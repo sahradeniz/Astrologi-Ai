@@ -2,3 +2,4 @@ flask
 swisseph
 pytz
 requests
+gunicorn
