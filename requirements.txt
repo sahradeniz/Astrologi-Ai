@@ -1,0 +1,4 @@
+flask
+swisseph
+pytz
+requests
