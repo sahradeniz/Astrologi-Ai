@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 import swisseph as swe
 from datetime import datetime
@@ -7,7 +8,7 @@ import requests
 app = Flask(__name__)
 
 # Swiss Ephemeris dosya yolu (kendi yolunuzu buraya ekleyin)
-swe.set_ephe_path("./Astrolog_AI")
+swe.set_ephe_path(os.environ.get('EPHE_PATH', './swisseph-master/ephe'))
 
 # OpenCage API anahtarınızı buraya ekleyin
 OPENCAGE_API_KEY = "242313ae99454edbb5a7b4eaa5a09d2b"
