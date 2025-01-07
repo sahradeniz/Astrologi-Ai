@@ -7,9 +7,18 @@ import requests
 
 app = Flask(__name__)
 
-# Swiss Ephemeris dosya yolu (kendi yolunuzu buraya ekleyin)
-swe.set_ephe_path(os.environ.get('EPHE_PATH', './swisseph-master/ephe'))
+def check_path():
+    path = '/opt/render/project/src/swisseph-master/ephe'
+    if os.path.exists(path):
+        print(f"Path exists: {path}")
+        print(f"Files in path: {os.listdir(path)}")
+    else:
+        print(f"Path does not exist: {path}")
 
+check_path()
+
+# Swiss Ephemeris dosya yolu (kendi yolunuzu buraya ekleyin)
+swe.set_ephe_path(os.environ.get('EPHE_PATH', '/opt/render/project/src/swisseph-master/ephe'))
 # OpenCage API anahtarınızı buraya ekleyin
 OPENCAGE_API_KEY = "242313ae99454edbb5a7b4eaa5a09d2b"
 
