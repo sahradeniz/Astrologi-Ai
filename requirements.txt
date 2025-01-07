@@ -1,0 +1,5 @@
+gunicorn
+swisseph
+flask
+pytz
+requests
