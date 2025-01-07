@@ -12,7 +12,7 @@ export default function MainContent() {
 
   const handleNatalSubmit = async () => {
     try {
-      const response = await fetch("http://localhost:5000/natal-chart", {
+      const response = await fetch("https://astrolog-ai.onrender.com/natal-chart", { // Render URL'ini ekledik
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

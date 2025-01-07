@@ -4,8 +4,9 @@ import swisseph as swe
 from datetime import datetime
 import pytz
 import requests
-
+from flask_cors import CORS
 app = Flask(__name__)
+CORS(app)
 
 def check_path():
     path = '/opt/render/project/src/swisseph-master/ephe'
