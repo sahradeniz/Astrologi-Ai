@@ -16,8 +16,8 @@ export default function MainContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          birth_date: "1996-12-28 07:10:00", // Tarih ve saat birleştirilmiş formatta
-          location: "Istanbul" // "birth_place" yerine "location" anahtarı
+          birth_date: `${formData.birthDate} ${formData.birthTime}:00`, // Tarih ve saat birleştirilmiş formatta
+          location: formData.birthPlace // "birthPlace" form verisinden alınıyor
         }),
       });
 
@@ -92,9 +92,20 @@ export default function MainContent() {
       {result && (
         <div className="mt-6">
           <h3 className="text-lg font-bold">Sonuç:</h3>
-          <pre className="bg-gray-100 p-4 rounded">
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <div className="bg-gray-100 p-4 rounded">
+            <h4 className="font-bold">Gezegenler:</h4>
+            <ul>
+              {result.gezegenler && Object.entries(result.gezegenler).map(([planet, details]) => (
+                <li key={planet}>{planet}: {details.burç}, {details.ev}. evde</li>
+              ))}
+            </ul>
+            <h4 className="font-bold">Açılar:</h4>
+            <ul>
+              {result.açılar && Object.entries(result.açılar).map(([aspect, value]) => (
+                <li key={aspect}>{aspect}: {value}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>
