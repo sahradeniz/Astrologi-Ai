@@ -16,8 +16,8 @@ export default function MainContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          birth_date: `${formData.birthDate} ${formData.birthTime}`,
-          location: formData.birthPlace,
+          birth_date: "1996-12-28 07:10:00", // Tarih ve saat birleştirilmiş formatta
+          location: "Istanbul" // "birth_place" yerine "location" anahtarı
         }),
       });
 
@@ -26,6 +26,7 @@ export default function MainContent() {
       }
 
       const result = await response.json();
+      console.log("Backend Response:", result); // İsteğin sonucunu konsola yazdır
       setResult(result); // Sonucu ekrana göstermek için state'e kaydet
     } catch (error) {
       console.error("Error fetching natal chart:", error);
