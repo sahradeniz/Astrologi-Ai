@@ -1,20 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header';
-import Footer from './components/Footer';
-import Sidebar from './components/Sidebar';
-import MainContent from './components/MainContent';
+import InputForm from './components/InputForm';
+import Results from './components/Results';
 
-function App() {
+const App = () => {
+  const [results, setResults] = useState(null);
+
+  // Backend'den dönen sonucu kontrol etmek için konsola yazdırma
+  const handleSetResults = (data) => {
+    console.log("Backend Response:", data);
+    setResults(data); // Results state'ini güncelle
+  };
+
   return (
-    <div>
+    <div className="App">
       <Header />
-      <div className="layout">
-        <Sidebar />
-        <MainContent />
-      </div>
-      <Footer />
+      {results ? (
+        <Results results={results} />
+      ) : (
+        <InputForm setResult={handleSetResults} />
+      )}
     </div>
   );
-}
+};
 
 export default App;

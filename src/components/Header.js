@@ -1,10 +1,11 @@
 import React from 'react';
 
-export default function Header() {
+function Header() {
   return (
-    <header className="bg-white shadow p-4">
-      <h1 className="text-xl font-bold">Astroloji Harita Uygulaması</h1>
+    <header className="bg-gray-800 text-white p-4">
+      <h1 className="text-2xl font-bold">AstroAi</h1>
     </header>
   );
 }
 
+export default Header;

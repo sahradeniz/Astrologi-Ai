@@ -9,7 +9,7 @@ import logging
 
 # Flask Uygulaması
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/": {"origins": ""}})  # Tüm kaynaklara izin verir)
 
 # Logging yapılandırması
 logging.basicConfig(level=logging.INFO)
