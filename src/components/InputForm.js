@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 function InputForm({ setResult }) {
   const [formData, setFormData] = useState({
@@ -8,7 +8,7 @@ function InputForm({ setResult }) {
     birthPlace: "",
     partnerBirthDate: "",
     partnerBirthTime: "",
-    partnerBirthPlace: ""
+    partnerBirthPlace: "",
   });
 
   const handleChange = (e) => {
@@ -22,45 +22,60 @@ function InputForm({ setResult }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Hatalı veri kontrolü
+    if (
+      !formData.birthDate ||
+      !formData.birthTime ||
+      !formData.birthPlace ||
+      (formData.analysisType === "synastry" &&
+        (!formData.partnerBirthDate ||
+          !formData.partnerBirthTime ||
+          !formData.partnerBirthPlace))
+    ) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
     // Endpoint seçimi
     const url =
       formData.analysisType === "natal"
         ? "https://astrolog-ai.onrender.com/natal-chart"
         : "https://astrolog-ai.onrender.com/synastry-chart";
 
-    // Gönderilecek JSON body
+    // JSON body
     const body =
       formData.analysisType === "natal"
         ? {
-            birth_date: `${formData.birthDate} ${formData.birthTime}:00`, // Doğum tarihi ve saati
-            location: formData.birthPlace // Doğum yeri
+            birth_date: `${formData.birthDate} ${formData.birthTime}:00`,
+            location: formData.birthPlace,
           }
         : {
             birth_date: `${formData.birthDate} ${formData.birthTime}:00`,
             location: formData.birthPlace,
-            partner_birth_date: `${formData.partnerBirthDate} ${formData.partnerBirthTime}:00`, // Partnerin doğum tarihi ve saati
-            partner_location: formData.partnerBirthPlace // Partnerin doğum yeri
+            partner_birth_date: `${formData.partnerBirthDate} ${formData.partnerBirthTime}:00`,
+            partner_location: formData.partnerBirthPlace,
           };
 
+    console.log("Sending Request:", body);
+
     try {
-      // Backend isteği
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        mode: "cors" // CORS modu etkin
       });
 
       if (!response.ok) {
-        throw new Error("API hatası. Yanıt alınamadı.");
+        throw new Error("API error: Response not ok.");
       }
 
-      // Backend'den dönen yanıt
       const result = await response.json();
-      console.log("Backend Yanıtı:", result);
+      console.log("API Response:", result);
       setResult(result);
     } catch (error) {
-      console.error("Hata:", error);
-      setResult({ error: "Bir hata oluştu. Lütfen tekrar deneyin." });
+      console.error("Error:", error);
+      setResult({ error: "An error occurred. Please try again." });
     }
   };
 

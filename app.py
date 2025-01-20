@@ -11,6 +11,15 @@ import logging
 app = Flask(__name__)
 CORS(app, resources={r"/": {"origins": ""}})  # Tüm kaynaklara izin verir)
 
+@app.before_request
+def handle_options():
+    if request.method == 'OPTIONS':
+        response = app.make_response('')
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        return response
+
 # Logging yapılandırması
 logging.basicConfig(level=logging.INFO)
 
