@@ -1,0 +1,41 @@
+/* src/components/InputForm.css */
+.input-form {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 36px;
+  }
+  
+  .subtitle {
+    font-family: 'Inria Sans', sans-serif;
+    font-size: 20px;
+  }
+  
+  .form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  input {
+    margin: 10px;
+    padding: 10px;
+    font-size: 16px;
+  }
+  
+  button {
+    padding: 10px;
+    font-size: 18px;
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #555;
+  }
+  

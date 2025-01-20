@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import ReactDOM from "react-dom";
-
+import React, { useState } from "react"; // useState kullanıyoruz
+import { useNavigate } from "react-router-dom"; // Sayfa yönlendirmesi için useNavigate'i import ediyoruz
+import './InputForm.css'; // Custom styles for the input form
 
 function InputForm({ setResult }) {
   const [formData, setFormData] = useState({
@@ -13,6 +13,8 @@ function InputForm({ setResult }) {
     partnerBirthPlace: "",
   });
 
+  const navigate = useNavigate(); // useNavigate Hook'u ile yönlendirme işlemi
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -21,14 +23,17 @@ function InputForm({ setResult }) {
     }));
   };
 
+  // Doğum tarihi ve saati format doğrulama
+  const isValidDate = (date, time) => {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD formatı
+    const timeRegex = /^\d{2}:\d{2}$/; // HH:MM formatı
+    return dateRegex.test(date) && timeRegex.test(time);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-      // Tarih formatı kontrolü
-  const isValidDate = (date, time) => {
-    return /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time);
-  };
-
+    // Gerekli alanların doğrulaması
     if (
       !formData.birthDate ||
       !formData.birthTime ||
@@ -42,11 +47,20 @@ function InputForm({ setResult }) {
       return;
     }
 
+    // Format doğrulaması
+    if (
+      !isValidDate(formData.birthDate, formData.birthTime) ||
+      (formData.analysisType === "synastry" &&
+        !isValidDate(formData.partnerBirthDate, formData.partnerBirthTime))
+    ) {
+      alert("Please enter valid date and time formats.");
+      return;
+    }
+
     const url =
-    formData.analysisType === "natal"
-      ? "https://astrolog-ai.onrender.com/natal-chart"
-      : "https://astrolog-ai.onrender.com/synastry-chart";
-  
+      formData.analysisType === "natal"
+        ? "https://astrolog-ai.onrender.com/natal-chart"
+        : "https://astrolog-ai.onrender.com/synastry-chart";
 
     const body =
       formData.analysisType === "natal"
@@ -61,8 +75,6 @@ function InputForm({ setResult }) {
             partner_location: formData.partnerBirthPlace,
           };
 
-    console.log("Sending Request:", body);
-
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -76,8 +88,8 @@ function InputForm({ setResult }) {
       }
 
       const result = await response.json();
-      console.log("API Response:", result);
-      setResult(result);
+      setResult(result); // API'den dönen veriyi Result bileşenine gönder
+      navigate('/results'); // Sonuç sayfasına yönlendiriyoruz
     } catch (error) {
       console.error("Error:", error);
       setResult({ error: "An error occurred. Please try again." });
@@ -87,7 +99,9 @@ function InputForm({ setResult }) {
   return (
     <form onSubmit={handleSubmit} className="p-4 space-y-4">
       <div>
-        <label htmlFor="analysisType" className="block font-bold">Analysis Type:</label>
+        <label htmlFor="analysisType" className="block font-bold">
+          Analysis Type:
+        </label>
         <select
           id="analysisType"
           name="analysisType"
@@ -101,7 +115,9 @@ function InputForm({ setResult }) {
       </div>
 
       <div>
-        <label htmlFor="birthDate" className="block font-bold">Birth Date:</label>
+        <label htmlFor="birthDate" className="block font-bold">
+          Birth Date:
+        </label>
         <input
           id="birthDate"
           type="date"
@@ -114,7 +130,9 @@ function InputForm({ setResult }) {
       </div>
 
       <div>
-        <label htmlFor="birthTime" className="block font-bold">Birth Time:</label>
+        <label htmlFor="birthTime" className="block font-bold">
+          Birth Time:
+        </label>
         <input
           id="birthTime"
           type="time"
@@ -127,7 +145,9 @@ function InputForm({ setResult }) {
       </div>
 
       <div>
-        <label htmlFor="birthPlace" className="block font-bold">Birth Place:</label>
+        <label htmlFor="birthPlace" className="block font-bold">
+          Birth Place:
+        </label>
         <input
           id="birthPlace"
           type="text"
@@ -142,7 +162,9 @@ function InputForm({ setResult }) {
       {formData.analysisType === "synastry" && (
         <>
           <div>
-            <label htmlFor="partnerBirthDate" className="block font-bold">Partner Birth Date:</label>
+            <label htmlFor="partnerBirthDate" className="block font-bold">
+              Partner Birth Date:
+            </label>
             <input
               id="partnerBirthDate"
               type="date"
@@ -154,7 +176,9 @@ function InputForm({ setResult }) {
             />
           </div>
           <div>
-            <label htmlFor="partnerBirthTime" className="block font-bold">Partner Birth Time:</label>
+            <label htmlFor="partnerBirthTime" className="block font-bold">
+              Partner Birth Time:
+            </label>
             <input
               id="partnerBirthTime"
               type="time"
@@ -166,7 +190,9 @@ function InputForm({ setResult }) {
             />
           </div>
           <div>
-            <label htmlFor="partnerBirthPlace" className="block font-bold">Partner Birth Place:</label>
+            <label htmlFor="partnerBirthPlace" className="block font-bold">
+              Partner Birth Place:
+            </label>
             <input
               id="partnerBirthPlace"
               type="text"

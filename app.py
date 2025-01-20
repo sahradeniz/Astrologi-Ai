@@ -9,7 +9,7 @@ import logging
 
 # Flask Uygulaması
 app = Flask(__name__)
-CORS(app, resources={r"/natal-chart": {"origins": "http://localhost:3000"}})  # Daha spesifik izinler
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://astrolog-ai.onrender.com"]}})  # Daha spesifik izinler
 @app.before_request
 def handle_options():
     if request.method == 'OPTIONS':
@@ -18,6 +18,7 @@ def handle_options():
         response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
         return response
+    
 
 # Logging yapılandırması
 logging.basicConfig(level=logging.INFO)
@@ -142,7 +143,9 @@ def calculate_individual_chart(person):
 
     # Evlerin burçlarını ve derecelerini hesapla
     house_signs = calculate_house_signs(houses)
-
+# Loglama
+    logging.info(f"Calculation Results: {results}, Aspects: {aspects}, Houses: {house_signs}")
+    
     return results, aspects, house_signs, timezone
 
 @app.route('/natal-chart', methods=['POST'])
@@ -178,6 +181,8 @@ def calculate_natal_chart():
 def calculate_synastry_chart():
     try:
         data = request.json
+        
+        # Gerekli alanların kontrolü
         birth_date = data.get("birth_date")
         location = data.get("location")
         partner_birth_date = data.get("partner_birth_date")
@@ -186,23 +191,55 @@ def calculate_synastry_chart():
         if not all([birth_date, location, partner_birth_date, partner_location]):
             raise ValueError("Tüm gerekli alanlar sağlanmalıdır.")
 
-        # Synastry hesaplama işlemleri burada yapılacak
-        # Dummy response
+        # Her iki kişinin doğum haritalarını hesaplama
+        person1 = {
+            "birth_date": birth_date,
+            "location": location
+        }
+        person2 = {
+            "birth_date": partner_birth_date,
+            "location": partner_location
+        }
+
+        chart1_results, chart1_aspects, chart1_houses, chart1_timezone = calculate_individual_chart(person1)
+        chart2_results, chart2_aspects, chart2_houses, chart2_timezone = calculate_individual_chart(person2)
+
+        # İki harita arasındaki açıları ve ev uyumlarını hesaplama
+        synastry_aspects = {}
+        for planet1, position1 in chart1_results.items():
+            for planet2, position2 in chart2_results.items():
+                aspect = calculate_aspect(position1['derece'], position2['derece'])
+                if aspect:
+                    synastry_aspects[f"{planet1} - {planet2}"] = aspect
+
+        # Response
         return jsonify({
-            "message": "Synastry chart hesaplandı.",
-            "data": {
-                "person1": {"birth_date": birth_date, "location": location,},
-                "person2": {"birth_date": partner_birth_date, "location": partner_location}
-            }
+            "message": "Synastry chart başarıyla hesaplandı.",
+            "person1": {
+                "gezegenler": chart1_results,
+                "açılar": chart1_aspects,
+                "evler": chart1_houses,
+                "timezone": chart1_timezone
+            },
+            "person2": {
+                "gezegenler": chart2_results,
+                "açılar": chart2_aspects,
+                "evler": chart2_houses,
+                "timezone": chart2_timezone
+            },
+            "synastry_aspects": synastry_aspects
         })
 
     except ValueError as ve:
         logging.error(f"Validation error: {ve}")
         return jsonify({"error": str(ve)}), 400
+    except KeyError as ke:
+        logging.error(f"Key error: {ke}")
+        return jsonify({"error": f"Beklenmedik bir anahtar hatası: {ke}"}), 400
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
-        return jsonify({"error": "Bir hata oluştu: " + str(e)}), 500
- 
+        return jsonify({"error": f"Beklenmedik bir hata oluştu: {e}"}), 500
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)

@@ -1,35 +1,83 @@
+/* Apply background gradient and basic layout */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Inria Sans', sans-serif;
+  text-align: center;
   background: linear-gradient(to bottom, #e0e0e0, #ffffff);
   margin: 0;
   padding: 0;
+  position: relative;
+  overflow: hidden;
 }
+
+/* Container for all content to center */
 .container {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
+  position: relative;
 }
-.bg-gray-800 {
-  background-color: #2d3748;
+
+/* Image group1 (left corner) */
+.group1 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;  /* Adjust size as needed */
 }
-.bg-gray-100 {
-  background-color: #f7fafc;
+
+/* Image group2 (right corner) */
+.group2 {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;  /* Adjust size as needed */
 }
-.bg-blue-500 {
+
+/* Chart image (centered) */
+.chart {
+  display: block;
+  margin: 20px auto;
+  width: 250px;  /* Adjust size as needed */
+}
+
+/* Input Form styling */
+input, select, button {
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+button {
   background-color: #4299e1;
+  color: white;
+  border: none;
 }
-.text-white {
-  color: #ffffff;
+
+h1, h2, h3 {
+  font-weight: bold;
+  margin-top: 0;
 }
-.text-lg {
-  font-size: 1.125rem;
+
+h4 {
+  margin-bottom: 10px;
 }
-.font-bold {
-  font-weight: 700;
+
+/* Ensures the form stays centered */
+form {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-.rounded {
-  border-radius: 0.25rem;
-}
-.p-4 {
-  padding: 1rem;
+
+/* Adjustments for responsive design */
+@media screen and (max-width: 768px) {
+  .group1, .group2 {
+    width: 80px;  /* Adjust for smaller screens */
+  }
+  .chart {
+    width: 200px;  /* Adjust size for smaller screens */
+  }
 }
