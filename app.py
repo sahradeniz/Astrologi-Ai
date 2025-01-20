@@ -9,8 +9,7 @@ import logging
 
 # Flask Uygulaması
 app = Flask(__name__)
-CORS(app, resources={r"/": {"origins": ""}})  # Tüm kaynaklara izin verir)
-
+CORS(app, resources={r"/natal-chart": {"origins": "http://localhost:3000"}})  # Daha spesifik izinler
 @app.before_request
 def handle_options():
     if request.method == 'OPTIONS':
@@ -174,6 +173,36 @@ def calculate_natal_chart():
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
         return jsonify({"error": "Bir hata oluştu: " + str(e)}), 500
+    
+@app.route('/synastry-chart', methods=['POST'])
+def calculate_synastry_chart():
+    try:
+        data = request.json
+        birth_date = data.get("birth_date")
+        location = data.get("location")
+        partner_birth_date = data.get("partner_birth_date")
+        partner_location = data.get("partner_location")
+
+        if not all([birth_date, location, partner_birth_date, partner_location]):
+            raise ValueError("Tüm gerekli alanlar sağlanmalıdır.")
+
+        # Synastry hesaplama işlemleri burada yapılacak
+        # Dummy response
+        return jsonify({
+            "message": "Synastry chart hesaplandı.",
+            "data": {
+                "person1": {"birth_date": birth_date, "location": location,},
+                "person2": {"birth_date": partner_birth_date, "location": partner_location}
+            }
+        })
+
+    except ValueError as ve:
+        logging.error(f"Validation error: {ve}")
+        return jsonify({"error": str(ve)}), 400
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
+        return jsonify({"error": "Bir hata oluştu: " + str(e)}), 500
+ 
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)

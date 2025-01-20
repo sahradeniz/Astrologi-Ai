@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import ReactDOM from "react-dom";
+
 
 function InputForm({ setResult }) {
   const [formData, setFormData] = useState({
-    analysisType: "natal", // Varsayılan analiz tipi
+    analysisType: "natal",
     birthDate: "",
     birthTime: "",
     birthPlace: "",
@@ -22,7 +24,11 @@ function InputForm({ setResult }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Hatalı veri kontrolü
+      // Tarih formatı kontrolü
+  const isValidDate = (date, time) => {
+    return /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time);
+  };
+
     if (
       !formData.birthDate ||
       !formData.birthTime ||
@@ -36,13 +42,12 @@ function InputForm({ setResult }) {
       return;
     }
 
-    // Endpoint seçimi
     const url =
-      formData.analysisType === "natal"
-        ? "https://astrolog-ai.onrender.com/natal-chart"
-        : "https://astrolog-ai.onrender.com/synastry-chart";
+    formData.analysisType === "natal"
+      ? "https://astrolog-ai.onrender.com/natal-chart"
+      : "https://astrolog-ai.onrender.com/synastry-chart";
+  
 
-    // JSON body
     const body =
       formData.analysisType === "natal"
         ? {
@@ -63,7 +68,7 @@ function InputForm({ setResult }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        mode: "cors" // CORS modu etkin
+        mode: "cors",
       });
 
       if (!response.ok) {
@@ -82,8 +87,9 @@ function InputForm({ setResult }) {
   return (
     <form onSubmit={handleSubmit} className="p-4 space-y-4">
       <div>
-        <label className="block font-bold">Analysis Type:</label>
+        <label htmlFor="analysisType" className="block font-bold">Analysis Type:</label>
         <select
+          id="analysisType"
           name="analysisType"
           value={formData.analysisType}
           onChange={handleChange}
@@ -94,65 +100,83 @@ function InputForm({ setResult }) {
         </select>
       </div>
 
-      {/* Common Inputs */}
-      <input
-        type="date"
-        name="birthDate"
-        value={formData.birthDate}
-        onChange={handleChange}
-        placeholder="Birth Date"
-        className="border p-2 w-full rounded"
-        required
-      />
-      <input
-        type="time"
-        name="birthTime"
-        value={formData.birthTime}
-        onChange={handleChange}
-        placeholder="Birth Time"
-        className="border p-2 w-full rounded"
-        required
-      />
-      <input
-        type="text"
-        name="birthPlace"
-        value={formData.birthPlace}
-        onChange={handleChange}
-        placeholder="Birth Place (e.g., Istanbul, Turkey)"
-        className="border p-2 w-full rounded"
-        required
-      />
+      <div>
+        <label htmlFor="birthDate" className="block font-bold">Birth Date:</label>
+        <input
+          id="birthDate"
+          type="date"
+          name="birthDate"
+          value={formData.birthDate}
+          onChange={handleChange}
+          className="border p-2 w-full rounded"
+          required
+        />
+      </div>
 
-      {/* Synastry-Specific Inputs */}
+      <div>
+        <label htmlFor="birthTime" className="block font-bold">Birth Time:</label>
+        <input
+          id="birthTime"
+          type="time"
+          name="birthTime"
+          value={formData.birthTime}
+          onChange={handleChange}
+          className="border p-2 w-full rounded"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="birthPlace" className="block font-bold">Birth Place:</label>
+        <input
+          id="birthPlace"
+          type="text"
+          name="birthPlace"
+          value={formData.birthPlace}
+          onChange={handleChange}
+          className="border p-2 w-full rounded"
+          required
+        />
+      </div>
+
       {formData.analysisType === "synastry" && (
         <>
-          <input
-            type="date"
-            name="partnerBirthDate"
-            value={formData.partnerBirthDate}
-            onChange={handleChange}
-            placeholder="Partner Birth Date"
-            className="border p-2 w-full rounded"
-            required
-          />
-          <input
-            type="time"
-            name="partnerBirthTime"
-            value={formData.partnerBirthTime}
-            onChange={handleChange}
-            placeholder="Partner Birth Time"
-            className="border p-2 w-full rounded"
-            required
-          />
-          <input
-            type="text"
-            name="partnerBirthPlace"
-            value={formData.partnerBirthPlace}
-            onChange={handleChange}
-            placeholder="Partner Birth Place (e.g., Ankara, Turkey)"
-            className="border p-2 w-full rounded"
-            required
-          />
+          <div>
+            <label htmlFor="partnerBirthDate" className="block font-bold">Partner Birth Date:</label>
+            <input
+              id="partnerBirthDate"
+              type="date"
+              name="partnerBirthDate"
+              value={formData.partnerBirthDate}
+              onChange={handleChange}
+              className="border p-2 w-full rounded"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="partnerBirthTime" className="block font-bold">Partner Birth Time:</label>
+            <input
+              id="partnerBirthTime"
+              type="time"
+              name="partnerBirthTime"
+              value={formData.partnerBirthTime}
+              onChange={handleChange}
+              className="border p-2 w-full rounded"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="partnerBirthPlace" className="block font-bold">Partner Birth Place:</label>
+            <input
+              id="partnerBirthPlace"
+              type="text"
+              name="partnerBirthPlace"
+              value={formData.partnerBirthPlace}
+              onChange={handleChange}
+              className="border p-2 w-full rounded"
+              required
+            />
+          </div>
         </>
       )}
 
