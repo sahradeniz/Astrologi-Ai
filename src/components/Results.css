@@ -1,23 +1,27 @@
-/* src/components/Result.css */
 .result-container {
-  background-color: #f0f0f0;
+  background-color: #1a1a1a; /* Dark background for contrast */
   padding: 20px;
-  box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1); /* Hafif gölge ekledim */
+  box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 20px;
 }
 
 .result-title {
   font-family: 'Instrument Serif', serif;
   font-size: 28px;
   margin-bottom: 20px;
-  text-align: center; /* Başlık ortalanmış */
+  text-align: center;
+  color: #fff; /* White title for contrast */
 }
 
 .tabs {
   display: flex;
   justify-content: space-around;
   margin-bottom: 20px;
-  border-bottom: 2px solid #ddd; /* Tabların altına çizgi ekledim */
+  border-bottom: 2px solid #ddd;
 }
 
 button {
@@ -27,295 +31,98 @@ button {
   border: none;
   cursor: pointer;
   font-size: 16px;
-  transition: background-color 0.3s ease, transform 0.3s ease; /* Renk ve animasyon ekledim */
   width: 100%;
   text-align: center;
-  border-radius: 5px; /* Köşeleri yuvarladım */
+  border-radius: 5px;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 button.active {
-  background-color: #2b6cb0; /* Aktif tab için daha koyu renk */
-  font-weight: bold; /* Aktif sekme için kalın yazı */
-  transform: scale(1.05); /* Aktif sekme için büyütme efekti */
+  background-color: #2b6cb0; /* Active tab color */
+  font-weight: bold;
+  transform: scale(1.05); /* Active tab scale */
 }
 
 button:hover {
   background-color: #2b6cb0;
-  transform: scale(1.05); /* Hover efektine de büyütme ekledim */
+  transform: scale(1.05);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2); /* Hover shadow */
 }
 
 .tab-content {
   padding: 20px;
-  background-color: white;
+  background-color: #2d2d2d; /* Koyu gri arka plan */
   border-radius: 5px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Tab içeriğine gölge ekledim */
-  animation: fadeIn 0.5s ease-in-out; /* İçeriğin yavaşça görünmesini sağladım */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.planets-section,
-.aspects-section,
-.houses-section,
-.timezone-section {
-  margin-bottom: 20px;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  font-family: 'Inria Sans', sans-serif;
-  font-size: 16px;
-  padding-bottom: 10px;
-  animation: slideUp 0.5s ease-out; /* Liste elemanlarına animasyon ekledim */
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
 
 .tab-content h4 {
   margin-top: 20px;
   font-size: 20px;
   font-weight: bold;
-  color: #333; /* Başlık rengini koyu yaptım */
+  color: #333;
 }
 
 .tab-content p {
   font-size: 16px;
   margin: 10px 0;
-  color: #555; /* Paragraflara hafif gri ton ekledim */
-}
-
-.tab-content p span {
-  font-weight: bold;
-}
-
-button {
-  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out; /* Daha pürüzsüz geçiş */
-}
-
-/* Arka plana animasyon ekledim */
-.result-container {
-  animation: slideIn 0.5s ease-in-out;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-button.active {
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Aktif butona gölge ekledim */
-}
-
-button:hover {
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3); /* Hover efektine gölge ekledim */
-}
-/* src/components/Result.css */
-.result-container {
-  background-color: #f0f0f0;
-  padding: 20px;
-  box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1); /* Light shadow */
-  border-radius: 8px;
-  animation: slideIn 0.5s ease-in-out; /* Animation for the whole container */
-}
-
-.result-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 28px;
-  margin-bottom: 20px;
-  text-align: center; /* Centering the title */
-}
-
-.tabs {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #ddd; /* Border under the tabs */
-}
-
-button {
-  background-color: #4299e1;
-  color: white;
-  padding: 15px;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition */
-  width: 100%;
-  text-align: center;
-  border-radius: 5px;
-}
-
-button.active {
-  background-color: #2b6cb0; /* Darker color for active tab */
-  font-weight: bold; /* Bold font for active tab */
-  transform: scale(1.05); /* Slightly larger on active */
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Active tab shadow */
-}
-
-button:hover {
-  background-color: #2b6cb0;
-  transform: scale(1.05); /* Hover effect to grow the button */
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3); /* Hover shadow */
-}
-
-.tab-content {
-  padding: 20px;
-  background-color: white;
-  border-radius: 5px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Adding a subtle shadow */
-  animation: fadeIn 0.5s ease-in-out; /* Fade in effect for content */
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.planets-section,
-.aspects-section,
-.houses-section,
-.timezone-section {
-  margin-bottom: 20px;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  font-family: 'Inria Sans', sans-serif;
-  font-size: 16px;
-  padding-bottom: 10px;
-  animation: slideUp 0.5s ease-out; /* Slide up animation for list items */
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.tab-content h4 {
-  margin-top: 20px;
-  font-size: 20px;
-  font-weight: bold;
-  color: #333; /* Darker heading color */
-}
-
-.tab-content p {
-  font-size: 16px;
-  margin: 10px 0;
-  color: #555; /* Light gray text color for readability */
-}
-
-.tab-content p span {
-  font-weight: bold;
-}
-
-button {
-  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out; /* Smooth transitions */
-}
-
-/* Background animation */
-.result-container {
-  animation: slideIn 0.5s ease-in-out;
-}
-
-button.active {
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Active button shadow */
-}
-
-button:hover {
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3); /* Hover effect shadow */
-}
-
-button.active {
-  font-weight: bold;
-  color: white;
-  background-color: #2b6cb0;
-}
-
-button:hover {
-  background-color: #2c5282;
-}
-
-button:focus {
-  outline: none;
-}
-
-.tab-content h4 {
-  font-size: 22px;
-  color: #2b6cb0;
-  font-weight: 700;
-  text-align: left;
-  margin-top: 10px;
-}
-
-.tab-content p {
-  font-size: 16px;
   color: #555;
-  line-height: 1.5;
 }
 
-@media (max-width: 768px) {
-  .tabs {
-    flex-direction: column;
-  }
+.highlight {
+  font-weight: bold;
+}
 
-  button {
-    width: 100%;
-    margin-bottom: 10px;
-  }
+button {
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
 
-  .result-title {
-    font-size: 24px;
-  }
+button:hover {
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom card styles */
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.card {
+  width: 180px;
+  height: 240px;
+  background: linear-gradient(135deg, #ff7d00, #ff6c96, #ffbd3e);
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.card-text {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  color: #fff;
+  font-size: 18px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.card-subtext {
+  position: absolute;
+  bottom: 5px;
+  color: #eee;
+  font-size: 14px;
+  text-align: center;
 }
 

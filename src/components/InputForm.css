@@ -1,46 +1,74 @@
 /* src/components/InputForm.css */
 .input-form {
-    text-align: center;
-    padding: 20px;
-  }
-  
-  .title {
-    font-family: 'Instrument Serif', serif;
-    font-size: 36px;
-  }
-  
-  .subtitle {
-    font-family: 'Inria Sans', sans-serif;
-    font-size: 20px;
-  }
-  
-  .form-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  input {
-    margin: 10px;
-    padding: 10px;
-    font-size: 16px;
-  }
-  
-  button {
-    padding: 10px;
-    font-size: 18px;
-    background-color: #333;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #4299e1;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 20px;
-  }
-  
+  text-align: center;
+  padding: 30px;
+  background-color: #222; /* Dark background */
+  border-radius: 8px;
+  box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1);
+  width: 80%; /* Width control */
+  margin: 0 auto;
+}
+
+.title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 36px;
+  color: #fff; /* White text for the title */
+  margin-bottom: 20px;
+}
+
+.subtitle {
+  font-family: 'Inria Sans', sans-serif;
+  font-size: 20px;
+  color: #bbb; /* Lighter color for subtitle */
+  margin-bottom: 30px;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+input {
+  margin: 10px;
+  padding: 12px;
+  font-size: 16px;
+  width: 80%;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+input:focus {
+  border-color: #ff7d00; /* Highlight border on focus */
+}
+
+button {
+  padding: 12px 20px;
+  font-size: 18px;
+  background: linear-gradient(135deg, #ff7d00, #ff6c96, #ffbd3e);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  width: 80%; /* Same width as input */
+  margin-top: 20px;
+}
+
+button:hover {
+  background-color: #ff6c96;
+  transform: scale(1.05);
+}
+
+button:active {
+  background-color: #ff7d00;
+  transform: scale(1.02);
+}
+
+button:focus {
+  outline: none;
+}

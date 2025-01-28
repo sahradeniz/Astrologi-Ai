@@ -6,6 +6,10 @@ import Chart from './assets/chart.png';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
 import Result from './components/Results';
+import CharacterPage from './pages/CharacterPage';
+import TransitPage from './pages/TransitPage';
+import SynastryPage from './pages/SynastryPage';
+import LifePurposePage from './pages/LifePurposePage';
 import './App.css';
 
 const App = () => {
@@ -13,7 +17,7 @@ const App = () => {
 
   const handleSetResults = (data) => {
     console.log("API Response in App.js (before updating state):", data);
-    setResults(data); 
+    setResults(data);
   };
 
   useEffect(() => {
@@ -27,12 +31,17 @@ const App = () => {
         <img src={Group2} alt="Group2" className="group2" />
         
         <Header />
+        
         <div className="content">
           <img src={Chart} alt="Chart" className="chart" />
 
           <Routes>
             <Route path="/" element={<InputForm setResult={handleSetResults} />} />
             <Route path="/results" element={<Result result={results} />} />
+            <Route path="/character" element={<CharacterPage />} />
+            <Route path="/transit" element={<TransitPage />} />
+            <Route path="/synastry" element={<SynastryPage />} />
+            <Route path="/lifepurpose" element={<LifePurposePage />} />
           </Routes>
         </div>
       </div>

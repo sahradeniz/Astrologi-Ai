@@ -1,30 +1,24 @@
 import React, { useState, useEffect } from "react";
+import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import './Results.css';  // Custom styles for the result component
 
-function Result({ result }) {
+function Result({ result, calculateTransit }) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(1); // Başlangıçta 1. tab aktif olacak
-  const [transitData, setTransitData] = useState(null); // Transit verisini saklamak için state
-  const [isLoading, setIsLoading] = useState(false); // Yükleniyor durumu
+  const [activeTab, setActiveTab] = useState(1); // Default active tab
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [transitData, setTransitData] = useState(null); // Transit data
 
-  // Handle Back Click
-  const handleBack = () => {
-    navigate('/'); // Geri gitmek için '/' ana sayfaya yönlendirme yapıyoruz
-  };
-
-  // Transit verisini almak için fonksiyon
   const fetchTransitData = async () => {
+    setIsLoading(true); // Start loading
     try {
-      setIsLoading(true); // Yükleniyor durumunu başlat
-      const response = await fetch('https://astrolog-ai.onrender.com/transit-chart', {
-        method: 'POST',
+      const response = await fetch("https://astrolog-ai.onrender.com/transit-chart", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           birth_date: result.birth_date,
-          location: result.location
+          location: result.location,
         }),
-        mode: "cors"
+        mode: "cors",
       });
 
       if (!response.ok) {
@@ -32,23 +26,27 @@ function Result({ result }) {
       }
 
       const transitResult = await response.json();
-      setTransitData(transitResult); // Transit verisini state'e set et
+      setTransitData(transitResult); // Store transit data
     } catch (error) {
       console.error("Error fetching transit data:", error);
-      setTransitData({ error: "Transit verisi alınırken bir hata oluştu." });
+      setTransitData({ error: "Transit data could not be fetched." });
     } finally {
-      setIsLoading(false); // Yükleniyor durumu sonlanır
+      setIsLoading(false); // End loading
     }
   };
 
-  // Kutu içeriği render fonksiyonu
+  useEffect(() => {
+    if (activeTab === 2) {
+      fetchTransitData(); // Fetch transit data when "Günlük Transitler" tab is clicked
+    }
+  }, [activeTab]);
+
   const renderContent = () => {
     switch (activeTab) {
       case 1:
         return (
-          <div>
+          <div className="tab-content">
             <h4>Karakter Özellikleri</h4>
-            {/* Gezegenler ve evler bilgisi */}
             {Object.entries(result.gezegenler).map(([planet, details]) => (
               <p key={planet}>
                 {planet}: {details.burç}, {details.derece}°, {details.ev} evinde
@@ -63,10 +61,10 @@ function Result({ result }) {
         );
       case 2:
         return (
-          <div>
+          <div className="tab-content">
             <h4>Günlük Transitler</h4>
             {isLoading ? (
-              <p>Transit verisi yükleniyor...</p> // Yükleniyor mesajı
+              <p>Transit data is loading...</p>
             ) : (
               transitData ? (
                 transitData.error ? (
@@ -79,21 +77,21 @@ function Result({ result }) {
                   ))
                 )
               ) : (
-                <p>Transit verisi henüz yüklenmedi.</p>
+                <p>No transit data available yet.</p>
               )
             )}
           </div>
         );
       case 3:
         return (
-          <div>
+          <div className="tab-content">
             <h4>Your Vibe</h4>
             <p>Your vibe is calm and centered today.</p>
           </div>
         );
       case 4:
         return (
-          <div>
+          <div className="tab-content">
             <h4>Life Path</h4>
             <p>Your life path is about exploring new opportunities and embracing change.</p>
           </div>
@@ -103,41 +101,118 @@ function Result({ result }) {
     }
   };
 
-  // Transit tabına tıklanırsa veriyi almak
-  useEffect(() => {
-    if (activeTab === 2) {
-      fetchTransitData(); // Transit verisini al
-    }
-  }, [activeTab]); // activeTab değiştiğinde çalışacak
-
   return (
-    <div className="p-4">
-      <h3 className="font-bold text-lg">Sonuçlar:</h3>
-      <div className="bg-gray-100 p-4 rounded">
+    <StyledWrapper>
+      <div className="result-container">
+        <h3 className="result-title">Results:</h3>
         <div className="tabs">
-          <button onClick={() => setActiveTab(1)} className={activeTab === 1 ? "active" : ""}>
+          <button
+            onClick={() => setActiveTab(1)}
+            className={activeTab === 1 ? "active" : ""}
+          >
             Karakter Özellikleri
           </button>
-          <button onClick={() => setActiveTab(2)} className={activeTab === 2 ? "active" : ""}>
+          <button
+            onClick={() => setActiveTab(2)}
+            className={activeTab === 2 ? "active" : ""}
+          >
             Günlük Transitler
           </button>
-          <button onClick={() => setActiveTab(3)} className={activeTab === 3 ? "active" : ""}>
+          <button
+            onClick={() => setActiveTab(3)}
+            className={activeTab === 3 ? "active" : ""}
+          >
             Your Vibe
           </button>
-          <button onClick={() => setActiveTab(4)} className={activeTab === 4 ? "active" : ""}>
+          <button
+            onClick={() => setActiveTab(4)}
+            className={activeTab === 4 ? "active" : ""}
+          >
             Life Path
           </button>
         </div>
-        <div className="tab-content">
-          {renderContent()}
-        </div>
-        {/* Geri butonu */}
-        <button onClick={handleBack} className="bg-gray-500 text-white px-4 py-2 rounded mt-4 transition-all duration-300 transform hover:scale-105">
+        {renderContent()}
+        <button
+          onClick={() => navigate('/')}
+          className="back-btn"
+        >
           Geri
         </button>
       </div>
-    </div>
+    </StyledWrapper>
   );
 }
+
+const StyledWrapper = styled.div`
+  .result-container {
+    background-color: #222; /* Dark background for contrast */
+    padding: 20px;
+    box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+
+  .result-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #fff;
+  }
+
+  .tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ddd;
+  }
+
+  button {
+    background: linear-gradient(135deg, #ff7d00, #ff6c96, #ffbd3e);
+    color: white;
+    padding: 15px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    text-align: center;
+    border-radius: 15px;
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    margin: 5px;
+  }
+
+  button.active {
+    background-color: #ff6c96;
+    font-weight: bold;
+    transform: scale(1.05);
+  }
+
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .tab-content {
+    padding: 20px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .highlight {
+    font-weight: bold;
+  }
+
+  .back-btn {
+    background-color: #ff7d00;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    border-radius: 5px;
+    margin-top: 20px;
+  }
+`;
 
 export default Result;
