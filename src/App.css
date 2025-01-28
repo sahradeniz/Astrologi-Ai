@@ -40,19 +40,26 @@ body {
   width: 250px;  /* Adjust size as needed */
 }
 
-/* Input Form styling */
-input, select, button {
-  padding: 10px;
-  width: 100%;
+/* Tabs (buttons) for each section */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
   margin-bottom: 20px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
 }
 
-button {
+.tabs button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.tabs button.active {
   background-color: #4299e1;
   color: white;
-  border: none;
 }
 
 h1, h2, h3 {
@@ -72,7 +79,69 @@ form {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Adjustments for responsive design */
+/* Result section styling */
+.result-container {
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.result-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.planets-section, .aspects-section, .houses-section, .timezone-section {
+  margin-bottom: 20px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  font-family: 'Inria Sans', sans-serif;
+  font-size: 16px;
+}
+
+button {
+  background-color: #4299e1;
+  color: white;
+  border: none;
+}
+
+button:hover {
+  background-color: #3182ce;
+}
+/* Sayfa kaydırma için genel yapı */
+body {
+  font-family: 'Inria Sans', sans-serif;
+  text-align: center;
+  background: linear-gradient(to bottom, #e0e0e0, #ffffff);
+  margin: 0;
+  padding: 0;
+  position: relative;
+  overflow-y: auto; /* Sayfanın dikey kaydırılabilir olması */
+  height: 100vh; /* Sayfa yüksekliği */
+}
+
+/* İçeriğin kaydırılabilir olması */
+.content {
+  max-width: 100%; /* İçeriğin tam genişlikte olması */
+  padding: 20px;
+  overflow-y: auto; /* Yalnızca içerik bölgesinin kaydırılması */
+  height: 80vh; /* İçeriğin dikey yüksekliği */
+  margin-top: 50px; /* Başlık ve üst kısmın boşluk bırakması */
+}
+
+/* 4 kutu ve içerik için kaydırma */
+.tabs-container {
+  overflow-y: auto;
+  max-height: 300px; /* Kutu içeriklerinin yüksekliğini sınırla */
+}
+
 @media screen and (max-width: 768px) {
   .group1, .group2 {
     width: 80px;  /* Adjust for smaller screens */

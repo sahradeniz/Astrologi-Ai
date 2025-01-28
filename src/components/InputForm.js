@@ -1,5 +1,5 @@
-import React, { useState } from "react"; // useState kullanıyoruz
-import { useNavigate } from "react-router-dom"; // Sayfa yönlendirmesi için useNavigate'i import ediyoruz
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import './InputForm.css'; // Custom styles for the input form
 
 function InputForm({ setResult }) {
@@ -13,7 +13,7 @@ function InputForm({ setResult }) {
     partnerBirthPlace: "",
   });
 
-  const navigate = useNavigate(); // useNavigate Hook'u ile yönlendirme işlemi
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,57 +23,41 @@ function InputForm({ setResult }) {
     }));
   };
 
-  // Doğum tarihi ve saati format doğrulama
   const isValidDate = (date, time) => {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD formatı
-    const timeRegex = /^\d{2}:\d{2}$/; // HH:MM formatı
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const timeRegex = /^\d{2}:\d{2}$/;
     return dateRegex.test(date) && timeRegex.test(time);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Gerekli alanların doğrulaması
-    if (
-      !formData.birthDate ||
-      !formData.birthTime ||
-      !formData.birthPlace ||
-      (formData.analysisType === "synastry" &&
-        (!formData.partnerBirthDate ||
-          !formData.partnerBirthTime ||
-          !formData.partnerBirthPlace))
-    ) {
+    if (!formData.birthDate || !formData.birthTime || !formData.birthPlace) {
       alert("Please fill in all required fields.");
       return;
     }
 
-    // Format doğrulaması
-    if (
-      !isValidDate(formData.birthDate, formData.birthTime) ||
-      (formData.analysisType === "synastry" &&
-        !isValidDate(formData.partnerBirthDate, formData.partnerBirthTime))
-    ) {
+    if (!isValidDate(formData.birthDate, formData.birthTime)) {
       alert("Please enter valid date and time formats.");
       return;
     }
 
+    // Adjusted the URL based on the analysisType
     const url =
       formData.analysisType === "natal"
         ? "https://astrolog-ai.onrender.com/natal-chart"
-        : "https://astrolog-ai.onrender.com/synastry-chart";
+        : formData.analysisType === "synastry"
+        ? "https://astrolog-ai.onrender.com/synastry-chart"
+        : "https://astrolog-ai.onrender.com/transit-chart"; // For future transit handling
 
-    const body =
-      formData.analysisType === "natal"
-        ? {
-            birth_date: `${formData.birthDate} ${formData.birthTime}:00`,
-            location: formData.birthPlace,
-          }
-        : {
-            birth_date: `${formData.birthDate} ${formData.birthTime}:00`,
-            location: formData.birthPlace,
-            partner_birth_date: `${formData.partnerBirthDate} ${formData.partnerBirthTime}:00`,
-            partner_location: formData.partnerBirthPlace,
-          };
+    const body = {
+      birth_date: `${formData.birthDate} ${formData.birthTime}:00`,
+      location: formData.birthPlace,
+      ...(formData.analysisType === "synastry" && {
+        partner_birth_date: `${formData.partnerBirthDate} ${formData.partnerBirthTime}:00`,
+        partner_location: formData.partnerBirthPlace,
+      }),
+    };
 
     try {
       const response = await fetch(url, {
@@ -88,8 +72,8 @@ function InputForm({ setResult }) {
       }
 
       const result = await response.json();
-      setResult(result); // API'den dönen veriyi Result bileşenine gönder
-      navigate('/results'); // Sonuç sayfasına yönlendiriyoruz
+      setResult(result); // Pass the response data to the result
+      navigate('/results'); // Redirect to the results page
     } catch (error) {
       console.error("Error:", error);
       setResult({ error: "An error occurred. Please try again." });

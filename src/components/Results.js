@@ -1,96 +1,139 @@
-import React from "react";
-import { useNavigate } from "react-router-dom"; // useNavigate Hook'unu ekliyoruz
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import './Results.css';  // Custom styles for the result component
 
 function Result({ result }) {
-  const navigate = useNavigate();  // navigate fonksiyonunu çağırıyoruz
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(1); // Başlangıçta 1. tab aktif olacak
+  const [transitData, setTransitData] = useState(null); // Transit verisini saklamak için state
+  const [isLoading, setIsLoading] = useState(false); // Yükleniyor durumu
 
   // Handle Back Click
   const handleBack = () => {
-    navigate('/');  // Geri gitmek için '/' ana sayfaya yönlendirme yapıyoruz
+    navigate('/'); // Geri gitmek için '/' ana sayfaya yönlendirme yapıyoruz
   };
 
-  // Hata kontrolü: Eğer result nesnesi yoksa veya boşsa
-  if (!result) {
-    console.log("Result is empty or null.");
-    return <p className="text-gray-500">No results available.</p>;
-  }
+  // Transit verisini almak için fonksiyon
+  const fetchTransitData = async () => {
+    try {
+      setIsLoading(true); // Yükleniyor durumunu başlat
+      const response = await fetch('https://astrolog-ai.onrender.com/transit-chart', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          birth_date: result.birth_date,
+          location: result.location
+        }),
+        mode: "cors"
+      });
 
-  console.log("Backend Response in Result:", result);
+      if (!response.ok) {
+        throw new Error("API error: Response not ok.");
+      }
 
-  // Hata kontrolü: Eğer result bir hata içeriyorsa
-  if (result.error) {
-    return <p className="text-red-500">{result.error}</p>;
-  }
+      const transitResult = await response.json();
+      setTransitData(transitResult); // Transit verisini state'e set et
+    } catch (error) {
+      console.error("Error fetching transit data:", error);
+      setTransitData({ error: "Transit verisi alınırken bir hata oluştu." });
+    } finally {
+      setIsLoading(false); // Yükleniyor durumu sonlanır
+    }
+  };
 
-  // Gezegenler, açılar ve evler için veri kontrolü
-  const planets = result.gezegenler || {};
-  const aspects = result.açılar || {};
-  const houses = result.evler || [];
+  // Kutu içeriği render fonksiyonu
+  const renderContent = () => {
+    switch (activeTab) {
+      case 1:
+        return (
+          <div>
+            <h4>Karakter Özellikleri</h4>
+            {/* Gezegenler ve evler bilgisi */}
+            {Object.entries(result.gezegenler).map(([planet, details]) => (
+              <p key={planet}>
+                {planet}: {details.burç}, {details.derece}°, {details.ev} evinde
+              </p>
+            ))}
+            {result.evler.map((house, index) => (
+              <p key={index}>
+                House {index + 1}: {house.burç}, {house.derece}°
+              </p>
+            ))}
+          </div>
+        );
+      case 2:
+        return (
+          <div>
+            <h4>Günlük Transitler</h4>
+            {isLoading ? (
+              <p>Transit verisi yükleniyor...</p> // Yükleniyor mesajı
+            ) : (
+              transitData ? (
+                transitData.error ? (
+                  <p>{transitData.error}</p>
+                ) : (
+                  Object.entries(transitData.transit_positions).map(([planet, position]) => (
+                    <p key={planet}>
+                      <span className="highlight">{planet}</span>: {position}° - {transitData.transit_comments[planet]}
+                    </p>
+                  ))
+                )
+              ) : (
+                <p>Transit verisi henüz yüklenmedi.</p>
+              )
+            )}
+          </div>
+        );
+      case 3:
+        return (
+          <div>
+            <h4>Your Vibe</h4>
+            <p>Your vibe is calm and centered today.</p>
+          </div>
+        );
+      case 4:
+        return (
+          <div>
+            <h4>Life Path</h4>
+            <p>Your life path is about exploring new opportunities and embracing change.</p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
-  // Eğer tüm veri boşsa kullanıcıya uyarı göster
-  if (
-    Object.keys(planets).length === 0 &&
-    Object.keys(aspects).length === 0 &&
-    houses.length === 0
-  ) {
-    console.log("No valid data returned from the backend.");
-    return <p className="text-gray-500">No valid data available from the backend.</p>;
-  }
+  // Transit tabına tıklanırsa veriyi almak
+  useEffect(() => {
+    if (activeTab === 2) {
+      fetchTransitData(); // Transit verisini al
+    }
+  }, [activeTab]); // activeTab değiştiğinde çalışacak
 
   return (
     <div className="p-4">
-      <h3 className="font-bold text-lg">Results:</h3>
+      <h3 className="font-bold text-lg">Sonuçlar:</h3>
       <div className="bg-gray-100 p-4 rounded">
-        {/* Gezegenler */}
-        <h4 className="font-bold">Planets:</h4>
-        {Object.keys(planets).length > 0 ? (
-          <ul>
-            {Object.entries(planets).map(([planet, details]) => (
-              <li key={planet}>
-                {planet}: {details.burç}, {details.derece}°, {details.ev} house
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No planetary data available.</p>
-        )}
-
-        {/* Açıları */}
-        <h4 className="font-bold mt-4">Aspects:</h4>
-        {Object.keys(aspects).length > 0 ? (
-          <ul>
-            {Object.entries(aspects).map(([aspect, value]) => (
-              <li key={aspect}>
-                {aspect}: {value}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No aspects data available.</p>
-        )}
-
-        {/* Evler */}
-        <h4 className="font-bold mt-4">Houses:</h4>
-        {houses.length > 0 ? (
-          <ul>
-            {houses.map((house, index) => (
-              <li key={index}>
-                House {index + 1}: {house.burç}, {house.derece}°
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No houses data available.</p>
-        )}
-
-        {/* Timezone */}
-        <h4 className="font-bold mt-4">Timezone:</h4>
-        <p>{result.timezone || "Timezone not available."}</p>
-
-        {/* Back button */}
-        <button onClick={handleBack} className="bg-gray-500 text-white px-4 py-2 rounded mt-4">
-          Back
+        <div className="tabs">
+          <button onClick={() => setActiveTab(1)} className={activeTab === 1 ? "active" : ""}>
+            Karakter Özellikleri
+          </button>
+          <button onClick={() => setActiveTab(2)} className={activeTab === 2 ? "active" : ""}>
+            Günlük Transitler
+          </button>
+          <button onClick={() => setActiveTab(3)} className={activeTab === 3 ? "active" : ""}>
+            Your Vibe
+          </button>
+          <button onClick={() => setActiveTab(4)} className={activeTab === 4 ? "active" : ""}>
+            Life Path
+          </button>
+        </div>
+        <div className="tab-content">
+          {renderContent()}
+        </div>
+        {/* Geri butonu */}
+        <button onClick={handleBack} className="bg-gray-500 text-white px-4 py-2 rounded mt-4 transition-all duration-300 transform hover:scale-105">
+          Geri
         </button>
       </div>
     </div>

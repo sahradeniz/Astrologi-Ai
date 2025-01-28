@@ -10,15 +10,6 @@ import logging
 # Flask Uygulaması
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://astrolog-ai.onrender.com"]}})  # Daha spesifik izinler
-@app.before_request
-def handle_options():
-    if request.method == 'OPTIONS':
-        response = app.make_response('')
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response
-    
 
 # Logging yapılandırması
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +24,19 @@ else:
 
 # OpenCage API Anahtarı
 OPENCAGE_API_KEY = "242313ae99454edbb5a7b4eaa5a09d2b"
+
+# Gezegen yorumları eklenmiş
+planet_comments = {
+    "Sun": {
+        "conjunct": "The Sun conjunct Moon: Your relationship is anchored in deep emotional security.",
+        "trine": "The Sun trine Venus: A harmonious and loving relationship with mutual support."
+    },
+    "Moon": {
+        "conjunct": "Moon conjunct Mars: Emotional energy and passion can create a lively connection.",
+        "square": "Moon square Jupiter: Emotional misunderstandings may occur, leading to growth."
+    },
+    # Diğer gezegenler ve açı yorumları
+}
 
 def get_coordinates_and_timezone(location):
     """OpenCage API ile koordinatları ve saat dilimini alır."""
@@ -130,7 +134,16 @@ def calculate_individual_chart(person):
     for planet, degree in positions.items():
         sign, position_in_sign = degree_to_sign_and_position(degree)
         house = find_house(degree, houses)
-        results[planet] = {"burç": sign, "derece": position_in_sign, "ev": house}
+        
+        # Gezegen yorumlarını ekle
+        planet_comment = planet_comments.get(planet, {}).get("conjunct", "No specific comment available.")
+        
+        results[planet] = {
+            "burç": sign, 
+            "derece": position_in_sign, 
+            "ev": house,
+            "comment": planet_comment  # Yorum ekleniyor
+        }
 
     # Gezegenler arası açıları hesaplama
     aspects = {}
@@ -143,10 +156,42 @@ def calculate_individual_chart(person):
 
     # Evlerin burçlarını ve derecelerini hesapla
     house_signs = calculate_house_signs(houses)
-# Loglama
+
     logging.info(f"Calculation Results: {results}, Aspects: {aspects}, Houses: {house_signs}")
     
     return results, aspects, house_signs, timezone
+def calculate_transits(birth_date, location):
+    """Transit gezegenlerinin konumlarını hesaplar."""
+    coordinates, timezone = get_coordinates_and_timezone(location)
+
+    # Doğum tarihini UTC'ye çevirme
+    local_tz = pytz.timezone(timezone)
+    birth_datetime = parse_date(birth_date)
+    birth_datetime = local_tz.localize(birth_datetime).astimezone(pytz.utc)
+
+    # Swiss Ephemeris için tarih formatı
+    year, month, day, hour = birth_datetime.year, birth_datetime.month, birth_datetime.day, birth_datetime.hour + birth_datetime.minute / 60
+    julian_day = swe.julday(year, month, day, hour)
+
+    # Şu anki tarihi alalım (transit hesaplaması için)
+    current_julian_day = swe.julday(datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour)
+
+    # Transit gezegenlerini hesaplayalım
+    transit_positions = {}
+    planets = ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"]
+    for planet in planets:
+        planet_id = getattr(swe, planet.upper(), None)
+        if planet_id is not None:
+            transit_position, _ = swe.calc_ut(current_julian_day, planet_id)
+            transit_positions[planet] = transit_position[0]
+    
+    # Transit gezegenlerine ait yorumları döndürelim
+    transit_comments = {}
+    for planet, position in transit_positions.items():
+        sign, position_in_sign = degree_to_sign_and_position(position)
+        transit_comments[planet] = planet_comments.get(planet, {}).get("conjunct", "No specific comment available.")
+    
+    return transit_positions, transit_comments
 
 @app.route('/natal-chart', methods=['POST'])
 def calculate_natal_chart():
@@ -165,10 +210,10 @@ def calculate_natal_chart():
         })
 
         return jsonify({
-    "gezegenler": planets,
-    "açılar": aspects,
-    "evler": house_signs,
-    "timezone": timezone
+            "gezegenler": planets,
+            "açılar": aspects,
+            "evler": house_signs,
+            "timezone": timezone
         })
     except ValueError as ve:
         logging.error(f"Validation error: {ve}")
@@ -239,6 +284,31 @@ def calculate_synastry_chart():
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
         return jsonify({"error": f"Beklenmedik bir hata oluştu: {e}"}), 500
+
+@app.route('/transit-chart', methods=['POST'])
+def get_transit_chart():
+    try:
+        data = request.json
+        birth_date = data.get("birth_date")
+        location = data.get("location")
+
+        if not birth_date or not location:
+            raise ValueError("Doğum tarihi ve konumu sağlanmalıdır.")
+
+        # Transit gezegenlerinin konumlarını hesaplayalım
+        transit_positions, transit_comments = calculate_transits(birth_date, location)
+
+        return jsonify({
+            "transit_positions": transit_positions,
+            "transit_comments": transit_comments
+        })
+    except ValueError as ve:
+        logging.error(f"Validation error: {ve}")
+        return jsonify({"error": str(ve)}), 400
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
+        return jsonify({"error": "Bir hata oluştu: " + str(e)}), 500
+
 
 
 if __name__ == '__main__':
