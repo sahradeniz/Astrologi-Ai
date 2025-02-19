@@ -50,7 +50,10 @@ const InputForm = ({ setResult }) => {
     console.log("Sending request with body:", body);
 
     try {
-      const response = await fetch("https://astrolog-ai.onrender.com/natal-chart", {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
+      console.log('Using API URL:', API_URL);
+      
+      const response = await fetch(`${API_URL}/api/calculate-natal`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -58,6 +61,8 @@ const InputForm = ({ setResult }) => {
         },
         body: JSON.stringify(body),
       });
+
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
