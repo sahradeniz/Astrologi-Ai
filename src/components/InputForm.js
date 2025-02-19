@@ -1,18 +1,25 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import './InputForm.css'; // Custom styles for the input form
+import {
+  Box,
+  Input,
+  Button,
+  VStack,
+  Text,
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from "@chakra-ui/react";
 
-function InputForm({ setResult }) {
+const InputForm = ({ setResult }) => {
   const [formData, setFormData] = useState({
-    analysisType: "natal",
     birthDate: "",
-    birthTime: "",
+    birthTime: "", 
     birthPlace: "",
-    partnerBirthDate: "",
-    partnerBirthTime: "",
-    partnerBirthPlace: "",
   });
 
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,180 +28,154 @@ function InputForm({ setResult }) {
       ...prevData,
       [name]: value,
     }));
-  };
-
-  const isValidDate = (date, time) => {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    const timeRegex = /^\d{2}:\d{2}$/;
-    return dateRegex.test(date) && timeRegex.test(time);
+    setErrorMessage(""); // Clear error when user starts typing
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage("");
 
     if (!formData.birthDate || !formData.birthTime || !formData.birthPlace) {
-      alert("Please fill in all required fields.");
+      setErrorMessage("Lütfen tüm alanları doldurun.");
+      setIsLoading(false);
       return;
     }
-
-    if (!isValidDate(formData.birthDate, formData.birthTime)) {
-      alert("Please enter valid date and time formats.");
-      return;
-    }
-
-    // Adjusted the URL based on the analysisType
-    const url =
-      formData.analysisType === "natal"
-        ? "https://astrolog-ai.onrender.com/natal-chart"
-        : formData.analysisType === "synastry"
-        ? "https://astrolog-ai.onrender.com/synastry-chart"
-        : "https://astrolog-ai.onrender.com/transit-chart"; // For future transit handling
 
     const body = {
       birth_date: `${formData.birthDate} ${formData.birthTime}:00`,
       location: formData.birthPlace,
-      ...(formData.analysisType === "synastry" && {
-        partner_birth_date: `${formData.partnerBirthDate} ${formData.partnerBirthTime}:00`,
-        partner_location: formData.partnerBirthPlace,
-      }),
     };
 
+    console.log("Sending request with body:", body);
+
     try {
-      const response = await fetch(url, {
+      const response = await fetch("https://astrolog-ai.onrender.com/natal-chart", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify(body),
-        mode: "cors",
       });
 
       if (!response.ok) {
-        throw new Error("API error: Response not ok.");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "API error: Response not ok.");
       }
 
-      const result = await response.json();
-      setResult(result); // Pass the response data to the result
-      navigate('/results'); // Redirect to the results page
+      const data = await response.json();
+      console.log("Raw API Response:", JSON.stringify(data, null, 2));
+      
+      // Check if data is an object with the expected properties
+      if (!data || typeof data !== 'object') {
+        console.error("Invalid data format - not an object:", data);
+        throw new Error("Invalid data format received from API");
+      }
+
+      // Extract the relevant data, handling both English and Turkish keys
+      const formattedResult = {
+        planet_positions: data.planet_positions || data.planets || data.gezegenler || [],
+        aspects: data.aspects || data.açılar || {},
+        house_positions: data.houses || data.house_positions || data.evler || [],
+      };
+
+      console.log("Formatted Result:", JSON.stringify(formattedResult, null, 2));
+
+      // Validate the formatted data
+      if (!formattedResult.planet_positions.length) {
+        console.error("Missing planet positions in API response");
+        throw new Error("Missing planet positions in API response");
+      }
+
+      setResult(formattedResult);
+      navigate("/results");
     } catch (error) {
-      console.error("Error:", error);
-      setResult({ error: "An error occurred. Please try again." });
+      console.error("Error details:", error);
+      setErrorMessage(
+        error.message === "Invalid data format received from API"
+          ? "API yanıtı beklenen formatta değil. Lütfen tekrar deneyin."
+          : error.message === "Missing planet positions in API response"
+          ? "Gezegen pozisyonları alınamadı. Lütfen tekrar deneyin."
+          : error.message || "Bir hata oluştu. Lütfen tekrar deneyin."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4">
-      <div>
-        <label htmlFor="analysisType" className="block font-bold">
-          Analysis Type:
-        </label>
-        <select
-          id="analysisType"
-          name="analysisType"
-          value={formData.analysisType}
-          onChange={handleChange}
-          className="border p-2 w-full rounded"
-        >
-          <option value="natal">Natal Chart</option>
-          <option value="synastry">Synastry Chart</option>
-        </select>
-      </div>
+    <Box p={6} maxW="500px" mx="auto" bg="white" borderRadius="lg" boxShadow="lg">
+      <Text fontSize="2xl" fontWeight="bold" mb={6} textAlign="center">
+        Doğum Haritası Hesaplama
+      </Text>
 
-      <div>
-        <label htmlFor="birthDate" className="block font-bold">
-          Birth Date:
-        </label>
-        <input
-          id="birthDate"
-          type="date"
-          name="birthDate"
-          value={formData.birthDate}
-          onChange={handleChange}
-          className="border p-2 w-full rounded"
-          required
-        />
-      </div>
-
-      <div>
-        <label htmlFor="birthTime" className="block font-bold">
-          Birth Time:
-        </label>
-        <input
-          id="birthTime"
-          type="time"
-          name="birthTime"
-          value={formData.birthTime}
-          onChange={handleChange}
-          className="border p-2 w-full rounded"
-          required
-        />
-      </div>
-
-      <div>
-        <label htmlFor="birthPlace" className="block font-bold">
-          Birth Place:
-        </label>
-        <input
-          id="birthPlace"
-          type="text"
-          name="birthPlace"
-          value={formData.birthPlace}
-          onChange={handleChange}
-          className="border p-2 w-full rounded"
-          required
-        />
-      </div>
-
-      {formData.analysisType === "synastry" && (
-        <>
-          <div>
-            <label htmlFor="partnerBirthDate" className="block font-bold">
-              Partner Birth Date:
-            </label>
-            <input
-              id="partnerBirthDate"
-              type="date"
-              name="partnerBirthDate"
-              value={formData.partnerBirthDate}
-              onChange={handleChange}
-              className="border p-2 w-full rounded"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="partnerBirthTime" className="block font-bold">
-              Partner Birth Time:
-            </label>
-            <input
-              id="partnerBirthTime"
-              type="time"
-              name="partnerBirthTime"
-              value={formData.partnerBirthTime}
-              onChange={handleChange}
-              className="border p-2 w-full rounded"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="partnerBirthPlace" className="block font-bold">
-              Partner Birth Place:
-            </label>
-            <input
-              id="partnerBirthPlace"
-              type="text"
-              name="partnerBirthPlace"
-              value={formData.partnerBirthPlace}
-              onChange={handleChange}
-              className="border p-2 w-full rounded"
-              required
-            />
-          </div>
-        </>
+      {errorMessage && (
+        <Alert status="error" mb={6} borderRadius="md">
+          <AlertTitle>Hata!</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
       )}
 
-      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-        Calculate
-      </button>
-    </form>
+      <form onSubmit={handleSubmit}>
+        <VStack spacing={6}>
+          <Box w="100%">
+            <Text fontWeight="bold" mb={2}>Doğum Tarihi</Text>
+            <Input
+              id="birthDate"
+              type="date"
+              name="birthDate"
+              value={formData.birthDate}
+              onChange={handleChange}
+              bg="gray.50"
+              focusBorderColor="blue.400"
+              size="lg"
+            />
+          </Box>
+
+          <Box w="100%">
+            <Text fontWeight="bold" mb={2}>Doğum Saati</Text>
+            <Input
+              id="birthTime"
+              type="time"
+              name="birthTime"
+              value={formData.birthTime}
+              onChange={handleChange}
+              bg="gray.50"
+              focusBorderColor="blue.400"
+              size="lg"
+            />
+          </Box>
+
+          <Box w="100%">
+            <Text fontWeight="bold" mb={2}>Doğum Yeri</Text>
+            <Input
+              id="birthPlace"
+              type="text"
+              name="birthPlace"
+              value={formData.birthPlace}
+              onChange={handleChange}
+              bg="gray.50"
+              focusBorderColor="blue.400"
+              size="lg"
+              placeholder="Şehir, Ülke"
+            />
+          </Box>
+
+          <Button
+            type="submit"
+            colorScheme="blue"
+            size="lg"
+            w="full"
+            isLoading={isLoading}
+            loadingText="Hesaplanıyor..."
+          >
+            Hesapla
+          </Button>
+        </VStack>
+      </form>
+    </Box>
   );
-}
+};
 
 export default InputForm;

@@ -1,0 +1,106 @@
+2025-02-13 17:43:45,714 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-13 17:43:45,716 - __main__ - ERROR - Failed to initialize Swiss Ephemeris: module 'swisseph' has no attribute 'SE_SUN'
+2025-02-13 17:46:20,159 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-13 17:46:20,162 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-13 17:46:20,166 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-13 17:46:20,271 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.159:5000
+2025-02-13 17:46:20,271 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-13 18:13:45,020 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-13 18:13:45,022 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-13 18:13:45,024 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-13 18:13:45,118 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-02-13 18:13:45,119 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-13 18:13:45,120 - werkzeug - INFO -  * Restarting with stat
+2025-02-13 18:13:45,363 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-13 18:13:45,363 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-13 18:13:45,364 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-13 18:13:45,390 - werkzeug - WARNING -  * Debugger is active!
+2025-02-13 18:13:45,419 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-18 11:38:37,322 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 11:38:37,324 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 11:38:37,325 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 11:38:37,376 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-02-18 11:38:37,376 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-18 11:38:37,377 - werkzeug - INFO -  * Restarting with stat
+2025-02-18 11:38:37,612 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 11:38:37,612 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 11:38:37,613 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 11:38:37,644 - werkzeug - WARNING -  * Debugger is active!
+2025-02-18 11:38:37,660 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-18 11:56:16,546 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-18 11:56:16,636 - werkzeug - INFO -  * Restarting with stat
+2025-02-18 11:56:17,161 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 11:56:17,163 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 11:56:17,165 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 11:56:17,285 - werkzeug - WARNING -  * Debugger is active!
+2025-02-18 11:56:17,353 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-18 11:57:06,482 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 11:57:06,483 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 11:57:06,484 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 11:57:15,740 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-18 11:57:15,789 - werkzeug - INFO -  * Restarting with stat
+2025-02-18 11:57:16,161 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 11:57:16,162 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 11:57:16,163 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 11:57:16,213 - werkzeug - WARNING -  * Debugger is active!
+2025-02-18 11:57:16,231 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-18 11:58:27,028 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 11:58:27,030 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 11:58:27,030 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 11:58:27,066 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5001
+2025-02-18 11:58:27,066 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-18 11:58:27,067 - werkzeug - INFO -  * Restarting with stat
+2025-02-18 11:58:27,290 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 11:58:27,290 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 11:58:27,291 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 11:58:27,318 - werkzeug - WARNING -  * Debugger is active!
+2025-02-18 11:58:27,333 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-18 14:30:02,601 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-18 14:30:02,607 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-18 14:30:02,735 - werkzeug - INFO -  * Restarting with stat
+2025-02-18 14:30:02,745 - werkzeug - INFO -  * Restarting with stat
+2025-02-18 14:30:03,499 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 14:30:03,501 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 14:30:03,502 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 14:30:03,503 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 14:30:03,502 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 14:30:03,503 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 14:30:03,554 - werkzeug - WARNING -  * Debugger is active!
+2025-02-18 14:30:03,556 - werkzeug - WARNING -  * Debugger is active!
+2025-02-18 14:30:03,608 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-18 14:30:03,608 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-18 14:33:38,918 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 14:33:38,920 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 14:33:38,921 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 14:33:58,286 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-18 14:33:58,310 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-18 14:33:58,470 - werkzeug - INFO -  * Restarting with stat
+2025-02-18 14:33:58,473 - werkzeug - INFO -  * Restarting with stat
+2025-02-18 14:33:59,131 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 14:33:59,131 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 14:33:59,133 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 14:33:59,133 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 14:33:59,133 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 14:33:59,134 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 14:33:59,249 - werkzeug - WARNING -  * Debugger is active!
+2025-02-18 14:33:59,250 - werkzeug - WARNING -  * Debugger is active!
+2025-02-18 14:33:59,352 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-18 14:33:59,353 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-18 14:37:13,154 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 14:37:13,156 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 14:37:13,157 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 14:37:13,201 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+2025-02-18 14:37:13,201 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-18 14:37:13,202 - werkzeug - INFO -  * Restarting with stat
+2025-02-18 14:37:13,446 - __main__ - INFO - Setting Swiss Ephemeris path to: /Users/ofis/Astrologi-Ai/ephe
+2025-02-18 14:37:13,446 - __main__ - INFO - Swiss Ephemeris path set successfully
+2025-02-18 14:37:13,446 - __main__ - INFO - Swiss Ephemeris initialized successfully
+2025-02-18 14:37:13,471 - werkzeug - WARNING -  * Debugger is active!
+2025-02-18 14:37:13,489 - werkzeug - INFO -  * Debugger PIN: 303-984-621
