@@ -100,25 +100,41 @@ def token_required(f):
 def get_coordinates_and_timezone(location):
     """Get coordinates and timezone for a location using OpenCage API."""
     try:
+        if not OPENCAGE_API_KEY or OPENCAGE_API_KEY == 'your_opencage_api_key_here':
+            raise ValueError("OpenCage API key is not properly configured")
+
         url = f"https://api.opencagedata.com/geocode/v1/json?q={location}&key={OPENCAGE_API_KEY}"
         response = requests.get(url)
+        response.raise_for_status()
+        
         data = response.json()
-        
         if not data['results']:
-            raise ValueError(f"Location not found: {location}")
-            
+            return {
+                'error': f'Location not found: {location}'
+            }
+
         result = data['results'][0]
-        coordinates = {
-            "lat": result['geometry']['lat'],
-            "lng": result['geometry']['lng']
-        }
+        coords = result['geometry']
         timezone = result['annotations']['timezone']['name']
-        
-        return coordinates, timezone
-        
+
+        return {
+            'latitude': coords['lat'],
+            'longitude': coords['lng'],
+            'timezone': timezone
+        }
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"OpenCage API request failed: {str(e)}")
+        return {
+            'error': 'Failed to get location coordinates',
+            'details': str(e)
+        }
     except Exception as e:
-        logger.error(f"Error getting coordinates: {str(e)}")
-        raise ValueError(f"Could not get coordinates: {str(e)}")
+        logger.error(f"Error processing location data: {str(e)}")
+        return {
+            'error': 'Error processing location data',
+            'details': str(e)
+        }
 
 def calculate_chart(birth_date, birth_time, location):
     """Calculate astrological chart data."""
@@ -141,7 +157,7 @@ def calculate_chart(birth_date, birth_time, location):
         birth_datetime = f"{birth_date} {birth_time}"
         
         # Get coordinates and timezone
-        coordinates, timezone = get_coordinates_and_timezone(location)
+        coordinates, timezone = location['latitude'], location['longitude'], location['timezone']
         
         # Convert to UTC
         try:
@@ -158,7 +174,7 @@ def calculate_chart(birth_date, birth_time, location):
                        utc_dt.hour + utc_dt.minute/60.0)
         
         # Calculate houses
-        houses, ascmc = swe.houses(jd, coordinates['lat'], coordinates['lng'], b'P')
+        houses, ascmc = swe.houses(jd, coordinates[0], coordinates[1], b'P')
         
         # Calculate planet positions
         planets = {}
@@ -222,44 +238,81 @@ def get_aspect(longitude1, longitude2, orbs):
 
     return None
 
-@app.route('/api/calculate-natal', methods=['POST'])
+@app.route('/api/calculate-birth-chart', methods=['POST'])
 def calculate_natal_chart():
-    """Calculate natal chart endpoint."""
     try:
-        logger.info("=== Starting natal chart calculation ===")
+        logger.info("=== Starting birth chart calculation ===")
         data = request.get_json()
         logger.info(f"Received request data: {data}")
-
-        birth_date = data.get('birth_date')
-        birth_time = data.get('birth_time')
-        location = data.get('location')
-
-        logger.info(f"Extracted data - Date: {birth_date}, Time: {birth_time}, Location: {location}")
-
-        if not all([birth_date, birth_time, location]):
-            missing = []
-            if not birth_date: missing.append('birth_date')
-            if not birth_time: missing.append('birth_time')
-            if not location: missing.append('location')
+        
+        # Input validation
+        required_fields = ['birth_date', 'birth_time', 'birth_place']
+        if not all(field in data for field in required_fields):
+            missing = [field for field in required_fields if field not in data]
             error_msg = f"Missing required fields: {', '.join(missing)}"
             logger.error(error_msg)
-            return jsonify({"error": error_msg}), 400
+            return jsonify({
+                'error': 'Missing required fields',
+                'required_fields': required_fields,
+                'missing_fields': missing
+            }), 400
 
+        birth_date = data['birth_date']
+        birth_time = data['birth_time']
+        birth_place = data['birth_place']
+
+        logger.info(f"Processing request - Date: {birth_date}, Time: {birth_time}, Place: {birth_place}")
+
+        # Validate date format
         try:
-            chart_data = calculate_chart(birth_date, birth_time, location)
-            logger.info("Successfully calculated natal chart")
-            return jsonify(chart_data)
+            datetime.strptime(birth_date, '%d.%m.%Y')
+        except ValueError as e:
+            error_msg = 'Invalid date format. Please use DD.MM.YYYY'
+            logger.error(f"{error_msg}: {str(e)}")
+            return jsonify({
+                'error': error_msg
+            }), 400
 
-        except ValueError as ve:
-            logger.error(f"Calculation error: {str(ve)}")
-            return jsonify({"error": str(ve)}), 400
+        # Validate time format
+        try:
+            datetime.strptime(birth_time, '%H:%M')
+        except ValueError as e:
+            error_msg = 'Invalid time format. Please use HH:MM (24-hour format)'
+            logger.error(f"{error_msg}: {str(e)}")
+            return jsonify({
+                'error': error_msg
+            }), 400
+
+        # Get coordinates and timezone
+        logger.info(f"Getting coordinates for location: {birth_place}")
+        location_data = get_coordinates_and_timezone(birth_place)
+        if 'error' in location_data:
+            logger.error(f"Location error: {location_data['error']}")
+            return jsonify(location_data), 400
+
+        logger.info(f"Location data retrieved: {location_data}")
+
+        # Calculate chart
+        try:
+            logger.info("Calculating birth chart...")
+            chart_data = calculate_chart(birth_date, birth_time, location_data)
+            logger.info("Birth chart calculation completed successfully")
+            return jsonify(chart_data)
         except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}")
-            return jsonify({"error": "An unexpected error occurred"}), 500
+            error_msg = f"Error calculating chart: {str(e)}"
+            logger.error(error_msg)
+            return jsonify({
+                'error': 'Error calculating birth chart',
+                'details': str(e)
+            }), 500
 
     except Exception as e:
-        logger.error(f"Server error: {str(e)}")
-        return jsonify({"error": "Server error"}), 500
+        error_msg = f"Unexpected error: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({
+            'error': 'An unexpected error occurred',
+            'details': str(e)
+        }), 500
 
 @app.route('/api/calculate-synastry', methods=['POST'])
 def calculate_synastry():
@@ -367,4 +420,5 @@ def calculate_transit_aspects(natal_planets, transit_planets):
     return calculate_synastry_aspects(natal_planets, transit_planets)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5002)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port, debug=False)

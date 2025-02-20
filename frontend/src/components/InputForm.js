@@ -16,7 +16,7 @@ const InputForm = () => {
   const [formData, setFormData] = useState({
     birth_date: '',
     birth_time: '',
-    location: '',
+    birth_place: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
@@ -65,11 +65,11 @@ const InputForm = () => {
       }
 
       // Validate location
-      if (!formData.location.trim()) {
+      if (!formData.birth_place.trim()) {
         throw new Error('Lütfen doğum yerini girin');
       }
 
-      if (formData.location.trim().length < 2) {
+      if (formData.birth_place.trim().length < 2) {
         throw new Error('Doğum yeri çok kısa');
       }
 
@@ -78,10 +78,9 @@ const InputForm = () => {
       
       // Format data
       const formattedData = {
-        ...formData,
         birth_date: `${dayNum.toString().padStart(2, '0')}.${monthNum.toString().padStart(2, '0')}.${yearNum}`,
         birth_time: `${hours}:${minutes}`,
-        location: formData.location.trim()
+        birth_place: formData.birth_place.trim()
       };
 
       console.log('Submitting formatted data:', formattedData);
@@ -90,7 +89,7 @@ const InputForm = () => {
       console.log('Using API URL:', API_URL);
       console.log('Environment variables:', process.env);
       
-      const response = await fetch(`${API_URL}/api/calculate-natal`, {
+      const response = await fetch(`${API_URL}/api/calculate-birth-chart`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,8 +167,8 @@ const InputForm = () => {
               <FormLabel>Doğum Yeri</FormLabel>
               <Input
                 type="text"
-                name="location"
-                value={formData.location}
+                name="birth_place"
+                value={formData.birth_place}
                 onChange={handleInputChange}
                 placeholder="Şehir, Ülke"
               />
