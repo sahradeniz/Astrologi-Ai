@@ -34,6 +34,7 @@ CORS(app, resources={
     r"/api/*": {
         "origins": [
             "http://localhost:3000",
+            "http://localhost:3001",
             "https://astrologi-ai.vercel.app",
             "https://astrologi-ai.onrender.com"
         ],
