@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -22,6 +22,32 @@ const CharacterPage = () => {
   const [chartData, setChartData] = useState(null);
   const bgColor = useColorModeValue('gray.50', 'gray.900');
   const cardBg = useColorModeValue('white', 'gray.800');
+
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem('natalChart');
+      if (!savedData) {
+        return;
+      }
+
+      const parsedData = JSON.parse(savedData);
+      if (!parsedData.planet_positions) {
+        throw new Error('Missing planet positions in API response');
+      }
+      
+      setChartData(parsedData);
+    } catch (error) {
+      console.error('Error loading chart data:', error);
+    }
+  }, []);
+
+  if (!chartData) {
+    return (
+      <Container maxW="container.xl" py={8}>
+        <Text>Doğum haritası yükleniyor...</Text>
+      </Container>
+    );
+  }
 
   return (
     <Container maxW="container.xl" py={8}>

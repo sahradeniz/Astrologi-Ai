@@ -85,40 +85,59 @@ const InputForm = () => {
 
       console.log('Submitting formatted data:', formattedData);
 
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:10000';
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
       console.log('Using API URL:', API_URL);
-      console.log('Environment variables:', process.env);
       
-      const response = await fetch(`${API_URL}/api/calculate-birth-chart`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(formattedData),
-      });
+      try {
+        const response = await fetch(`${API_URL}/api/calculate-birth-chart`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(formattedData),
+          mode: 'cors',
+          credentials: 'same-origin'
+        });
 
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries([...response.headers]));
+        
+        const data = await response.json();
+        console.log('Response data:', data);
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Bir hata oluştu');
+        if (!response.ok) {
+          throw new Error(data.error || 'API request failed');
+        }
+
+        if (!data.planet_positions) {
+          console.error('Invalid API response:', data);
+          throw new Error('Missing planet positions in API response');
+        }
+
+        // Store the chart data in localStorage
+        localStorage.setItem('natalChart', JSON.stringify(data));
+
+        // Navigate to character page
+        navigate('/character');
+
+        toast({
+          title: 'Başarılı!',
+          description: 'Doğum haritanız hazırlandı.',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error('API call error:', error);
+        toast({
+          title: 'Hata',
+          description: error.message || 'Bir hata oluştu',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
       }
-
-      // Store the chart data in localStorage or state management
-      localStorage.setItem('natalChart', JSON.stringify(data));
-
-      // Navigate to character page
-      navigate('/character');
-
-      toast({
-        title: 'Başarılı!',
-        description: 'Doğum haritanız hazırlandı.',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
     } catch (error) {
       toast({
         title: 'Hata!',

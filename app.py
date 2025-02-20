@@ -29,22 +29,52 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+# Initialize Flask app
 app = Flask(__name__)
+
+# Configure CORS
 CORS(app, resources={
     r"/api/*": {
         "origins": [
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "https://astrologi-ai.vercel.app",
-            "https://astrologi-ai.onrender.com"
+            "http://localhost:3001",  # Development
+            "http://localhost:3000",   # Alternative development port
+            "https://astrologi-ai.onrender.com"  # Production
         ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')  # Change in production
 
-load_dotenv()
+# Load environment variables
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+logger.info(f"Loading environment variables from: {env_path}")
+load_dotenv(dotenv_path=env_path, override=True)  # Force override any existing env vars
+OPENCAGE_API_KEY = os.getenv('OPENCAGE_API_KEY')
+ASTROLOGY_API_KEY = os.getenv('ASTROLOGY_API_KEY')
+
+logger.info(f"OpenCage API Key: {OPENCAGE_API_KEY}")
+logger.info(f"Astrology API Key: {ASTROLOGY_API_KEY}")
+
+if not OPENCAGE_API_KEY:
+    raise ValueError("OpenCage API key not found in environment variables")
+
+# Swiss Ephemeris planet IDs
+PLANETS = {
+    'Sun': swe.SUN,
+    'Moon': swe.MOON,
+    'Mercury': swe.MERCURY,
+    'Venus': swe.VENUS,
+    'Mars': swe.MARS,
+    'Jupiter': swe.JUPITER,
+    'Saturn': swe.SATURN,
+    'Uranus': swe.URANUS,
+    'Neptune': swe.NEPTUNE,
+    'Pluto': swe.PLUTO,
+    'North Node': swe.MEAN_NODE,  # Mean Lunar Node
+    'Chiron': swe.CHIRON
+}
+
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')  # Change in production
 
 # Initialize Swiss Ephemeris
 EPHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ephe')
@@ -66,24 +96,6 @@ except Exception as e:
     logger.error(f"Failed to initialize Swiss Ephemeris: {str(e)}")
     raise RuntimeError(f"Swiss Ephemeris initialization failed: {str(e)}")
 
-# Planet constants
-PLANETS = {
-    'Sun': swe.SUN,
-    'Moon': swe.MOON,
-    'Mercury': swe.MERCURY,
-    'Venus': swe.VENUS,
-    'Mars': swe.MARS,
-    'Jupiter': swe.JUPITER,
-    'Saturn': swe.SATURN,
-    'Uranus': swe.URANUS,
-    'Neptune': swe.NEPTUNE,
-    'Pluto': swe.PLUTO
-}
-
-# Get API keys
-ASTROLOGY_API_KEY = os.getenv('ASTROLOGY_API_KEY')
-OPENCAGE_API_KEY = os.getenv('OPENCAGE_API_KEY')
-
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -101,15 +113,21 @@ def token_required(f):
 def get_coordinates_and_timezone(location):
     """Get coordinates and timezone for a location using OpenCage API."""
     try:
+        logger.info(f"Attempting to get coordinates for location: {location}")
         if not OPENCAGE_API_KEY or OPENCAGE_API_KEY == 'your_opencage_api_key_here':
+            logger.error("OpenCage API key is not properly configured")
             raise ValueError("OpenCage API key is not properly configured")
 
         url = f"https://api.opencagedata.com/geocode/v1/json?q={location}&key={OPENCAGE_API_KEY}"
+        logger.info(f"Making request to OpenCage API: {url}")
         response = requests.get(url)
         response.raise_for_status()
         
         data = response.json()
+        logger.info(f"OpenCage API response: {data}")
+        
         if not data['results']:
+            logger.error(f'Location not found: {location}')
             return {
                 'error': f'Location not found: {location}'
             }
@@ -118,6 +136,7 @@ def get_coordinates_and_timezone(location):
         coords = result['geometry']
         timezone = result['annotations']['timezone']['name']
 
+        logger.info(f"Successfully got coordinates: lat={coords['lat']}, lng={coords['lng']}, timezone={timezone}")
         return {
             'latitude': coords['lat'],
             'longitude': coords['lng'],
@@ -140,11 +159,14 @@ def get_coordinates_and_timezone(location):
 def calculate_chart(birth_date, birth_time, location):
     """Calculate astrological chart data."""
     try:
+        logger.info(f"Starting chart calculation with date={birth_date}, time={birth_time}, location={location}")
+        
         # Parse and standardize date format
         if isinstance(birth_date, str):
             if '.' in birth_date:
                 day, month, year = map(int, birth_date.split('.'))
                 birth_date = f"{year:04d}-{month:02d}-{day:02d}"
+                logger.info(f"Converted date format from DD.MM.YYYY to YYYY-MM-DD: {birth_date}")
             elif '-' in birth_date:
                 year, month, day = map(int, birth_date.split('-'))
                 # Validate date components
@@ -156,9 +178,17 @@ def calculate_chart(birth_date, birth_time, location):
 
         # Combine date and time
         birth_datetime = f"{birth_date} {birth_time}"
+        logger.info(f"Combined datetime: {birth_datetime}")
         
         # Get coordinates and timezone
-        coordinates, timezone = location['latitude'], location['longitude'], location['timezone']
+        try:
+            latitude = location['latitude']
+            longitude = location['longitude']
+            timezone = location['timezone']
+            logger.info(f"Location data - Latitude: {latitude}, Longitude: {longitude}, Timezone: {timezone}")
+        except KeyError as e:
+            logger.error(f"Missing required location data: {e}")
+            raise ValueError(f"Missing required location data: {e}")
         
         # Convert to UTC
         try:
@@ -166,33 +196,49 @@ def calculate_chart(birth_date, birth_time, location):
             local_tz = pytz.timezone(timezone)
             local_dt = local_tz.localize(local_dt)
             utc_dt = local_dt.astimezone(pytz.UTC)
+            logger.info(f"Converted local time {local_dt} to UTC: {utc_dt}")
         except ValueError as e:
             logger.error(f"Error parsing datetime: {str(e)}")
             raise ValueError("Invalid date or time format")
+        except pytz.exceptions.UnknownTimeZoneError as e:
+            logger.error(f"Unknown timezone: {timezone}")
+            raise ValueError(f"Unknown timezone: {timezone}")
         
         # Calculate Julian day
-        jd = swe.julday(utc_dt.year, utc_dt.month, utc_dt.day,
-                       utc_dt.hour + utc_dt.minute/60.0)
+        try:
+            jd = swe.julday(utc_dt.year, utc_dt.month, utc_dt.day,
+                           utc_dt.hour + utc_dt.minute/60.0)
+            logger.info(f"Calculated Julian day: {jd}")
+        except Exception as e:
+            logger.error(f"Error calculating Julian day: {str(e)}")
+            raise ValueError(f"Error calculating Julian day: {str(e)}")
         
         # Calculate houses
-        houses, ascmc = swe.houses(jd, coordinates[0], coordinates[1], b'P')
+        try:
+            houses, ascmc = swe.houses(jd, latitude, longitude, b'P')
+            logger.info(f"Calculated houses successfully")
+        except Exception as e:
+            logger.error(f"Error calculating houses: {str(e)}")
+            raise ValueError(f"Error calculating houses: {str(e)}")
         
         # Calculate planet positions
         planets = {}
         for name, planet_id in PLANETS.items():
             try:
                 logger.info(f"Calculating position for {name} (ID: {planet_id})")
-                ret, xx = swe.calc_ut(jd, planet_id)
+                flags = swe.FLG_SWIEPH | swe.FLG_SPEED
+                positions, ret_flags = swe.calc_ut(jd, planet_id, flags)
                 
-                if ret < 0:
-                    logger.error(f"Swiss Ephemeris error for {name}: {ret}")
-                    raise ValueError(f"Error calculating {name} position")
+                if not isinstance(positions, tuple) or len(positions) < 6:
+                    raise ValueError(f"Unexpected return format from Swiss Ephemeris for {name}")
 
                 planets[name] = {
-                    'longitude': xx[0],
-                    'latitude': xx[1],
-                    'distance': xx[2],
-                    'speed': xx[3]
+                    'longitude': float(positions[0]),  # Convert to float for JSON serialization
+                    'latitude': float(positions[1]),
+                    'distance': float(positions[2]),
+                    'speed_longitude': float(positions[3]),
+                    'speed_latitude': float(positions[4]),
+                    'speed_distance': float(positions[5])
                 }
                 logger.info(f"Position calculated for {name}: {planets[name]}")
             except Exception as e:
@@ -203,13 +249,52 @@ def calculate_chart(birth_date, birth_time, location):
             logger.error("No planet positions were calculated")
             raise ValueError("Failed to calculate any planet positions")
         
-        return {
-            'planets': planets,
-            'houses': houses,
-            'ascmc': ascmc,
-            'coordinates': coordinates,
+        # Format response to match frontend expectations
+        response_data = {
+            'planet_positions': planets,
+            'house_positions': houses,
+            'ascendant': ascmc[0],
+            'midheaven': ascmc[1],
+            'coordinates': [latitude, longitude],
             'timezone': timezone
         }
+
+        # Calculate aspects between planets
+        aspects = {}
+        for p1 in planets:
+            aspects[p1] = {}
+            for p2 in planets:
+                if p1 != p2:
+                    try:
+                        angle = abs(planets[p1]['longitude'] - planets[p2]['longitude']) % 360
+                        # Define major aspects and their orbs
+                        major_aspects = {
+                            'conjunction': {'angle': 0, 'orb': 10},
+                            'sextile': {'angle': 60, 'orb': 6},
+                            'square': {'angle': 90, 'orb': 10},
+                            'trine': {'angle': 120, 'orb': 10},
+                            'opposition': {'angle': 180, 'orb': 10}
+                        }
+                        
+                        # Check each aspect
+                        for aspect_name, aspect_data in major_aspects.items():
+                            target_angle = aspect_data['angle']
+                            orb = aspect_data['orb']
+                            
+                            if abs(angle - target_angle) <= orb or abs(angle - (360 - target_angle)) <= orb:
+                                if p2 not in aspects[p1]:
+                                    aspects[p1][p2] = []
+                                aspects[p1][p2].append({
+                                    'type': aspect_name,
+                                    'angle': float(angle),  # Convert to float for JSON serialization
+                                    'orb': float(min(abs(angle - target_angle), abs(angle - (360 - target_angle))))
+                                })
+                    except Exception as e:
+                        logger.error(f"Error calculating aspect between {p1} and {p2}: {str(e)}")
+                        continue
+
+        response_data['aspects'] = aspects
+        return response_data  # Return dict instead of Response object
     except Exception as e:
         logger.error(f"Error calculating chart: {str(e)}")
         raise ValueError(str(e))
@@ -242,76 +327,30 @@ def get_aspect(longitude1, longitude2, orbs):
 @app.route('/api/calculate-birth-chart', methods=['POST'])
 def calculate_natal_chart():
     try:
-        logger.info("=== Starting birth chart calculation ===")
         data = request.get_json()
         logger.info(f"Received request data: {data}")
-        
-        # Input validation
+
+        # Validate required fields
         required_fields = ['birth_date', 'birth_time', 'birth_place']
         if not all(field in data for field in required_fields):
             missing = [field for field in required_fields if field not in data]
-            error_msg = f"Missing required fields: {', '.join(missing)}"
-            logger.error(error_msg)
-            return jsonify({
-                'error': 'Missing required fields',
-                'required_fields': required_fields,
-                'missing_fields': missing
-            }), 400
+            raise ValueError(f"Missing required fields: {', '.join(missing)}")
 
-        birth_date = data['birth_date']
-        birth_time = data['birth_time']
-        birth_place = data['birth_place']
-
-        logger.info(f"Processing request - Date: {birth_date}, Time: {birth_time}, Place: {birth_place}")
-
-        # Validate date format
-        try:
-            datetime.strptime(birth_date, '%d.%m.%Y')
-        except ValueError as e:
-            error_msg = 'Invalid date format. Please use DD.MM.YYYY'
-            logger.error(f"{error_msg}: {str(e)}")
-            return jsonify({
-                'error': error_msg
-            }), 400
-
-        # Validate time format
-        try:
-            datetime.strptime(birth_time, '%H:%M')
-        except ValueError as e:
-            error_msg = 'Invalid time format. Please use HH:MM (24-hour format)'
-            logger.error(f"{error_msg}: {str(e)}")
-            return jsonify({
-                'error': error_msg
-            }), 400
-
-        # Get coordinates and timezone
-        logger.info(f"Getting coordinates for location: {birth_place}")
-        location_data = get_coordinates_and_timezone(birth_place)
-        if 'error' in location_data:
-            logger.error(f"Location error: {location_data['error']}")
-            return jsonify(location_data), 400
-
-        logger.info(f"Location data retrieved: {location_data}")
+        # Get location data
+        location_data = get_coordinates_and_timezone(data['birth_place'])
+        if not location_data:
+            raise ValueError("Could not get location data")
 
         # Calculate chart
-        try:
-            logger.info("Calculating birth chart...")
-            chart_data = calculate_chart(birth_date, birth_time, location_data)
-            logger.info("Birth chart calculation completed successfully")
-            return jsonify(chart_data)
-        except Exception as e:
-            error_msg = f"Error calculating chart: {str(e)}"
-            logger.error(error_msg)
-            return jsonify({
-                'error': 'Error calculating birth chart',
-                'details': str(e)
-            }), 500
+        chart_data = calculate_chart(data['birth_date'], data['birth_time'], location_data)
+        
+        # Return the response
+        return jsonify(chart_data)
 
     except Exception as e:
-        error_msg = f"Unexpected error: {str(e)}"
-        logger.error(error_msg)
+        logger.error(f"Error in calculate_chart: {str(e)}")
         return jsonify({
-            'error': 'An unexpected error occurred',
+            'error': 'Error calculating birth chart',
             'details': str(e)
         }), 500
 
@@ -421,5 +460,5 @@ def calculate_transit_aspects(natal_planets, transit_planets):
     return calculate_synastry_aspects(natal_planets, transit_planets)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    port = int(os.environ.get('PORT', 5002))
+    app.run(host='0.0.0.0', port=port, debug=True)  # Enable debug mode
