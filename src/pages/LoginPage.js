@@ -206,17 +206,18 @@ const LoginPage = () => {
                   </InputLeftElement>
                   <Input
                     name="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Şifrenizi girin"
                   />
                   <InputRightElement>
                     <IconButton
-                      icon={showPassword ? <FaEyeSlash /> : <FaEye />}
-                      onClick={() => setShowPassword(!showPassword)}
+                      size="sm"
                       variant="ghost"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowPassword(!showPassword)}
+                      icon={showPassword ? <FaEyeSlash /> : <FaEye />}
+                      aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
                     />
                   </InputRightElement>
                 </InputGroup>
@@ -225,7 +226,7 @@ const LoginPage = () => {
               {!isLogin && (
                 <>
                   <FormControl isRequired>
-                    <FormLabel>İsim</FormLabel>
+                    <FormLabel>Ad Soyad</FormLabel>
                     <InputGroup>
                       <InputLeftElement>
                         <FaUser color="gray.500" />
@@ -234,12 +235,12 @@ const LoginPage = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        placeholder="İsminizi girin"
+                        placeholder="Adınızı ve soyadınızı girin"
                       />
                     </InputGroup>
                   </FormControl>
 
-                  <FormControl isRequired>
+                  <FormControl>
                     <FormLabel>Doğum Tarihi</FormLabel>
                     <Input
                       name="birthDate"
@@ -249,7 +250,7 @@ const LoginPage = () => {
                     />
                   </FormControl>
 
-                  <FormControl isRequired>
+                  <FormControl>
                     <FormLabel>Doğum Saati</FormLabel>
                     <Input
                       name="birthTime"
@@ -259,7 +260,7 @@ const LoginPage = () => {
                     />
                   </FormControl>
 
-                  <FormControl isRequired>
+                  <FormControl>
                     <FormLabel>Doğum Yeri</FormLabel>
                     <Input
                       name="birthPlace"
@@ -267,7 +268,7 @@ const LoginPage = () => {
                       onChange={handleInputChange}
                       placeholder="Doğum yerinizi girin"
                     />
-                  </InputGroup>
+                  </FormControl>
                 </>
               )}
 
@@ -275,25 +276,27 @@ const LoginPage = () => {
                 type="submit"
                 colorScheme="purple"
                 size="lg"
-                width="full"
-                mt={6}
+                fontSize="md"
                 isLoading={isLoading}
+                width="full"
               >
                 {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
               </Button>
+
+              <HStack justify="space-between" align="center">
+                <Text color={textColor}>
+                  {isLogin ? "Hesabınız yok mu?" : "Zaten hesabınız var mı?"}
+                </Text>
+                <Button
+                  variant="link"
+                  color="purple.500"
+                  onClick={() => setIsLogin(!isLogin)}
+                >
+                  {isLogin ? "Kayıt Ol" : "Giriş Yap"}
+                </Button>
+              </HStack>
             </Stack>
           </form>
-
-          <HStack pt={4}>
-            <Text>
-              {isLogin ? "Hesabınız yok mu?" : "Zaten hesabınız var mı?"}
-            </Text>
-            <Switch
-              isChecked={!isLogin}
-              onChange={() => setIsLogin(!isLogin)}
-              colorScheme="purple"
-            />
-          </HStack>
         </VStack>
       </Box>
     </Container>

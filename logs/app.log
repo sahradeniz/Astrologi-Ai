@@ -11193,3 +11193,5 @@ AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
 2025-02-21 18:07:55,690 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
 2025-02-21 18:07:55,836 - werkzeug - WARNING -  * Debugger is active!
 2025-02-21 18:07:55,858 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 18:10:04,817 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:10:04] "OPTIONS /login HTTP/1.1" 200 -
+2025-02-21 18:10:04,979 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:10:04] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
