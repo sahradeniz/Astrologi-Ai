@@ -22,7 +22,8 @@ from bson.objectid import ObjectId
 import certifi
 import ssl
 from pymongo import MongoClient
-import openai
+import groq
+from groq import Groq
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'txt'}
@@ -76,8 +77,8 @@ try:
 
     logger.info("Connecting to MongoDB Atlas...")
     
-    # Create a basic MongoClient
-    client = MongoClient(MONGO_URI)
+    # Create MongoClient with SSL configuration
+    client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
     
     # Test connection and get database
     db = client.astrologiAi
@@ -245,7 +246,7 @@ def get_house(longitude, houses):
 def get_aspect_interpretation(aspect_type, planet1, planet2):
     try:
         # Create a context-rich prompt
-        prompt = f"""As an expert astrologer, provide a detailed interpretation of the {aspect_type} aspect between {planet1} and {planet2}.
+        prompt = f"""An expert astrologer, provide a detailed interpretation of the {aspect_type} aspect between {planet1} and {planet2}.
         Consider:
         1. The nature of both planets
         2. The type of aspect ({aspect_type}) and its influence
@@ -1023,6 +1024,7 @@ def health_check():
 def login():
     try:
         data = request.get_json()
+        logger.info("Login attempt received")
         
         if not data:
             return jsonify({"error": "Veri gerekli"}), 400
@@ -1035,17 +1037,22 @@ def login():
 
         # Find user by email
         user = db.users.find_one({"email": email})
+        logger.info(f"User found for email {email}: {user is not None}")
         
         if not user:
             return jsonify({"error": "Kullanıcı bulunamadı"}), 401
 
         # Debug log
-        print(f"Stored password hash: {user.get('password')}")
-        print(f"Input password: {password}")
-        print(f"Generated hash: {generate_password_hash(password)}")
+        stored_hash = user.get('password', '')
+        logger.info(f"Stored hash: {stored_hash}")
+        logger.info(f"Input password: {password}")
+        test_hash = generate_password_hash(password)
+        logger.info(f"Test hash for input: {test_hash}")
+        is_valid = check_password_hash(stored_hash, password)
+        logger.info(f"Password valid: {is_valid}")
             
         # Check password
-        if not check_password_hash(user.get('password', ''), password):
+        if not is_valid:
             return jsonify({"error": "Hatalı şifre"}), 401
 
         # Generate token
@@ -1067,7 +1074,7 @@ def login():
         })
 
     except Exception as e:
-        print(f"Login error: {str(e)}")
+        logger.error(f"Login error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/test/user/<user_id>', methods=['GET'])
@@ -1215,42 +1222,26 @@ def chat():
         if not groq_api_key:
             raise Exception("GROQ_API_KEY bulunamadı")
 
-        # Create chat completion using Groq API
-        headers = {
-            "Authorization": f"Bearer {groq_api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "messages": [
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": user_message}
-            ],
-            "model": "mixtral-8x7b-32768",
-            "temperature": 0.7,
-            "max_tokens": 500
-        }
+        # Initialize Groq client
+        client = Groq(api_key=groq_api_key)
         
         try:
-            groq_response = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=30
+            # Create chat completion using Groq client
+            chat_completion = client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": user_message}
+                ],
+                model="mixtral-8x7b-32768",
+                temperature=0.7,
+                max_tokens=500
             )
             
-            if groq_response.status_code != 200:
-                error_detail = groq_response.json().get('error', {}).get('message', 'Bilinmeyen hata')
-                logger.error(f"Groq API Error: Status {groq_response.status_code}, Detail: {error_detail}")
-                raise Exception(f"Groq API Hatası: {error_detail}")
-                
-            response_data = groq_response.json()
-            response_text = response_data['choices'][0]['message']['content']
+            response_text = chat_completion.choices[0].message.content
 
-        except requests.exceptions.Timeout:
-            raise Exception("Groq API zaman aşımına uğradı")
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Groq API bağlantı hatası: {str(e)}")
+        except Exception as e:
+            logger.error(f"Groq API Error: {str(e)}")
+            raise Exception(f"Groq API Hatası: {str(e)}")
 
         # Save conversation to database
         try:
@@ -1328,58 +1319,33 @@ def register():
         print(f"Register error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/login', methods=['POST'])
-def login():
+@app.route('/test-password', methods=['POST'])
+def test_password():
     try:
         data = request.get_json()
-        print("Login attempt data:", data)
-        
-        if not data:
-            return jsonify({"error": "Veri gerekli"}), 400
-            
-        email = data.get('email')
-        password = data.get('password')
-        
-        if not email or not password:
+        if not data or 'email' not in data or 'password' not in data:
             return jsonify({"error": "Email ve şifre gerekli"}), 400
 
-        # Find user by email
+        email = data['email']
+        test_password = data['password']
+
+        # Find user
         user = db.users.find_one({"email": email})
-        print(f"Found user for {email}: {user is not None}")
-        
         if not user:
-            return jsonify({"error": "Kullanıcı bulunamadı"}), 401
+            return jsonify({"error": "Kullanıcı bulunamadı"}), 404
 
         stored_hash = user.get('password', '')
-        print(f"Stored hash for {email}: {stored_hash}")
-        print(f"Checking password for {email}")
-            
-        # Check password
-        if not check_password_hash(stored_hash, password):
-            print(f"Password verification failed for {email}")
-            return jsonify({"error": "Hatalı şifre"}), 401
-
-        print(f"Login successful for {email}")
-
-        # Generate token
-        token = jwt.encode({
-            'user_id': str(user['_id']),
-            'email': user['email'],
-            'exp': datetime.utcnow() + timedelta(days=1)
-        }, os.getenv('JWT_SECRET', 'your-secret-key'))
+        test_hash = generate_password_hash(test_password)
+        is_valid = check_password_hash(stored_hash, test_password)
 
         return jsonify({
-            'token': token,
-            'userId': str(user['_id']),
-            'name': user.get('name', 'User'),
-            'email': email,
-            'birthDate': user.get('birthDate', ''),
-            'birthTime': user.get('birthTime', ''),
-            'birthPlace': user.get('birthPlace', '')
+            "stored_hash": stored_hash,
+            "test_hash": test_hash,
+            "is_valid": is_valid,
+            "password_tested": test_password
         })
 
     except Exception as e:
-        print(f"Login error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
