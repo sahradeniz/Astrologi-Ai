@@ -1038,6 +1038,11 @@ def login():
         
         if not user:
             return jsonify({"error": "Kullanıcı bulunamadı"}), 401
+
+        # Debug log
+        print(f"Stored password hash: {user.get('password')}")
+        print(f"Input password: {password}")
+        print(f"Generated hash: {generate_password_hash(password)}")
             
         # Check password
         if not check_password_hash(user.get('password', ''), password):
@@ -1062,7 +1067,7 @@ def login():
         })
 
     except Exception as e:
-        logger.error(f"Login error: {str(e)}")
+        print(f"Login error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/test/user/<user_id>', methods=['GET'])
@@ -1263,6 +1268,118 @@ def chat():
 
     except Exception as e:
         logger.error(f"Chat error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        data = request.get_json()
+        print("Register data:", data)
+        
+        if not data:
+            return jsonify({"error": "Veri gerekli"}), 400
+            
+        email = data.get('email')
+        password = data.get('password')
+        name = data.get('name')
+        
+        if not email or not password:
+            return jsonify({"error": "Email ve şifre gerekli"}), 400
+
+        # Check if user already exists
+        existing_user = db.users.find_one({"email": email})
+        if existing_user:
+            return jsonify({"error": "Bu email zaten kayıtlı"}), 400
+
+        # Hash password with default method (pbkdf2:sha256)
+        hashed_password = generate_password_hash(password)
+        print(f"Generated hash for {email}: {hashed_password}")
+
+        # Create user document
+        user = {
+            "email": email,
+            "password": hashed_password,
+            "name": name,
+            "birthDate": data.get('birthDate', ''),
+            "birthTime": data.get('birthTime', ''),
+            "birthPlace": data.get('birthPlace', ''),
+            "created_at": datetime.utcnow()
+        }
+        
+        # Insert user
+        result = db.users.insert_one(user)
+        print(f"Created user with id: {result.inserted_id}")
+        
+        # Generate token
+        token = jwt.encode({
+            'user_id': str(result.inserted_id),
+            'email': email,
+            'exp': datetime.utcnow() + timedelta(days=1)
+        }, os.getenv('JWT_SECRET', 'your-secret-key'))
+
+        return jsonify({
+            "token": token,
+            "userId": str(result.inserted_id),
+            "email": email,
+            "name": name
+        })
+
+    except Exception as e:
+        print(f"Register error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        print("Login attempt data:", data)
+        
+        if not data:
+            return jsonify({"error": "Veri gerekli"}), 400
+            
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({"error": "Email ve şifre gerekli"}), 400
+
+        # Find user by email
+        user = db.users.find_one({"email": email})
+        print(f"Found user for {email}: {user is not None}")
+        
+        if not user:
+            return jsonify({"error": "Kullanıcı bulunamadı"}), 401
+
+        stored_hash = user.get('password', '')
+        print(f"Stored hash for {email}: {stored_hash}")
+        print(f"Checking password for {email}")
+            
+        # Check password
+        if not check_password_hash(stored_hash, password):
+            print(f"Password verification failed for {email}")
+            return jsonify({"error": "Hatalı şifre"}), 401
+
+        print(f"Login successful for {email}")
+
+        # Generate token
+        token = jwt.encode({
+            'user_id': str(user['_id']),
+            'email': user['email'],
+            'exp': datetime.utcnow() + timedelta(days=1)
+        }, os.getenv('JWT_SECRET', 'your-secret-key'))
+
+        return jsonify({
+            'token': token,
+            'userId': str(user['_id']),
+            'name': user.get('name', 'User'),
+            'email': email,
+            'birthDate': user.get('birthDate', ''),
+            'birthTime': user.get('birthTime', ''),
+            'birthPlace': user.get('birthPlace', '')
+        })
+
+    except Exception as e:
+        print(f"Login error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

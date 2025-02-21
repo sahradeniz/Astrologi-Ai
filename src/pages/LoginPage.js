@@ -53,15 +53,22 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
+      console.log('Attempting login with:', API_URL);
       const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Giriş yapılamadı');
@@ -91,7 +98,7 @@ const LoginPage = () => {
       console.error('Login error:', error);
       toast({
         title: 'Hata',
-        description: error.message,
+        description: error.message || 'Bağlantı hatası',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -104,7 +111,6 @@ const LoginPage = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     try {
       const response = await fetch(`${API_URL}/register`, {
@@ -118,38 +124,32 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Bir hata oluştu');
+        throw new Error(data.error || 'Kayıt işlemi başarısız');
       }
 
       // Save user data to localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.userId);
-      localStorage.setItem('userEmail', data.email);
-      localStorage.setItem('userName', data.name || 'User');
+      localStorage.setItem('name', data.name || 'User');
+      localStorage.setItem('email', data.email);
       
-      console.log('Saved to localStorage:', {
-        userId: data.userId,
-        userEmail: data.email,
-        userName: data.name
-      });
-
       toast({
-        title: "Kayıt başarılı!",
-        status: "success",
+        title: 'Başarılı',
+        description: 'Kayıt işlemi tamamlandı',
+        status: 'success',
         duration: 3000,
+        isClosable: true,
       });
 
-      // Always navigate to home page after successful login/register
       navigate('/');
-
     } catch (error) {
-      console.error('Auth error:', error);
-      setError(error.message);
+      console.error('Register error:', error);
       toast({
-        title: "Hata",
+        title: 'Hata',
         description: error.message,
-        status: "error",
-        duration: 5000,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
