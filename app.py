@@ -19,6 +19,8 @@ import PyPDF2
 from werkzeug.utils import secure_filename
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
+import certifi
+import ssl
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'txt'}
@@ -61,7 +63,13 @@ try:
         raise ValueError("MONGO_URI environment variable is not set")
 
     logger.info("Connecting to MongoDB Atlas...")
+    
+    # Configure MongoDB with SSL
     app.config["MONGO_URI"] = MONGO_URI
+    app.config["MONGO_SSL"] = True
+    app.config["MONGO_SSL_CERT_REQS"] = ssl.CERT_NONE
+    app.config["MONGO_SSL_CA_CERTS"] = certifi.where()
+    
     mongo = PyMongo(app)
     
     # Test database connection
