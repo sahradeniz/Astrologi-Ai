@@ -22,6 +22,7 @@ const SynastryForm = () => {
   const [person1, setPerson1] = useState(null);
   const [person2, setPerson2] = useState(null);
   const [friends, setFriends] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
@@ -29,6 +30,13 @@ const SynastryForm = () => {
   const bgLight = useColorModeValue('gray.50', 'gray.600');
 
   useEffect(() => {
+    // Get current user data
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      const user = JSON.parse(userData);
+      setCurrentUser(user);
+    }
+
     // Get friends list
     const friendsList = localStorage.getItem('friends');
     if (friendsList) {
@@ -104,13 +112,19 @@ const SynastryForm = () => {
     }
   };
 
-  if (friends.length === 0) {
+  if (!currentUser) {
     return (
       <Box textAlign="center" p={6}>
-        <Text>Henüz kayıtlı kişi yok. Lütfen önce kişi ekleyin.</Text>
+        <Text>Lütfen önce giriş yapın.</Text>
       </Box>
     );
   }
+
+  // Combine current user and friends for selection
+  const allPeople = [
+    { ...currentUser, name: `${currentUser.name} (Profil Sahibi)` },
+    ...friends
+  ];
 
   return (
     <Container maxW="container.md" py={8}>
@@ -126,9 +140,9 @@ const SynastryForm = () => {
                 value={person1 ? JSON.stringify(person1) : ''}
                 onChange={(e) => setPerson1(e.target.value ? JSON.parse(e.target.value) : null)}
               >
-                {friends.map((friend, index) => (
-                  <option key={index} value={JSON.stringify(friend)}>
-                    {friend.name} ({friend.birthDate})
+                {allPeople.map((person, index) => (
+                  <option key={index} value={JSON.stringify(person)}>
+                    {person.name}
                   </option>
                 ))}
               </Select>
@@ -157,11 +171,11 @@ const SynastryForm = () => {
                 onChange={(e) => setPerson2(e.target.value ? JSON.parse(e.target.value) : null)}
                 isDisabled={!person1}
               >
-                {friends
-                  .filter(friend => !person1 || friend.name !== person1.name)
-                  .map((friend, index) => (
-                    <option key={index} value={JSON.stringify(friend)}>
-                      {friend.name} ({friend.birthDate})
+                {allPeople
+                  .filter(person => !person1 || person.name !== person1.name)
+                  .map((person, index) => (
+                    <option key={index} value={JSON.stringify(person)}>
+                      {person.name}
                     </option>
                   ))}
               </Select>

@@ -2,13 +2,11 @@ import React from 'react';
 import {
   Box,
   HStack,
-  Icon,
-  Text,
-  VStack,
+  IconButton,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaUser, FaStar, FaBook } from 'react-icons/fa';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaHome, FaUser, FaStar, FaBook, FaCog } from 'react-icons/fa';
 
 const TabItem = ({ icon, label, to, isActive }) => {
   const activeColor = useColorModeValue('purple.500', 'purple.300');
@@ -16,37 +14,30 @@ const TabItem = ({ icon, label, to, isActive }) => {
   
   return (
     <Link to={to}>
-      <VStack
-        spacing={1}
-        color={isActive ? activeColor : inactiveColor}
-        transition="all 0.2s"
-        cursor="pointer"
-        px={4}
-      >
-        <Icon
-          as={icon}
-          boxSize={6}
-          transform={isActive ? 'scale(1.1)' : 'scale(1)'}
-          transition="all 0.2s"
-        />
-        <Text fontSize="xs" fontWeight={isActive ? 'bold' : 'normal'}>
-          {label}
-        </Text>
-      </VStack>
+      <IconButton
+        icon={icon}
+        variant={isActive ? 'solid' : 'ghost'}
+        colorScheme={isActive ? 'purple' : 'gray'}
+        aria-label={label}
+      />
     </Link>
   );
 };
 
 const TabBar = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  const isActive = (path) => location.pathname === path;
 
   const tabs = [
     { icon: FaHome, label: 'Ana Sayfa', path: '/' },
     { icon: FaStar, label: 'Haritam', path: '/character' },
     { icon: FaBook, label: 'Öğren', path: '/learn' },
     { icon: FaUser, label: 'Profil', path: '/profile' },
+    { icon: FaCog, label: 'Ayarlar', path: '/settings' },
   ];
 
   return (
@@ -66,10 +57,10 @@ const TabBar = () => {
         {tabs.map((tab) => (
           <TabItem
             key={tab.path}
-            icon={tab.icon}
+            icon={<tab.icon />}
             label={tab.label}
             to={tab.path}
-            isActive={location.pathname === tab.path}
+            isActive={isActive(tab.path)}
           />
         ))}
       </HStack>

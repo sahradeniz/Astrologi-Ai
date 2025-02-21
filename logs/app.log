@@ -10488,3 +10488,306 @@ AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
 2025-02-21 13:43:49,119 - werkzeug - INFO -  * Debugger PIN: 303-984-621
 2025-02-21 13:45:18,713 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:45:18] "OPTIONS /api/user/register HTTP/1.1" 200 -
 2025-02-21 13:45:18,765 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:45:18] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 13:50:23,812 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:50:23] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 13:50:23,844 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:50:23] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 13:51:30,226 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 13:51:30,691 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 13:51:31,164 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 13:51:31,164 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 13:51:31,211 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 13:51:31,230 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 14:05:42,761 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:05:42,762 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:09:09,201 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:09:09,201 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:09:09,277 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 14:09:09,277 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 14:09:09,278 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 14:09:09,718 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:09:09,718 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:09:09,747 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 14:09:09,770 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 14:09:29,626 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 14:09:29] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 14:09:31,426 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 14:09:31] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 14:17:08,106 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 14:17:08,681 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 14:17:09,143 - __main__ - ERROR - Failed to connect to MongoDB: MONGO_PASSWORD environment variable is not set
+2025-02-21 14:17:09,144 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:17:09,144 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:17:09,192 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 14:17:09,217 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 14:19:15,907 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 14:19:16,036 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 14:19:16,607 - __main__ - ERROR - Failed to connect to MongoDB: MONGO_PASSWORD environment variable is not set
+2025-02-21 14:19:16,607 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:19:16,607 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:19:16,643 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 14:19:16,660 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 14:19:38,222 - __main__ - ERROR - Failed to connect to MongoDB: MONGO_PASSWORD environment variable is not set
+2025-02-21 14:19:38,223 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:19:38,223 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:19:49,926 - __main__ - ERROR - Failed to connect to MongoDB: MONGO_PASSWORD environment variable is not set
+2025-02-21 14:19:49,926 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:19:49,926 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:19:49,988 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 14:19:49,989 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 14:19:49,990 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 14:19:50,325 - __main__ - ERROR - Failed to connect to MongoDB: MONGO_PASSWORD environment variable is not set
+2025-02-21 14:19:50,325 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:19:50,325 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:19:50,355 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 14:19:50,370 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 14:22:24,732 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 14:22:24,904 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 14:22:25,423 - __main__ - ERROR - Failed to connect to MongoDB: MONGO_URI environment variable is not set
+2025-02-21 14:22:25,423 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:22:25,423 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:22:25,453 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 14:22:25,467 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 14:23:02,363 - __main__ - ERROR - Failed to connect to MongoDB: MONGO_URI environment variable is not set
+2025-02-21 14:23:02,363 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:23:02,363 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:23:17,224 - __main__ - ERROR - Failed to connect to MongoDB: MONGO_URI environment variable is not set
+2025-02-21 14:23:17,224 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:23:17,224 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:23:17,314 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 14:23:17,314 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 14:23:17,315 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 14:23:17,650 - __main__ - ERROR - Failed to connect to MongoDB: MONGO_URI environment variable is not set
+2025-02-21 14:23:17,650 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:23:17,650 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:23:17,786 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 14:23:17,810 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 14:36:31,106 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 14:36:31] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 14:36:31,115 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 14:36:31] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 14:36:34,370 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 14:36:34,556 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 14:36:35,149 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 14:36:37,106 - __main__ - ERROR - Failed to connect to MongoDB: bad auth : authentication failed, full error: {'ok': 0, 'errmsg': 'bad auth : authentication failed', 'code': 8000, 'codeName': 'AtlasError'}
+2025-02-21 14:36:37,106 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:36:37,107 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:36:37,174 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 14:36:37,200 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 14:36:37,262 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 14:36:37] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 14:47:50,525 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 14:47:50] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 14:47:50,530 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 14:47:50] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 14:48:05,129 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 14:48:05] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 14:48:05,136 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 14:48:05] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 14:48:20,702 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 14:48:20,863 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 14:48:21,473 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 14:48:23,423 - __main__ - ERROR - Failed to connect to MongoDB: bad auth : authentication failed, full error: {'ok': 0, 'errmsg': 'bad auth : authentication failed', 'code': 8000, 'codeName': 'AtlasError'}
+2025-02-21 14:48:23,423 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 14:48:23,424 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 14:48:23,478 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 14:48:23,502 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 14:51:12,952 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 14:51:13,480 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 14:51:14,085 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 14:51:16,058 - __main__ - ERROR - Failed to connect to MongoDB: bad auth : authentication failed, full error: {'ok': 0, 'errmsg': 'bad auth : authentication failed', 'code': 8000, 'codeName': 'AtlasError'}
+2025-02-21 15:25:55,256 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:25:57,234 - __main__ - ERROR - Failed to connect to MongoDB: bad auth : authentication failed, full error: {'ok': 0, 'errmsg': 'bad auth : authentication failed', 'code': 8000, 'codeName': 'AtlasError'}
+2025-02-21 15:27:43,238 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:27:45,296 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:27:45,297 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:27:45,297 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:27:45,393 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 15:27:45,393 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 15:27:45,394 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:27:45,748 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:27:47,592 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:27:47,592 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:27:47,593 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:27:47,626 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:27:47,643 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:34:40,562 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:34:42,622 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:34:42,623 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:34:42,623 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:34:42,691 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 15:34:42,691 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 15:34:42,692 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:34:43,120 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:34:45,407 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:34:45,408 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:34:45,408 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:34:45,458 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:34:45,477 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:36:37,431 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:36:37] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 15:36:37,586 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:36:37] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 15:37:38,666 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 15:37:39,214 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:37:39,921 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:37:42,068 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:37:42,069 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:37:42,069 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:37:42,161 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:37:42,182 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:38:12,464 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:38:14,383 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:38:14,384 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:38:14,384 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:42:35,038 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:42:37,253 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:42:37,254 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:42:37,254 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:42:37,340 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 15:42:37,340 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 15:42:37,342 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:42:37,831 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:42:39,740 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:42:39,740 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:42:39,740 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:42:39,780 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:42:39,802 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:43:00,969 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:43:00] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 15:43:01,131 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:43:01] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 15:43:45,645 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 15:43:46,271 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:43:46,732 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:43:48,589 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:43:48,589 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:43:48,590 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:43:48,648 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:43:48,681 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:44:33,780 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:44:35,796 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:44:35,796 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:44:35,796 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:45:19,358 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:45:21,244 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:45:21,245 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:45:21,245 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:45:21,318 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 15:45:21,319 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 15:45:21,320 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:45:21,659 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:45:23,421 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:45:23,422 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:45:23,422 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:45:23,471 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:45:23,488 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:46:07,095 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:46:07] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 15:46:07,106 - __main__ - INFO - Received registration data: {'email': 'ozdogansahra96@gmail.com', 'password': '121293Sahra', 'name': 'Sahra', 'birthDate': '1996-12-28', 'birthTime': '07:10', 'birthPlace': 'istanbul'}
+2025-02-21 15:46:07,269 - __main__ - ERROR - Registration error: module 'hashlib' has no attribute 'scrypt'
+2025-02-21 15:46:07,270 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:46:07] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 15:46:12,348 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:46:12] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 15:46:12,363 - __main__ - INFO - Received registration data: {'email': 'ozdogansahra96@gmail.com', 'password': '121293Sahra', 'name': 'Sahra', 'birthDate': '1996-12-28', 'birthTime': '07:10', 'birthPlace': 'istanbul'}
+2025-02-21 15:46:12,526 - __main__ - ERROR - Registration error: module 'hashlib' has no attribute 'scrypt'
+2025-02-21 15:46:12,526 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:46:12] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 15:46:45,255 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 15:46:45,659 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:46:46,079 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:46:48,109 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:46:48,110 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:46:48,110 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:46:48,159 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:46:48,176 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:47:59,788 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:48:01,722 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:48:01,723 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:48:01,723 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:48:09,611 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:48:11,660 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:48:11,660 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:48:11,661 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:48:11,735 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 15:48:11,735 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 15:48:11,737 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:48:12,076 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:48:13,854 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:48:13,854 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:48:13,855 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:48:13,898 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:48:13,927 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:48:34,766 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:48:34] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 15:48:34,771 - __main__ - INFO - Received registration data: {'email': 'ozdogansahra96@gmail.com', 'password': '121293Sahra', 'name': 'Sahra', 'birthDate': '1996-12-28', 'birthTime': '07:10', 'birthPlace': 'istanbul'}
+2025-02-21 15:48:36,036 - __main__ - INFO - User inserted with ID: 67b876230839b8b5956ea539
+2025-02-21 15:48:36,037 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:48:36] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 201 -
+2025-02-21 15:49:07,353 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:49:07] "OPTIONS /api/user/login HTTP/1.1" 200 -
+2025-02-21 15:49:07,359 - __main__ - INFO - Received login data: {'email': 'ozdogansahra96@gmail.com', 'password': '121293Sahra'}
+2025-02-21 15:49:08,473 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:49:08] "POST /api/user/login HTTP/1.1" 200 -
+2025-02-21 15:49:53,797 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:49:53] "[33mOPTIONS /calculate_synastry HTTP/1.1[0m" 404 -
+2025-02-21 15:50:55,587 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 15:50:55] "POST /upload_file HTTP/1.1" 200 -
+2025-02-21 15:51:30,041 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 15:51:30,275 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:51:30,843 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:51:32,904 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:51:32,904 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:51:32,904 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:51:32,962 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:51:32,983 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:52:24,287 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:52:26,146 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:52:26,146 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:52:26,147 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:52:41,263 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:52:43,161 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:52:43,161 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:52:43,161 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:52:43,222 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 15:52:43,222 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 15:52:43,223 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:52:43,544 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:52:46,452 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:52:46,453 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:52:46,453 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:52:46,500 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:52:46,520 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 15:53:47,808 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 15:53:48,350 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 15:53:48,746 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 15:53:50,781 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 15:53:50,782 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 15:53:50,782 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 15:53:50,832 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 15:53:50,849 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 16:00:20,921 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 16:00:22,986 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 16:00:22,986 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 16:00:22,986 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 16:00:32,360 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 16:00:34,300 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 16:00:34,301 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 16:00:34,301 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 16:00:34,387 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 16:00:34,388 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 16:00:34,390 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 16:00:34,753 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 16:00:36,537 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 16:00:36,538 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 16:00:36,538 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 16:00:36,585 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 16:00:36,603 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 16:10:40,984 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 16:10:40] "[33mOPTIONS /calculate_synastry HTTP/1.1[0m" 404 -
+2025-02-21 16:21:17,978 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 16:21:17] "[33mOPTIONS /calculate_synastry HTTP/1.1[0m" 404 -

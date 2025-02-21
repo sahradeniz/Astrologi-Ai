@@ -651,6 +651,7 @@ def calculate_synastry():
         if not all([person1, person2]):
             return jsonify({'error': 'Missing data for both people'}), 400
             
+        # Calculate both natal charts
         chart1 = calculate_chart(
             person1['birthDate'],
             person1['birthTime'],
@@ -663,16 +664,59 @@ def calculate_synastry():
             person2['location']
         )
         
-        # Calculate aspects between charts
-        aspects = calculate_aspects(chart1['planet_positions'])
+        # Calculate aspects between all planets from both charts
+        synastry_aspects = []
+        person1_planets = [(name, pos['longitude']) for name, pos in chart1['planet_positions'].items()]
+        person2_planets = [(name, pos['longitude']) for name, pos in chart2['planet_positions'].items()]
+        
+        for p1_name, p1_lon in person1_planets:
+            for p2_name, p2_lon in person2_planets:
+                # Calculate the angular difference between planets
+                diff = abs(p1_lon - p2_lon)
+                if diff > 180:
+                    diff = 360 - diff
+                    
+                # Check for major aspects
+                aspect = None
+                if 0 <= diff <= 10:  # Conjunction
+                    aspect = "Conjunction"
+                elif 55 <= diff <= 65:  # Sextile
+                    aspect = "Sextile"
+                elif 85 <= diff <= 95:  # Square
+                    aspect = "Square"
+                elif 115 <= diff <= 125:  # Trine
+                    aspect = "Trine"
+                elif 170 <= diff <= 180:  # Opposition
+                    aspect = "Opposition"
+                    
+                if aspect:
+                    interpretation = get_aspect_interpretation(aspect, p1_name, p2_name)
+                    synastry_aspects.append({
+                        'planet1': p1_name,
+                        'planet2': p2_name,
+                        'aspect': aspect,
+                        'orb': round(abs(diff - {'Conjunction': 0, 'Sextile': 60, 'Square': 90, 'Trine': 120, 'Opposition': 180}[aspect]), 2),
+                        'interpretation': interpretation
+                    })
         
         return jsonify({
-            'chart1': chart1,
-            'chart2': chart2,
-            'aspects': aspects
+            'chart1': {
+                'planets': chart1['planet_positions'],
+                'houses': chart1['houses'],
+                'ascendant': chart1.get('ascendant'),
+                'midheaven': chart1.get('midheaven')
+            },
+            'chart2': {
+                'planets': chart2['planet_positions'],
+                'houses': chart2['houses'],
+                'ascendant': chart2.get('ascendant'),
+                'midheaven': chart2.get('midheaven')
+            },
+            'synastry_aspects': synastry_aspects
         })
         
     except Exception as e:
+        logger.error("Synastry calculation error: %s", str(e))
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/calculate-transits', methods=['POST'])

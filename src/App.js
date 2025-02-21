@@ -17,11 +17,13 @@ import TabBar from "./components/TabBar";
 import SynastryForm from './components/SynastryForm';
 import SynastryResultPage from './pages/SynastryResultPage';
 import LoginPage from './pages/LoginPage';
+import SettingsPage from './pages/SettingsPage';
+import EditProfilePage from './pages/EditProfilePage';
 import "./App.css";
 
 const PrivateRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem('userId');
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  const isAuthenticated = localStorage.getItem('natalChartData');
+  return isAuthenticated ? children : <Navigate to="/input" />;
 };
 
 const App = () => {
@@ -49,17 +51,13 @@ const App = () => {
                 />
                 <Route 
                   path="/input" 
-                  element={
-                    <PrivateRoute>
-                      <InputForm setResult={setResult} />
-                    </PrivateRoute>
-                  } 
+                  element={<InputForm setResult={setResult} />} 
                 />
                 <Route 
                   path="/character" 
                   element={
                     <PrivateRoute>
-                      <CharacterPage initialData={result} />
+                      <CharacterPage result={result} />
                     </PrivateRoute>
                   } 
                 />
@@ -67,7 +65,7 @@ const App = () => {
                   path="/transit" 
                   element={
                     <PrivateRoute>
-                      <TransitPage initialData={result} />
+                      <TransitPage />
                     </PrivateRoute>
                   } 
                 />
@@ -75,12 +73,20 @@ const App = () => {
                   path="/synastry" 
                   element={
                     <PrivateRoute>
+                      <SynastryPage />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/synastry/form" 
+                  element={
+                    <PrivateRoute>
                       <SynastryForm />
                     </PrivateRoute>
                   } 
                 />
                 <Route 
-                  path="/synastry-result" 
+                  path="/synastry/result" 
                   element={
                     <PrivateRoute>
                       <SynastryResultPage />
@@ -96,6 +102,14 @@ const App = () => {
                   } 
                 />
                 <Route 
+                  path="/admin" 
+                  element={
+                    <PrivateRoute>
+                      <AdminPage />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
                   path="/profile" 
                   element={
                     <PrivateRoute>
@@ -104,10 +118,18 @@ const App = () => {
                   } 
                 />
                 <Route 
-                  path="/admin" 
+                  path="/settings" 
                   element={
                     <PrivateRoute>
-                      <AdminPage />
+                      <SettingsPage />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile/edit" 
+                  element={
+                    <PrivateRoute>
+                      <EditProfilePage />
                     </PrivateRoute>
                   } 
                 />

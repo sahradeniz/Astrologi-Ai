@@ -160,7 +160,16 @@ const FriendsList = () => {
     // Get current user data from natalChartData
     const natalData = localStorage.getItem('natalChartData');
     if (natalData) {
-      setCurrentUser(JSON.parse(natalData));
+      const data = JSON.parse(natalData);
+      setCurrentUser(data);
+      
+      // Update friends list in localStorage if empty
+      const storedFriends = localStorage.getItem('friends');
+      if (!storedFriends || storedFriends === '[]') {
+        const newFriends = [data];
+        localStorage.setItem('friends', JSON.stringify(newFriends));
+        setFriends(newFriends);
+      }
     }
   }, []);
 
