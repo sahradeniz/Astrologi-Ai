@@ -19,6 +19,8 @@ __pycache__/
 *.so
 .Python
 .env
+.env.development
+.env.production
 .venv
 env/
 venv/
@@ -28,9 +30,13 @@ venv.bak/
 
 # Development
 .DS_Store
+.env
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
 
 # Logs
