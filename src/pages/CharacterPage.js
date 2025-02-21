@@ -1,28 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box,
+  Container,
+  Grid,
+  Heading,
   Text,
-  Flex,
+  VStack,
+  HStack,
+  Badge,
+  useColorModeValue,
   Icon,
-  Stack,
+  Divider,
+  Card,
+  CardHeader,
+  CardBody,
+  SimpleGrid,
+  Tooltip,
+  IconButton,
+  Flex,
+  Spacer,
   Accordion,
   AccordionItem,
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
-  Heading,
   Button,
-  VStack,
-  Container,
-  SimpleGrid,
-  Grid,
   Alert,
   AlertIcon,
   AlertTitle,
   AlertDescription,
   useToast
-} from '@chakra-ui/react';
-import { FaSun, FaMoon, FaMars, FaVenus, FaMercury, FaStar, FaGem } from 'react-icons/fa';
+} from "@chakra-ui/react";
+import { FaSun, FaMoon, FaStar, FaArrowRight, FaMars, FaVenus, FaMercury } from "react-icons/fa";
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -57,59 +66,72 @@ const getPlanetIcon = (planet) => {
     case 'venus': return FaVenus;
     case 'mercury': return FaMercury;
     case 'jupiter': return FaStar;
-    case 'saturn': return FaGem;
+    case 'saturn': return FaStar;
     default: return FaStar;
   }
 };
 
-const PlanetCard = ({ planet, data }) => {
-  if (!data || typeof data !== 'object') {
-    console.error(`Invalid planet data for ${planet}:`, data);
-    return null;
-  }
-
-  // Ensure we have all required fields
-  if (!data.zodiac_sign || typeof data.degree !== 'number' || typeof data.minutes !== 'number') {
-    console.error(`Missing required fields for ${planet}:`, data);
-    return null;
-  }
+const PlanetCard = ({ data }) => {
+  const bgColor = useColorModeValue("white", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
 
   return (
-    <Box p={4} borderWidth="1px" borderRadius="lg" bg="white" shadow="sm">
-      <Text fontWeight="bold" mb={2}>
-        {data.name_tr || planet}
-      </Text>
-      <Text>
-        {data.zodiac_sign} {data.degree}°{data.minutes}'
-      </Text>
-      {data.house && (
-        <Text color="gray.600" mt={1}>
-          Ev {data.house}
-        </Text>
-      )}
-    </Box>
+    <Card
+      bg={bgColor}
+      borderWidth="1px"
+      borderColor={borderColor}
+      borderRadius="lg"
+      overflow="hidden"
+      transition="all 0.3s"
+      _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
+    >
+      <CardHeader pb={2}>
+        <HStack>
+          <Icon as={getPlanetIcon(data.planet_name)} color="yellow.400" />
+          <Heading size="md">{data.planet_name}</Heading>
+          <Spacer />
+          <Badge colorScheme="purple">{data.zodiac_sign}</Badge>
+        </HStack>
+      </CardHeader>
+      <CardBody pt={2}>
+        <VStack align="start" spacing={2}>
+          <Text fontSize="sm">
+            Derece: {data.degree}°{data.minutes}'
+          </Text>
+          <Text fontSize="sm">Ev: {data.house}</Text>
+        </VStack>
+      </CardBody>
+    </Card>
   );
 };
 
-const AspectCard = ({ planet1, planet2, aspects }) => {
+const AspectCard = ({ aspect, interpretation }) => {
+  const bgColor = useColorModeValue("white", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+
   return (
-    <Box p={4} borderWidth="1px" borderRadius="lg" bg="white" shadow="sm">
-      <Text fontWeight="bold" mb={2}>
-        {planet1} - {planet2}
-      </Text>
-      {aspects.map((aspect, index) => (
-        <Box key={index} mt={2}>
-          <Text>
-            {aspect.type} ({Math.round(aspect.angle)}°)
-          </Text>
-          {aspect.interpretation && (
-            <Text fontSize="sm" color="gray.600" mt={1}>
-              {aspect.interpretation}
-            </Text>
-          )}
-        </Box>
-      ))}
-    </Box>
+    <Card
+      bg={bgColor}
+      borderWidth="1px"
+      borderColor={borderColor}
+      borderRadius="lg"
+      overflow="hidden"
+      transition="all 0.3s"
+      _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
+    >
+      <CardHeader pb={2}>
+        <HStack>
+          <Heading size="sm">{aspect.planet1}</Heading>
+          <Icon as={FaArrowRight} color="blue.400" />
+          <Heading size="sm">{aspect.planet2}</Heading>
+          <Spacer />
+          <Badge colorScheme="teal">{ASPECT_NAMES[aspect.aspect_type]}</Badge>
+        </HStack>
+      </CardHeader>
+      <CardBody pt={2}>
+        <Text fontSize="sm">{interpretation || "Yorum yükleniyor..."}</Text>
+      </CardBody>
+    </Card>
   );
 };
 
@@ -119,6 +141,8 @@ const CharacterPage = ({ initialData }) => {
   const [chartData, setChartData] = useState(null);
   const [error, setError] = useState(null);
   const toast = useToast();
+  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const textColor = useColorModeValue("gray.800", "gray.100");
 
   useEffect(() => {
     const loadData = () => {
@@ -228,58 +252,66 @@ const CharacterPage = ({ initialData }) => {
   console.log('Sorted planets:', sortedPlanets);
 
   return (
-    <Container maxW="container.xl" py={10}>
-      <VStack spacing={8} align="stretch">
-        <Heading textAlign="center" mb={6}>
-          Doğum Haritası
-        </Heading>
+    <Box bg={bgColor} minH="100vh" py={8}>
+      <Container maxW="container.xl">
+        <VStack spacing={8} align="stretch">
+          <Box textAlign="center" pb={8}>
+            <Heading size="2xl" color={textColor} mb={4}>
+              Doğum Haritası
+            </Heading>
+            <Text fontSize="lg" color={textColor}>
+              {chartData.name || "Doğum Haritası"} - {chartData.birth_date}
+            </Text>
+          </Box>
 
-        <Box>
-          <Heading size="md" mb={4}>
-            Gezegen Konumları
-          </Heading>
-          <SimpleGrid columns={[2, 3, 4]} spacing={4}>
-            {sortedPlanets.map(([planet, data]) => (
-              <PlanetCard key={planet} planet={planet} data={data} />
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+            {sortedPlanets.map(([key, planetData]) => (
+              <PlanetCard
+                key={key}
+                data={{ ...planetData, planet_name: PLANET_NAMES[key] }}
+              />
             ))}
           </SimpleGrid>
-        </Box>
 
-        {chartData.aspects && Object.keys(chartData.aspects).length > 0 && (
+          <Divider my={8} />
+
           <Box>
-            <Heading size="md" mb={4}>
-              Açılar
+            <Heading size="lg" mb={6} color={textColor}>
+              Açı Yorumları
             </Heading>
-            <SimpleGrid columns={[1, 2, 3]} spacing={4}>
-              {Object.entries(chartData.aspects).map(([planet1, aspects]) =>
-                Object.entries(aspects).map(([planet2, aspectList]) => (
-                  <AspectCard
-                    key={`${planet1}-${planet2}`}
-                    planet1={planet1}
-                    planet2={planet2}
-                    aspects={aspectList}
-                  />
-                ))
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+              {chartData.aspects && Object.keys(chartData.aspects).length > 0 && (
+                Object.entries(chartData.aspects).map(([planet1, aspects]) =>
+                  Object.entries(aspects).map(([planet2, aspectList]) => (
+                    aspectList.map((aspect, index) => (
+                      <AspectCard
+                        key={`${planet1}-${planet2}-${index}`}
+                        aspect={aspect}
+                        interpretation={aspect.interpretation}
+                      />
+                    ))
+                  ))
+                )
               )}
             </SimpleGrid>
           </Box>
-        )}
 
-        <Box>
-          <Heading size="md" mb={4}>
-            Ev Pozisyonları
-          </Heading>
-          <Grid templateColumns="repeat(3, 1fr)" gap={4}>
-            {chartData.house_positions.map((position, index) => (
-              <Box key={index} p={4} borderWidth="1px" borderRadius="lg" bg="white">
-                <Text fontWeight="bold">Ev {index + 1}</Text>
-                <Text>{Math.floor(position)}°{Math.floor((position % 1) * 60)}'</Text>
-              </Box>
-            ))}
-          </Grid>
-        </Box>
-      </VStack>
-    </Container>
+          <Box>
+            <Heading size="lg" mb={6} color={textColor}>
+              Ev Pozisyonları
+            </Heading>
+            <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+              {chartData.house_positions.map((position, index) => (
+                <Box key={index} p={4} borderWidth="1px" borderRadius="lg" bg="white">
+                  <Text fontWeight="bold">Ev {index + 1}</Text>
+                  <Text>{Math.floor(position)}°{Math.floor((position % 1) * 60)}'</Text>
+                </Box>
+              ))}
+            </Grid>
+          </Box>
+        </VStack>
+      </Container>
+    </Box>
   );
 };
 

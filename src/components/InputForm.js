@@ -2,125 +2,76 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
-  Input,
   Button,
-  VStack,
-  Text,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
-  useToast,
   FormControl,
   FormLabel,
-  FormErrorMessage
+  Input,
+  VStack,
+  Container,
+  Heading,
+  Text,
+  useToast,
+  useColorModeValue,
+  FormErrorMessage,
+  InputGroup,
+  InputLeftElement,
+  Icon,
 } from "@chakra-ui/react";
+import { FaCalendar, FaClock, FaMapMarkerAlt } from "react-icons/fa";
 
 const API_URL = 'http://localhost:5003';
 
 const InputForm = ({ setResult }) => {
   const [formData, setFormData] = useState({
     birthDate: "",
-    birthTime: "", 
+    birthTime: "",
     birthPlace: "",
   });
 
-  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
   const toast = useToast();
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-    setError(null); // Clear error when user starts typing
-  };
+  const bgColor = useColorModeValue("white", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
 
   const validateForm = () => {
-    if (!formData.birthDate) {
-      setError('Birth date is required');
-      return false;
-    }
-    if (!formData.birthTime) {
-      setError('Birth time is required');
-      return false;
-    }
-    if (!formData.birthPlace) {
-      setError('Birth place is required');
-      return false;
-    }
-    return true;
+    const newErrors = {};
+    if (!formData.birthDate) newErrors.birthDate = "Doğum tarihi gerekli";
+    if (!formData.birthTime) newErrors.birthTime = "Doğum saati gerekli";
+    if (!formData.birthPlace) newErrors.birthPlace = "Doğum yeri gerekli";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
     setIsLoading(true);
-    setError(null);
-
     try {
-      console.log('Submitting form with data:', {
-        birthDate: formData.birthDate,
-        birthTime: formData.birthTime,
-        location: formData.birthPlace
-      });
-
       const response = await fetch(`${API_URL}/calculate_natal_chart`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          birthDate: formData.birthDate,
-          birthTime: formData.birthTime,
-          location: formData.birthPlace
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Server error: ${response.status}`);
+        throw new Error("Sunucu hatası");
       }
 
       const data = await response.json();
-      console.log('Received response:', data);
-
-      if (!data || !data.planet_positions) {
-        throw new Error('Invalid response data: missing planet positions');
-      }
-
-      // Save to localStorage
-      localStorage.setItem('natalChart', JSON.stringify(data));
-      console.log('Saved to localStorage:', data);
-
-      // Set result in parent component
+      localStorage.setItem("natalChartData", JSON.stringify(data));
       setResult(data);
-
-      // Show success message
-      toast({
-        title: "Success",
-        description: "Your natal chart has been calculated!",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-
-      // Navigate to character page with data
-      navigate('/character', { state: { result: data } });
-
+      navigate("/character");
     } catch (error) {
-      console.error('Error in form submission:', error);
-      setError(error.message || 'An error occurred while calculating your natal chart');
+      console.error("Error in form submission:", error);
       toast({
-        title: "Error",
-        description: error.message || 'An error occurred while calculating your natal chart',
+        title: "Hata",
+        description: "Doğum haritası hesaplanırken bir hata oluştu.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -131,71 +82,98 @@ const InputForm = ({ setResult }) => {
   };
 
   return (
-    <Box p={6} maxW="500px" mx="auto" bg="white" borderRadius="lg" boxShadow="lg">
-      <Text fontSize="2xl" fontWeight="bold" mb={6} textAlign="center">
-        Doğum Haritası Hesaplama
-      </Text>
-
-      {error && (
-        <Alert status="error" mb={6} borderRadius="md">
-          <AlertIcon />
-          <Box>
-            <AlertTitle mr={2}>Hata!</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+    <Container maxW="container.sm" py={10}>
+      <Box
+        p={8}
+        bg={bgColor}
+        borderWidth="1px"
+        borderColor={borderColor}
+        borderRadius="xl"
+        shadow="xl"
+      >
+        <VStack spacing={6} align="stretch">
+          <Box textAlign="center">
+            <Heading size="xl" mb={2}>
+              Doğum Haritası
+            </Heading>
+            <Text color="gray.600">
+              Doğum bilgilerinizi girerek kişisel astroloji haritanızı görüntüleyin
+            </Text>
           </Box>
-        </Alert>
-      )}
 
-      <form onSubmit={handleSubmit}>
-        <VStack spacing={4}>
-          <FormControl isRequired isInvalid={error && !formData.birthDate}>
-            <FormLabel>Doğum Tarihi</FormLabel>
-            <Input
-              type="date"
-              name="birthDate"
-              value={formData.birthDate}
-              onChange={handleChange}
-              placeholder="YYYY-MM-DD"
-            />
-            <FormErrorMessage>Birth date is required</FormErrorMessage>
-          </FormControl>
+          <form onSubmit={handleSubmit}>
+            <VStack spacing={4}>
+              <FormControl isInvalid={errors.birthDate}>
+                <FormLabel>Doğum Tarihi</FormLabel>
+                <InputGroup>
+                  <InputLeftElement>
+                    <Icon as={FaCalendar} color="gray.500" />
+                  </InputLeftElement>
+                  <Input
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, birthDate: e.target.value })
+                    }
+                    pl={10}
+                  />
+                </InputGroup>
+                <FormErrorMessage>{errors.birthDate}</FormErrorMessage>
+              </FormControl>
 
-          <FormControl isRequired isInvalid={error && !formData.birthTime}>
-            <FormLabel>Doğum Saati</FormLabel>
-            <Input
-              type="time"
-              name="birthTime"
-              value={formData.birthTime}
-              onChange={handleChange}
-              placeholder="HH:MM"
-            />
-            <FormErrorMessage>Birth time is required</FormErrorMessage>
-          </FormControl>
+              <FormControl isInvalid={errors.birthTime}>
+                <FormLabel>Doğum Saati</FormLabel>
+                <InputGroup>
+                  <InputLeftElement>
+                    <Icon as={FaClock} color="gray.500" />
+                  </InputLeftElement>
+                  <Input
+                    type="time"
+                    value={formData.birthTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, birthTime: e.target.value })
+                    }
+                    pl={10}
+                  />
+                </InputGroup>
+                <FormErrorMessage>{errors.birthTime}</FormErrorMessage>
+              </FormControl>
 
-          <FormControl isRequired isInvalid={error && !formData.birthPlace}>
-            <FormLabel>Doğum Yeri</FormLabel>
-            <Input
-              type="text"
-              name="birthPlace"
-              value={formData.birthPlace}
-              onChange={handleChange}
-              placeholder="Şehir, Ülke"
-            />
-            <FormErrorMessage>Birth place is required</FormErrorMessage>
-          </FormControl>
+              <FormControl isInvalid={errors.birthPlace}>
+                <FormLabel>Doğum Yeri</FormLabel>
+                <InputGroup>
+                  <InputLeftElement>
+                    <Icon as={FaMapMarkerAlt} color="gray.500" />
+                  </InputLeftElement>
+                  <Input
+                    type="text"
+                    placeholder="Şehir, Ülke"
+                    value={formData.birthPlace}
+                    onChange={(e) =>
+                      setFormData({ ...formData, birthPlace: e.target.value })
+                    }
+                    pl={10}
+                  />
+                </InputGroup>
+                <FormErrorMessage>{errors.birthPlace}</FormErrorMessage>
+              </FormControl>
 
-          <Button
-            type="submit"
-            colorScheme="purple"
-            width="100%"
-            isLoading={isLoading}
-            loadingText="Hesaplanıyor..."
-          >
-            Hesapla
-          </Button>
+              <Button
+                type="submit"
+                colorScheme="purple"
+                size="lg"
+                width="full"
+                isLoading={isLoading}
+                loadingText="Hesaplanıyor..."
+                mt={6}
+              >
+                Haritayı Hesapla
+              </Button>
+            </VStack>
+          </form>
         </VStack>
-      </form>
-    </Box>
+      </Box>
+    </Container>
   );
 };
 

@@ -9872,3 +9872,520 @@ AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
 2025-02-21 12:21:52,472 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:21:52] "POST /calculate_natal_chart HTTP/1.1" 200 -
 2025-02-21 12:26:18,833 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
 2025-02-21 12:26:18,905 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 12:35:21,422 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:35:21,424 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:35:21,425 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:35:21,425 - __main__ - WARNING - No astro_knowledge.json found or invalid JSON. Will use base prompts.
+2025-02-21 12:35:21,425 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:35:21,425 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:35:21,453 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 12:35:21,473 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 12:36:23,708 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:36:23] "OPTIONS /calculate_natal_chart HTTP/1.1" 200 -
+2025-02-21 12:36:23,719 - __main__ - INFO - Received request data: {'birthDate': '1996-12-28', 'birthTime': '07:10', 'location': 'istanbul'}
+2025-02-21 12:36:23,720 - __main__ - INFO - Attempting to get coordinates for location: istanbul
+2025-02-21 12:36:23,720 - __main__ - INFO - Making request to OpenCage API: https://api.opencagedata.com/geocode/v1/json?q=istanbul&key=242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:36:24,580 - __main__ - INFO - OpenCage API response: {'documentation': 'https://opencagedata.com/api', 'licenses': [{'name': 'see attribution guide', 'url': 'https://opencagedata.com/credits'}], 'rate': {'limit': 2500, 'remaining': 2482, 'reset': 1740182400}, 'results': [{'annotations': {'DMS': {'lat': "41° 0' 22.97160'' N", 'lng': "28° 58' 33.13740'' E"}, 'MGRS': '35TPF6616241345', 'Maidenhead': 'KN41la71cm', 'Mercator': {'x': 3225579.261, 'y': 4985240.162}, 'NUTS': {'NUTS0': {'code': 'TR'}, 'NUTS1': {'code': 'TR1'}, 'NUTS2': {'code': 'TR10'}, 'NUTS3': {'code': 'TR100'}}, 'OSM': {'edit_url': 'https://www.openstreetmap.org/edit?node=1882099475#map=16/41.00638/28.97587', 'note_url': 'https://www.openstreetmap.org/note/new#map=16/41.00638/28.97587&layers=N', 'url': 'https://www.openstreetmap.org/?mlat=41.00638&mlon=28.97587#map=16/41.00638/28.97587'}, 'UN_M49': {'regions': {'ASIA': '142', 'TR': '792', 'WESTERN_ASIA': '145', 'WORLD': '001'}, 'statistical_groupings': ['LEDC']}, 'callingcode': 90, 'currency': {'alternate_symbols': ['TL'], 'decimal_mark': ',', 'html_entity': '&#8378;', 'iso_code': 'TRY', 'iso_numeric': '949', 'name': 'Turkish Lira', 'smallest_denomination': 1, 'subunit': 'kuruş', 'subunit_to_unit': 100, 'symbol': '₺', 'symbol_first': 1, 'thousands_separator': '.'}, 'flag': '🇹🇷', 'geohash': 'sxk972gx6xry8z1yu71m', 'qibla': 151.61, 'roadinfo': {'drive_on': 'right', 'speed_in': 'km/h'}, 'sun': {'rise': {'apparent': 1740113460, 'astronomical': 1740108000, 'civil': 1740111780, 'nautical': 1740109860}, 'set': {'apparent': 1740152700, 'astronomical': 1740158160, 'civil': 1740154380, 'nautical': 1740156300}}, 'timezone': {'name': 'Europe/Istanbul', 'now_in_dst': 0, 'offset_sec': 10800, 'offset_string': '+0300', 'short_name': '+03'}, 'what3words': {'words': 'reboot.offer.organ'}, 'wikidata': 'Q406'}, 'bounds': {'northeast': {'lat': 41.166381, 'lng': 29.1358715}, 'southwest': {'lat': 40.846381, 'lng': 28.8158715}}, 'components': {'ISO_3166-1_alpha-2': 'TR', 'ISO_3166-1_alpha-3': 'TUR', 'ISO_3166-2': ['TR-34'], '_category': 'place', '_normalized_city': 'Istanbul', '_type': 'city', 'city': 'Istanbul', 'continent': 'Europe', 'country': 'Turkey', 'country_code': 'tr', 'postcode': '34122', 'province': 'Istanbul', 'region': 'Marmara Region', 'state': 'Istanbul', 'town': 'Fatih'}, 'confidence': 3, 'formatted': 'Istanbul, Turkey', 'geometry': {'lat': 41.006381, 'lng': 28.9758715}}, {'annotations': {'DMS': {'lat': "41° 4' 35.76684'' N", 'lng': "29° 3' 8.98200'' E"}, 'MGRS': '35TPF7242349290', 'Maidenhead': 'KN41mb68hj', 'Mercator': {'x': 3234108.95, 'y': 4995564.674}, 'NUTS': {'NUTS0': {'code': 'TR'}, 'NUTS1': {'code': 'TR1'}, 'NUTS2': {'code': 'TR10'}, 'NUTS3': {'code': 'TR100'}}, 'OSM': {'edit_url': 'https://www.openstreetmap.org/edit?relation=223474#map=16/41.07660/29.05250', 'note_url': 'https://www.openstreetmap.org/note/new#map=16/41.07660/29.05250&layers=N', 'url': 'https://www.openstreetmap.org/?mlat=41.07660&mlon=29.05250#map=16/41.07660/29.05250'}, 'UN_M49': {'regions': {'ASIA': '142', 'TR': '792', 'WESTERN_ASIA': '145', 'WORLD': '001'}, 'statistical_groupings': ['LEDC']}, 'callingcode': 90, 'currency': {'alternate_symbols': ['TL'], 'decimal_mark': ',', 'html_entity': '&#8378;', 'iso_code': 'TRY', 'iso_numeric': '949', 'name': 'Turkish Lira', 'smallest_denomination': 1, 'subunit': 'kuruş', 'subunit_to_unit': 100, 'symbol': '₺', 'symbol_first': 1, 'thousands_separator': '.'}, 'flag': '🇹🇷', 'geohash': 'sxk9tjg2s1w6swxx0n6g', 'qibla': 151.87, 'roadinfo': {'drive_on': 'right', 'speed_in': 'km/h'}, 'sun': {'rise': {'apparent': 1740113460, 'astronomical': 1740107940, 'civil': 1740111780, 'nautical': 1740109860}, 'set': {'apparent': 1740152640, 'astronomical': 1740158160, 'civil': 1740154320, 'nautical': 1740156240}}, 'timezone': {'name': 'Europe/Istanbul', 'now_in_dst': 0, 'offset_sec': 10800, 'offset_string': '+0300', 'short_name': '+03'}, 'what3words': {'words': 'polite.mission.ready'}, 'wikidata': 'Q534799'}, 'bounds': {'northeast': {'lat': 41.671, 'lng': 29.9588048}, 'southwest': {'lat': 40.7376735, 'lng': 27.9708481}}, 'components': {'ISO_3166-1_alpha-2': 'TR', 'ISO_3166-1_alpha-3': 'TUR', 'ISO_3166-2': ['TR-34'], '_category': 'place', '_type': 'state', 'continent': 'Asia', 'country': 'Turkey', 'country_code': 'tr', 'province': 'Istanbul', 'region': 'Marmara Region', 'state': 'Istanbul'}, 'confidence': 1, 'formatted': 'Istanbul, Turkey', 'geometry': {'lat': 41.0766019, 'lng': 29.052495}}], 'status': {'code': 200, 'message': 'OK'}, 'stay_informed': {'blog': 'https://blog.opencagedata.com', 'mastodon': 'https://en.osm.town/@opencage'}, 'thanks': 'For using an OpenCage API', 'timestamp': {'created_http': 'Fri, 21 Feb 2025 09:36:24 GMT', 'created_unix': 1740130584}, 'total_results': 2}
+2025-02-21 12:36:24,581 - __main__ - INFO - Successfully got coordinates: lat=41.006381, lng=28.9758715, timezone=Europe/Istanbul
+2025-02-21 12:36:24,583 - __main__ - INFO - Location data: {'latitude': 41.006381, 'longitude': 28.9758715, 'timezone': 'Europe/Istanbul'}
+2025-02-21 12:36:24,583 - __main__ - INFO - Starting chart calculation with date=1996-12-28, time=07:10, location={'latitude': 41.006381, 'longitude': 28.9758715, 'timezone': 'Europe/Istanbul'}
+2025-02-21 12:36:24,591 - __main__ - INFO - Parsed local datetime: 1996-12-28 07:10:00
+2025-02-21 12:36:24,635 - __main__ - INFO - Converted to UTC: 1996-12-28 05:10:00+00:00
+2025-02-21 12:36:24,635 - __main__ - INFO - Calculated Julian day: 2450445.715277778
+2025-02-21 12:36:24,637 - __main__ - INFO - Calculated houses: (271.1858269441459, 310.26312763399625, 351.821641948635, 25.282459267739, 50.446076476099734, 71.19174160559635, 91.1858269441459, 130.26312763399625, 171.82164194863503, 205.28245926773903, 230.4460764760997, 251.19174160559635)
+2025-02-21 12:36:24,637 - __main__ - INFO - Calculated ascmc: (271.1858269441459, 205.28245926773903, 203.42978224097405, 131.86522678091868, 291.682935239813, 307.75803992876445, 264.2356878747288, 127.75803992876445)
+2025-02-21 12:36:24,637 - __main__ - INFO - Calculating position for Sun (ID: 0)
+2025-02-21 12:36:24,638 - __main__ - INFO - Raw calculation result for Sun: ((276.7507696667611, -0.0001758872339995798, 0.9833297505841149, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,638 - __main__ - INFO - Normalized longitude for Sun: 276.7507696667611
+2025-02-21 12:36:24,638 - __main__ - INFO - Position in sign for Sun: Oğlak 6°45'
+2025-02-21 12:36:24,638 - __main__ - INFO - Final position for Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:36:24,638 - __main__ - INFO - Calculating position for Moon (ID: 1)
+2025-02-21 12:36:24,638 - __main__ - INFO - Raw calculation result for Moon: ((133.94804692234, -3.774783307346077, 0.0027072527693113154, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,638 - __main__ - INFO - Normalized longitude for Moon: 133.94804692234
+2025-02-21 12:36:24,638 - __main__ - INFO - Position in sign for Moon: Aslan 13°56'
+2025-02-21 12:36:24,638 - __main__ - INFO - Final position for Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:36:24,639 - __main__ - INFO - Calculating position for Mercury (ID: 2)
+2025-02-21 12:36:24,639 - __main__ - INFO - Raw calculation result for Mercury: ((287.36578661146353, 1.176039025481328, 0.718255494901402, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,639 - __main__ - INFO - Normalized longitude for Mercury: 287.36578661146353
+2025-02-21 12:36:24,639 - __main__ - INFO - Position in sign for Mercury: Oğlak 17°21'
+2025-02-21 12:36:24,639 - __main__ - INFO - Final position for Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:36:24,639 - __main__ - INFO - Calculating position for Venus (ID: 3)
+2025-02-21 12:36:24,639 - __main__ - INFO - Raw calculation result for Venus: ((253.7138514645326, 0.9310716144650166, 1.5170279156537079, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,639 - __main__ - INFO - Normalized longitude for Venus: 253.7138514645326
+2025-02-21 12:36:24,639 - __main__ - INFO - Position in sign for Venus: Yay 13°42'
+2025-02-21 12:36:24,639 - __main__ - INFO - Final position for Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:36:24,640 - __main__ - INFO - Calculating position for Mars (ID: 4)
+2025-02-21 12:36:24,640 - __main__ - INFO - Raw calculation result for Mars: ((177.93132347009853, 2.565561250241301, 1.1962471239946229, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,640 - __main__ - INFO - Normalized longitude for Mars: 177.93132347009853
+2025-02-21 12:36:24,640 - __main__ - INFO - Position in sign for Mars: Başak 27°55'
+2025-02-21 12:36:24,640 - __main__ - INFO - Final position for Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:36:24,640 - __main__ - INFO - Calculating position for Jupiter (ID: 5)
+2025-02-21 12:36:24,641 - __main__ - INFO - Raw calculation result for Jupiter: ((294.2983242045063, -0.32622532951679906, 6.067748781827586, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,641 - __main__ - INFO - Normalized longitude for Jupiter: 294.2983242045063
+2025-02-21 12:36:24,642 - __main__ - INFO - Position in sign for Jupiter: Oğlak 24°17'
+2025-02-21 12:36:24,642 - __main__ - INFO - Final position for Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:36:24,642 - __main__ - INFO - Calculating position for Saturn (ID: 6)
+2025-02-21 12:36:24,643 - __main__ - INFO - Raw calculation result for Saturn: ((1.1579748630766857, -2.372029366969906, 9.51718007460616, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,643 - __main__ - INFO - Normalized longitude for Saturn: 1.1579748630766857
+2025-02-21 12:36:24,643 - __main__ - INFO - Position in sign for Saturn: Koç 1°9'
+2025-02-21 12:36:24,643 - __main__ - INFO - Final position for Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:36:24,643 - __main__ - INFO - Calculating position for Uranus (ID: 7)
+2025-02-21 12:36:24,644 - __main__ - INFO - Raw calculation result for Uranus: ((303.06259755091816, -0.5694183485002708, 20.673445239850505, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,644 - __main__ - INFO - Normalized longitude for Uranus: 303.06259755091816
+2025-02-21 12:36:24,644 - __main__ - INFO - Position in sign for Uranus: Kova 3°3'
+2025-02-21 12:36:24,644 - __main__ - INFO - Final position for Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:36:24,644 - __main__ - INFO - Calculating position for Neptune (ID: 8)
+2025-02-21 12:36:24,644 - __main__ - INFO - Raw calculation result for Neptune: ((296.69054138713403, 0.4276026737517369, 31.078617788335507, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,644 - __main__ - INFO - Normalized longitude for Neptune: 296.69054138713403
+2025-02-21 12:36:24,645 - __main__ - INFO - Position in sign for Neptune: Oğlak 26°41'
+2025-02-21 12:36:24,645 - __main__ - INFO - Final position for Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:36:24,645 - __main__ - INFO - Calculating position for Pluto (ID: 9)
+2025-02-21 12:36:24,645 - __main__ - INFO - Raw calculation result for Pluto: ((244.2569873055865, 12.380932854035862, 30.751657702589373, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:36:24,645 - __main__ - INFO - Normalized longitude for Pluto: 244.2569873055865
+2025-02-21 12:36:24,645 - __main__ - INFO - Position in sign for Pluto: Yay 4°15'
+2025-02-21 12:36:24,645 - __main__ - INFO - Final position for Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:36:24,645 - __main__ - INFO - Calculating position for North Node (ID: 10)
+2025-02-21 12:36:24,645 - __main__ - INFO - Raw calculation result for North Node: ((183.2561958299854, 0.0, 0.0025695552897999903, -0.05294735022669475, 0.0, 0.0), 258)
+2025-02-21 12:36:24,645 - __main__ - INFO - Normalized longitude for North Node: 183.2561958299854
+2025-02-21 12:36:24,645 - __main__ - INFO - Position in sign for North Node: Terazi 3°15'
+2025-02-21 12:36:24,645 - __main__ - INFO - Final position for North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:36:24,645 - __main__ - INFO - Calculating position for Chiron (ID: 15)
+2025-02-21 12:36:24,646 - __main__ - ERROR - Error calculating Chiron: swisseph.calc_ut: SwissEph file 'seas_18.se1' not found in PATH '/usr/share/swisseph:/usr/local/share/swisseph/'
+2025-02-21 12:36:24,649 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/ofis/Astrologi-Ai/app.py", line 369, in calculate_planet_position
+    result = swe.calc_ut(jd, planet_id, flags)
+swisseph.Error: swisseph.calc_ut: SwissEph file 'seas_18.se1' not found in PATH '/usr/share/swisseph:/usr/local/share/swisseph/'
+
+2025-02-21 12:36:24,649 - __main__ - ERROR - Failed to calculate position for Chiron
+2025-02-21 12:36:24,649 - __main__ - INFO - Calculating position for Lilith (ID: 12)
+2025-02-21 12:36:24,649 - __main__ - ERROR - Error calculating Lilith: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
+2025-02-21 12:36:24,649 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/ofis/Astrologi-Ai/app.py", line 366, in calculate_planet_position
+    flags |= swe.FLG_MEAN_APOG
+AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
+
+2025-02-21 12:36:24,649 - __main__ - ERROR - Failed to calculate position for Lilith
+2025-02-21 12:36:24,649 - __main__ - WARNING - Missing planets: {'Lilith', 'Chiron'}
+2025-02-21 12:36:24,663 - __main__ - INFO - Successfully calculated positions for planets:
+2025-02-21 12:36:24,663 - __main__ - INFO - Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:36:24,663 - __main__ - INFO - Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:36:24,664 - __main__ - INFO - Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:36:24,664 - __main__ - INFO - Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:36:24,664 - __main__ - INFO - Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:36:24,664 - __main__ - INFO - Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:36:24,665 - __main__ - INFO - Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:36:24,666 - __main__ - INFO - Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:36:24,666 - __main__ - INFO - Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:36:24,666 - __main__ - INFO - Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:36:24,666 - __main__ - INFO - North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:36:24,667 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:25,568 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:25,577 - __main__ - INFO - Generated interpretation for Trine between Ay and Venüs
+2025-02-21 12:36:25,578 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:26,353 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:26,355 - __main__ - INFO - Generated interpretation for Conjunction between Merkür and Neptün
+2025-02-21 12:36:26,356 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:27,481 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:27,484 - __main__ - INFO - Generated interpretation for Opposition between Mars and Satürn
+2025-02-21 12:36:27,484 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:28,198 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:28,199 - __main__ - INFO - Generated interpretation for Trine between Mars and Uranüs
+2025-02-21 12:36:28,199 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:28,914 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:28,915 - __main__ - INFO - Generated interpretation for Trine between Mars and Neptün
+2025-02-21 12:36:28,916 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:29,542 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:29,545 - __main__ - INFO - Generated interpretation for Conjunction between Mars and Kuzey Ay Düğümü
+2025-02-21 12:36:29,545 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:30,246 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:30,248 - __main__ - INFO - Generated interpretation for Conjunction between Jüpiter and Merkür
+2025-02-21 12:36:30,248 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:30,963 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:30,964 - __main__ - INFO - Generated interpretation for Trine between Jüpiter and Mars
+2025-02-21 12:36:30,964 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:31,651 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:31,653 - __main__ - INFO - Generated interpretation for Conjunction between Jüpiter and Uranüs
+2025-02-21 12:36:31,654 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:32,289 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:32,292 - __main__ - INFO - Generated interpretation for Conjunction between Jüpiter and Neptün
+2025-02-21 12:36:32,293 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:32,975 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:32,982 - __main__ - INFO - Generated interpretation for Square between Satürn and Güneş
+2025-02-21 12:36:32,983 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:33,663 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:33,665 - __main__ - INFO - Generated interpretation for Sextile between Satürn and Uranüs
+2025-02-21 12:36:33,666 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:34,445 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:34,448 - __main__ - INFO - Generated interpretation for Sextile between Neptün and Satürn
+2025-02-21 12:36:34,448 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:35,263 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:35,265 - __main__ - INFO - Generated interpretation for Conjunction between Neptün and Uranüs
+2025-02-21 12:36:35,265 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:35,937 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:35,941 - __main__ - INFO - Generated interpretation for Trine between Neptün and Kuzey Ay Düğümü
+2025-02-21 12:36:35,941 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:36,634 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:36,636 - __main__ - INFO - Generated interpretation for Conjunction between Plüton and Venüs
+2025-02-21 12:36:36,637 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:37,256 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:37,257 - __main__ - INFO - Generated interpretation for Trine between Plüton and Satürn
+2025-02-21 12:36:37,257 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:38,028 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:38,029 - __main__ - INFO - Generated interpretation for Sextile between Plüton and Uranüs
+2025-02-21 12:36:38,030 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:38,745 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:38,747 - __main__ - INFO - Generated interpretation for Square between Kuzey Ay Düğümü and Güneş
+2025-02-21 12:36:38,748 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:39,435 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:39,436 - __main__ - INFO - Generated interpretation for Opposition between Kuzey Ay Düğümü and Satürn
+2025-02-21 12:36:39,436 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:41,795 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:41,798 - __main__ - INFO - Generated interpretation for Trine between Kuzey Ay Düğümü and Uranüs
+2025-02-21 12:36:41,798 - __main__ - WARNING - No knowledge base found or invalid JSON
+2025-02-21 12:36:42,636 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:36:42,638 - __main__ - INFO - Generated interpretation for Sextile between Kuzey Ay Düğümü and Plüton
+2025-02-21 12:36:42,638 - __main__ - INFO - Calculated aspects: {'Sun': {}, 'Moon': {'Venus': [{'type': 'Trine', 'angle': 119.7658045421926, 'planet1_tr': 'Ay', 'planet2_tr': 'Venüs', 'interpretation': "Merhaba,\n\nAy ve Veneüs'ün trine aspecti, rahat ve sezgisel ilişkileri, estetik, hayalperest ve romantik özellikleri ile ilgili olarak iyi gelir. Bu aspect, kişinin insanlarıyla başladıkları ilişkilerin kolay ve doğal akışını sağlayabilir, aynı zamanda sanat, müzik ve güzellik alanlarında başarı elde edebilmekte kolayl"}]}, 'Mercury': {'Neptune': [{'type': 'Conjunction', 'angle': 9.324754775670499, 'planet1_tr': 'Merkür', 'planet2_tr': 'Neptün', 'interpretation': "Merkür ve Neptün'un birlikte olduğu bir konyunun yorumunu yapacağım.\n\n1. Merkür, bilgi, iletişim ve fikirlerle ilgili planetdir, Neptün ise hayal, duygu ve gerçeklik ile ilgili planetdir.\n2. Konyunun türü, konjüksyon, birlikte olduklarından dolayı, fikirlerin ve hayallerin bir araya gelmesini sağlar.\n3. Bu konyunun potansiyel"}]}, 'Venus': {}, 'Mars': {'Saturn': [{'type': 'Opposition', 'angle': 176.77334860702186, 'planet1_tr': 'Mars', 'planet2_tr': 'Satürn', 'interpretation': "Mars ve Satürn'in Oppozisyon Aspekti, iki planetin doğal özelliklerini dikkate alarak, bu aspektin türü ve etkisi, ayrıca kişilik ve yaşamda olan potansiyel yansımaları hakkında açıklanacaktır.\n\nMars, isteklerimizi ve istediğimizi elde etmeye yönelik kişilik özelliğidir. Satürn ise kürsüleri tutan, yetkinliklerimizi kontrol eden,"}], 'Uranus': [{'type': 'Trine', 'angle': 125.13127408081962, 'planet1_tr': 'Mars', 'planet2_tr': 'Uranüs', 'interpretation': 'Mars ve Uranüs arasındaki Üçgen (Trine) aspekti, iki planetin doğal enerjilerinin uyumlu ve kolayca akış veren bir ilişkisidir. Bu aspekt, risk-taking, adamant ve ileri görünme özelliklerini geliştirir. Canlı, özgür ve kendini ifade eden bir kişilik oluşturur, aynı zamanda kişinin kendi yolunu bulmasına yardımcı olur.'}], 'Neptune': [{'type': 'Trine', 'angle': 118.7592179170355, 'planet1_tr': 'Mars', 'planet2_tr': 'Neptün', 'interpretation': 'Mars ve Neptün arasındaki Üçgen (Trine) aspecti, iki planeta arasındaki doğal ve kolay akışı ifade eder. Mars, istekleriniz, istediğiniz şeyler elde etme ve başarma ihtiyacınızı, harekete geçme ve yaratma yeteneğini ifade eder. Neptün, ise hayal etme, romantizm, duygu ve bilinç derecesinizi temsil eder. Bu aspect, bu yeteneklerinizin doğal bir ş'}], 'North Node': [{'type': 'Conjunction', 'angle': 5.324872359886854, 'planet1_tr': 'Mars', 'planet2_tr': 'Kuzey Ay Düğümü', 'interpretation': "Mars, plannetin gerçekçi, aktif ve kıvanç verici yönleri vardır. Kuzey Ay Düğümü ise insanın kaderine, varlığa ve bağımlılıklara ilişkin yönleri temsil eder. Bu iki yönde Mars'un Kuzey Ay Düğümü ile karşılaştığı bir birleşik yönüdür. Bu birleşik yön, kişinin canlı, aktif ve gerçekçi bir şekilde"}]}, 'Jupiter': {'Mercury': [{'type': 'Conjunction', 'angle': 6.932537593042753, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Merkür', 'interpretation': "Eğer Jüpiter ve Merkür'ün birlikte olduğu bir natal chart inceliyorsanız, bu birlik genellikle bir akılcılık, bilgi, ve felsefi açıklama yeteneği ile ilgilidir. Bu birlik, geniş zihin ve genişletilmiş görüşleri, iyi haberler, ve reisli kişilik özelliklerini ifade eder. Ayrıca, mümkün olduğunca çok konu hakkınd"}], 'Mars': [{'type': 'Trine', 'angle': 116.36700073440775, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Mars', 'interpretation': 'Jüpiter, sembolizasyonunu genişlik, optimizm ve sezgisel gelişme ile Mars, sembolizasyonunu istekler, işgücü ve riskleri temsil eder. Trine aspectinin kolaylık ve harmoni anlamıyla, bu iki planetin arasındaki bağlantı sağlam ve etkileyici olur. Bu aspect, kişinin doğal risk-takma ve sezgisel bir işgücüyü geliştirme yeteneğini artırabil'}], 'Uranus': [{'type': 'Conjunction', 'angle': 8.76427334641187, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Uranüs', 'interpretation': "Jüpiter ve Uranus'un buzulması, iki planetin doğal karakterlerini bir araya getirir: Jüpiter genişliği, optimizmin ve sevilmediği gibi birçok şeyi genişletme ve artırma yeteneği, Uranus ise açıkçılık, özgürlük, yenilik ve fırsatların ele alınmasını temsil eder. Buzulma, bu karakterleri bir araya getirerek, bireyin"}], 'Neptune': [{'type': 'Conjunction', 'angle': 2.3922171826277463, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Neptün', 'interpretation': "Bu konjüksyon, genişlik açısından farklı vizyonlar, idealizm ve ümitleriyle ilgili Jüpiter'in ve gerçeklikten ayrı ayrılma, hayal ve duygu dünyasına odaklanma amacıyla Neptün'e karşılık geliyor. Bu aspect, bireyin kişiliğinde geniş bir fikir kapsamı, empati ve insanlık duygusu gibi pozitif özelliklerle karşı"}]}, 'Saturn': {'Sun': [{'type': 'Square', 'angle': 84.4072051963156, 'planet1_tr': 'Satürn', 'planet2_tr': 'Güneş', 'interpretation': 'Satürn, güc, yönetim ve yasama düzeni temsil eder. Güneş ise kişisel güç, ego ve beyin işlevleriyle ilgili. Square aspecti, birbirlerine 90 derece açılışı olan planetleri, birbirlerine tehdit eder ve engel olur, aynı anda fırtınalı ve yaratıcıdır. Bu nedenle, bu kenarlaşma, kişinin özgürlüğünü, kendi'}], 'Uranus': [{'type': 'Sextile', 'angle': 58.09537731215852, 'planet1_tr': 'Satürn', 'planet2_tr': 'Uranüs', 'interpretation': 'Satürn, yönetici ve yapayan planeti olarak bilinir, Uranüs ise ileri teknoloji ve özgürlük için symbolize edilir. Sextile aspectinin pozitif etkisiyle, bireyin yetkinlikleri ve ilgi alanları arasında ileri teknoloji ve yönetim konularında özgürlük duygusu ve fikirleri bulunur. Bu, kişinin adım adım ilerlemesine ve kendisini tanımlayan'}]}, 'Uranus': {}, 'Neptune': {'Saturn': [{'type': 'Sextile', 'angle': 64.46743347594264, 'planet1_tr': 'Neptün', 'planet2_tr': 'Satürn', 'interpretation': 'Neptün ve Satürn sextil aspecti, iki planetin doğal yeteneklerini ve birbirlerine olan uyumunu ifade eder. Neptün, hayal ve duygu dünyasını, idealizm ve empatiyle temsil eder. Satürn ise, istikrar, sürekliyet ve yönetim yetenekleri ile ilgilidir. Bu aspect, hayallerinize ve duygularınızın gerçekleştirilmesine yardımcı olur, aynı zamanda istik'}], 'Uranus': [{'type': 'Conjunction', 'angle': 6.372056163784123, 'planet1_tr': 'Neptün', 'planet2_tr': 'Uranüs', 'interpretation': "Neptün ve Uranüs'ün bu birleşimi, ROUHAAN ve ÖZGÜNLÜK planetlerinin kontaktını ifade eder. Bu birleşim, yenilik ve değişim için açıktır ve bireyin duygusal yaşamına, hayatına ve görüşlerine yansır. Konjüksyonun bu türü, bireyin kendi kendine ve dünyaya yönelik yeni bir yaklaşım ve anlayış sağlayabilir."}], 'North Node': [{'type': 'Trine', 'angle': 113.43434555714865, 'planet1_tr': 'Neptün', 'planet2_tr': 'Kuzey Ay Düğümü', 'interpretation': 'Neptün ve Kuzey Ay Düğümü arasındaki Üçgen aspectin doğal olarak uyumlu ve kolaylaştırıcı özellikleri vardır. Neptün, duygu ve hayalîlık, Kuzey Ay Düğümü ise insanların kaderine ve varoluşunu yansıtan bir akılçılık temsil eder. Bu aspect, bireyin duygusal yaşamını ve kendine özgü yolculuğunu anlamakta'}]}, 'Pluto': {'Venus': [{'type': 'Conjunction', 'angle': 9.456864158946104, 'planet1_tr': 'Plüton', 'planet2_tr': 'Venüs', 'interpretation': "Eğer Plüton ve Venüs'in birlikte olduğunu düşünürsek, kişinin derinlik ve sevgiyi bir araya getirdiğini ifade eder. Bu birlik, kişinin kendine özgü, saklanmış duyguları ve istemlerini tanımlar. Aynı zamanda, bu konjunksiyon, kişinin sevilme ve sahip olma konusunda zorluklarla karşılaştığını da gösterebilir."}], 'Saturn': [{'type': 'Trine', 'angle': 116.90098755749017, 'planet1_tr': 'Plüton', 'planet2_tr': 'Satürn', 'interpretation': "Plüton ve Satürn'in Trine aspecti, iki planetin doğal yönlerini bir araya getirir. Plüton, yenilik, transformasyon ve derinlik temsil ederken, Satürn ise yöneticilik, sınırlama ve kurallar temsil eder. Trine aspectinin pozitif etkisi sayesinde, bu iki yön, birbirlerine kolayca uyum sağlayarak, kişinin derinliklerine inen ve yeni yollara odaklanan yetenekleri geliştir"}], 'Uranus': [{'type': 'Sextile', 'angle': 58.80561024533165, 'planet1_tr': 'Plüton', 'planet2_tr': 'Uranüs', 'interpretation': 'Plüton, güçlü düşünceler ve derinlikleri temsil eder, Uranüs ise değişim, özgürlük ve ileri gelişmeyle ilgili. Sextile aspectinin kolaylık sarhoşluğu sayesinde, bu iki planeta arasında complementer olur. Bu aspect, kişinin derinliği ve orijinal düşünceleriyle birlikte, yenilikçi ve özgür bir yaşam şekli oluşturmaya yönelik'}]}, 'North Node': {'Sun': [{'type': 'Square', 'angle': 93.49457383677569, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Güneş', 'interpretation': 'Kuzey Ay Düğümü ve Güneş arasındaki karesi, iki planeta arasında kuvvetli bir türlü etkileşimdir. Kuzey Ay Düğümü, kendinizi ve varlığınızı tanımlayan bir kuvvet olarak görülür, Güneş ise doğal liderlik ve doğal yetenekleriyle tanınır. Karesi, bu iki kuvvetin kesiştiği noktada zorluk ve çatı'}], 'Saturn': [{'type': 'Opposition', 'angle': 177.9017790330913, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Satürn', 'interpretation': 'Kuzey Ay Düğümü, psikolojik olarak kendinizi ve yakınlarınızın duygu ve düşüncelerini anlamakta yardımcı olan bir akıl planetidir. Satürn ise, kurallara ve sınırlara sahip olan bir güç planetidir.\n\nOpposition aspectinin akıl ve kuvvet arasındaki karşılaştırması, kişinin iki yönlü bir karakter ve yaşam tarzına neden ol'}], 'Uranus': [{'type': 'Trine', 'angle': 119.80640172093277, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Uranüs', 'interpretation': "Kuzey Ay Düğümü, insanın kaderine ve özgürlüğüne yönelik duyarlılığını artırır. Uranüs ise, ileri gelen, yenilikçi ve farklılık aşklarına sahip planetidir. Trine aspect'inin pozitif etkisiyle, bu iki planet arasındaki doğal alilik, kişinin kaderine ve özgürlüğüne ilişkin duyarlılığını geliş"}], 'Pluto': [{'type': 'Sextile', 'angle': 61.00079147560112, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Plüton', 'interpretation': 'Kuzey Ay Düğümü (North Node) ve Plüton (Pluto) arasındaki sextil aspectinin doğal olarak pozitif etkisini göz önüne alırken, insanların kendilerini geliştirmek ve yeniliklerle ilgili riskleri almak için motivasyon almasını sağlar. Bu aspect, kişinin kendi kendine ve tabiatına olan derin bir bağımlılığın yönetimini öğrenme ve bu ba'}]}}
+2025-02-21 12:36:42,639 - __main__ - INFO - Chart calculation completed successfully
+2025-02-21 12:36:42,640 - __main__ - INFO - Calculated chart data:
+2025-02-21 12:36:42,640 - __main__ - INFO - Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:36:42,640 - __main__ - INFO - North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:36:42,640 - __main__ - INFO - Number of aspects: 11
+2025-02-21 12:36:42,641 - __main__ - INFO - House positions: [271.1858269441459, 310.26312763399625, 351.821641948635, 25.282459267739, 50.446076476099734, 71.19174160559635, 91.1858269441459, 130.26312763399625, 171.82164194863503, 205.28245926773903, 230.4460764760997, 251.19174160559635]
+2025-02-21 12:36:42,641 - __main__ - WARNING - Missing planets in calculation: {'Lilith', 'Chiron'}
+2025-02-21 12:36:42,642 - __main__ - INFO - Sending response: {
+  "ascendant": 271.1858269441459,
+  "aspects": {
+    "Jupiter": {
+      "Mars": [
+        {
+          "angle": 116.36700073440775,
+          "interpretation": "J\u00fcpiter, sembolizasyonunu geni\u015flik, optimizm ve sezgisel geli\u015fme ile Mars, sembolizasyonunu istekler, i\u015fg\u00fcc\u00fc ve riskleri temsil eder. Trine aspectinin kolayl\u0131k ve harmoni anlam\u0131yla, bu iki planetin aras\u0131ndaki ba\u011flant\u0131 sa\u011flam ve etkileyici olur. Bu aspect, ki\u015finin do\u011fal risk-takma ve sezgisel bir i\u015fg\u00fcc\u00fcy\u00fc geli\u015ftirme yetene\u011fini art\u0131rabil",
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Mars",
+          "type": "Trine"
+        }
+      ],
+      "Mercury": [
+        {
+          "angle": 6.932537593042753,
+          "interpretation": "E\u011fer J\u00fcpiter ve Merk\u00fcr'\u00fcn birlikte oldu\u011fu bir natal chart inceliyorsan\u0131z, bu birlik genellikle bir ak\u0131lc\u0131l\u0131k, bilgi, ve felsefi a\u00e7\u0131klama yetene\u011fi ile ilgilidir. Bu birlik, geni\u015f zihin ve geni\u015fletilmi\u015f g\u00f6r\u00fc\u015fleri, iyi haberler, ve reisli ki\u015filik \u00f6zelliklerini ifade eder. Ayr\u0131ca, m\u00fcmk\u00fcn oldu\u011funca \u00e7ok konu hakk\u0131nd",
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Merk\u00fcr",
+          "type": "Conjunction"
+        }
+      ],
+      "Neptune": [
+        {
+          "angle": 2.3922171826277463,
+          "interpretation": "Bu konj\u00fcksyon, geni\u015flik a\u00e7\u0131s\u0131ndan farkl\u0131 vizyonlar, idealizm ve \u00fcmitleriyle ilgili J\u00fcpiter'in ve ger\u00e7eklikten ayr\u0131 ayr\u0131lma, hayal ve duygu d\u00fcnyas\u0131na odaklanma amac\u0131yla Nept\u00fcn'e kar\u015f\u0131l\u0131k geliyor. Bu aspect, bireyin ki\u015fili\u011finde geni\u015f bir fikir kapsam\u0131, empati ve insanl\u0131k duygusu gibi pozitif \u00f6zelliklerle kar\u015f\u0131",
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Conjunction"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 8.76427334641187,
+          "interpretation": "J\u00fcpiter ve Uranus'un buzulmas\u0131, iki planetin do\u011fal karakterlerini bir araya getirir: J\u00fcpiter geni\u015fli\u011fi, optimizmin ve sevilmedi\u011fi gibi bir\u00e7ok \u015feyi geni\u015fletme ve art\u0131rma yetene\u011fi, Uranus ise a\u00e7\u0131k\u00e7\u0131l\u0131k, \u00f6zg\u00fcrl\u00fck, yenilik ve f\u0131rsatlar\u0131n ele al\u0131nmas\u0131n\u0131 temsil eder. Buzulma, bu karakterleri bir araya getirerek, bireyin",
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Mars": {
+      "Neptune": [
+        {
+          "angle": 118.7592179170355,
+          "interpretation": "Mars ve Nept\u00fcn aras\u0131ndaki \u00dc\u00e7gen (Trine) aspecti, iki planeta aras\u0131ndaki do\u011fal ve kolay ak\u0131\u015f\u0131 ifade eder. Mars, istekleriniz, istedi\u011finiz \u015feyler elde etme ve ba\u015farma ihtiyac\u0131n\u0131z\u0131, harekete ge\u00e7me ve yaratma yetene\u011fini ifade eder. Nept\u00fcn, ise hayal etme, romantizm, duygu ve bilin\u00e7 derecesinizi temsil eder. Bu aspect, bu yeteneklerinizin do\u011fal bir \u015f",
+          "planet1_tr": "Mars",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Trine"
+        }
+      ],
+      "North Node": [
+        {
+          "angle": 5.324872359886854,
+          "interpretation": "Mars, plannetin ger\u00e7ek\u00e7i, aktif ve k\u0131van\u00e7 verici y\u00f6nleri vard\u0131r. Kuzey Ay D\u00fc\u011f\u00fcm\u00fc ise insan\u0131n kaderine, varl\u0131\u011fa ve ba\u011f\u0131ml\u0131l\u0131klara ili\u015fkin y\u00f6nleri temsil eder. Bu iki y\u00f6nde Mars'un Kuzey Ay D\u00fc\u011f\u00fcm\u00fc ile kar\u015f\u0131la\u015ft\u0131\u011f\u0131 bir birle\u015fik y\u00f6n\u00fcd\u00fcr. Bu birle\u015fik y\u00f6n, ki\u015finin canl\u0131, aktif ve ger\u00e7ek\u00e7i bir \u015fekilde",
+          "planet1_tr": "Mars",
+          "planet2_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "type": "Conjunction"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 176.77334860702186,
+          "interpretation": "Mars ve Sat\u00fcrn'in Oppozisyon Aspekti, iki planetin do\u011fal \u00f6zelliklerini dikkate alarak, bu aspektin t\u00fcr\u00fc ve etkisi, ayr\u0131ca ki\u015filik ve ya\u015famda olan potansiyel yans\u0131malar\u0131 hakk\u0131nda a\u00e7\u0131klanacakt\u0131r.\n\nMars, isteklerimizi ve istedi\u011fimizi elde etmeye y\u00f6nelik ki\u015filik \u00f6zelli\u011fidir. Sat\u00fcrn ise k\u00fcrs\u00fcleri tutan, yetkinliklerimizi kontrol eden,",
+          "planet1_tr": "Mars",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Opposition"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 125.13127408081962,
+          "interpretation": "Mars ve Uran\u00fcs aras\u0131ndaki \u00dc\u00e7gen (Trine) aspekti, iki planetin do\u011fal enerjilerinin uyumlu ve kolayca ak\u0131\u015f veren bir ili\u015fkisidir. Bu aspekt, risk-taking, adamant ve ileri g\u00f6r\u00fcnme \u00f6zelliklerini geli\u015ftirir. Canl\u0131, \u00f6zg\u00fcr ve kendini ifade eden bir ki\u015filik olu\u015fturur, ayn\u0131 zamanda ki\u015finin kendi yolunu bulmas\u0131na yard\u0131mc\u0131 olur.",
+          "planet1_tr": "Mars",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Mercury": {
+      "Neptune": [
+        {
+          "angle": 9.324754775670499,
+          "interpretation": "Merk\u00fcr ve Nept\u00fcn'un birlikte oldu\u011fu bir konyunun yorumunu yapaca\u011f\u0131m.\n\n1. Merk\u00fcr, bilgi, ileti\u015fim ve fikirlerle ilgili planetdir, Nept\u00fcn ise hayal, duygu ve ger\u00e7eklik ile ilgili planetdir.\n2. Konyunun t\u00fcr\u00fc, konj\u00fcksyon, birlikte olduklar\u0131ndan dolay\u0131, fikirlerin ve hayallerin bir araya gelmesini sa\u011flar.\n3. Bu konyunun potansiyel",
+          "planet1_tr": "Merk\u00fcr",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Moon": {
+      "Venus": [
+        {
+          "angle": 119.7658045421926,
+          "interpretation": "Merhaba,\n\nAy ve Vene\u00fcs'\u00fcn trine aspecti, rahat ve sezgisel ili\u015fkileri, estetik, hayalperest ve romantik \u00f6zellikleri ile ilgili olarak iyi gelir. Bu aspect, ki\u015finin insanlar\u0131yla ba\u015flad\u0131klar\u0131 ili\u015fkilerin kolay ve do\u011fal ak\u0131\u015f\u0131n\u0131 sa\u011flayabilir, ayn\u0131 zamanda sanat, m\u00fczik ve g\u00fczellik alanlar\u0131nda ba\u015far\u0131 elde edebilmekte kolayl",
+          "planet1_tr": "Ay",
+          "planet2_tr": "Ven\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Neptune": {
+      "North Node": [
+        {
+          "angle": 113.43434555714865,
+          "interpretation": "Nept\u00fcn ve Kuzey Ay D\u00fc\u011f\u00fcm\u00fc aras\u0131ndaki \u00dc\u00e7gen aspectin do\u011fal olarak uyumlu ve kolayla\u015ft\u0131r\u0131c\u0131 \u00f6zellikleri vard\u0131r. Nept\u00fcn, duygu ve hayal\u00eel\u0131k, Kuzey Ay D\u00fc\u011f\u00fcm\u00fc ise insanlar\u0131n kaderine ve varolu\u015funu yans\u0131tan bir ak\u0131l\u00e7\u0131l\u0131k temsil eder. Bu aspect, bireyin duygusal ya\u015fam\u0131n\u0131 ve kendine \u00f6zg\u00fc yolculu\u011funu anlamakta",
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "type": "Trine"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 64.46743347594264,
+          "interpretation": "Nept\u00fcn ve Sat\u00fcrn sextil aspecti, iki planetin do\u011fal yeteneklerini ve birbirlerine olan uyumunu ifade eder. Nept\u00fcn, hayal ve duygu d\u00fcnyas\u0131n\u0131, idealizm ve empatiyle temsil eder. Sat\u00fcrn ise, istikrar, s\u00fcrekliyet ve y\u00f6netim yetenekleri ile ilgilidir. Bu aspect, hayallerinize ve duygular\u0131n\u0131z\u0131n ger\u00e7ekle\u015ftirilmesine yard\u0131mc\u0131 olur, ayn\u0131 zamanda istik",
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Sextile"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 6.372056163784123,
+          "interpretation": "Nept\u00fcn ve Uran\u00fcs'\u00fcn bu birle\u015fimi, ROUHAAN ve \u00d6ZG\u00dcNL\u00dcK planetlerinin kontakt\u0131n\u0131 ifade eder. Bu birle\u015fim, yenilik ve de\u011fi\u015fim i\u00e7in a\u00e7\u0131kt\u0131r ve bireyin duygusal ya\u015fam\u0131na, hayat\u0131na ve g\u00f6r\u00fc\u015flerine yans\u0131r. Konj\u00fcksyonun bu t\u00fcr\u00fc, bireyin kendi kendine ve d\u00fcnyaya y\u00f6nelik yeni bir yakla\u015f\u0131m ve anlay\u0131\u015f sa\u011flayabilir.",
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "North Node": {
+      "Pluto": [
+        {
+          "angle": 61.00079147560112,
+          "interpretation": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc (North Node) ve Pl\u00fcton (Pluto) aras\u0131ndaki sextil aspectinin do\u011fal olarak pozitif etkisini g\u00f6z \u00f6n\u00fcne al\u0131rken, insanlar\u0131n kendilerini geli\u015ftirmek ve yeniliklerle ilgili riskleri almak i\u00e7in motivasyon almas\u0131n\u0131 sa\u011flar. Bu aspect, ki\u015finin kendi kendine ve tabiat\u0131na olan derin bir ba\u011f\u0131ml\u0131l\u0131\u011f\u0131n y\u00f6netimini \u00f6\u011frenme ve bu ba",
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Pl\u00fcton",
+          "type": "Sextile"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 177.9017790330913,
+          "interpretation": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc, psikolojik olarak kendinizi ve yak\u0131nlar\u0131n\u0131z\u0131n duygu ve d\u00fc\u015f\u00fcncelerini anlamakta yard\u0131mc\u0131 olan bir ak\u0131l planetidir. Sat\u00fcrn ise, kurallara ve s\u0131n\u0131rlara sahip olan bir g\u00fc\u00e7 planetidir.\n\nOpposition aspectinin ak\u0131l ve kuvvet aras\u0131ndaki kar\u015f\u0131la\u015ft\u0131rmas\u0131, ki\u015finin iki y\u00f6nl\u00fc bir karakter ve ya\u015fam tarz\u0131na neden ol",
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Opposition"
+        }
+      ],
+      "Sun": [
+        {
+          "angle": 93.49457383677569,
+          "interpretation": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc ve G\u00fcne\u015f aras\u0131ndaki karesi, iki planeta aras\u0131nda kuvvetli bir t\u00fcrl\u00fc etkile\u015fimdir. Kuzey Ay D\u00fc\u011f\u00fcm\u00fc, kendinizi ve varl\u0131\u011f\u0131n\u0131z\u0131 tan\u0131mlayan bir kuvvet olarak g\u00f6r\u00fcl\u00fcr, G\u00fcne\u015f ise do\u011fal liderlik ve do\u011fal yetenekleriyle tan\u0131n\u0131r. Karesi, bu iki kuvvetin kesi\u015fti\u011fi noktada zorluk ve \u00e7at\u0131",
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "G\u00fcne\u015f",
+          "type": "Square"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 119.80640172093277,
+          "interpretation": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc, insan\u0131n kaderine ve \u00f6zg\u00fcrl\u00fc\u011f\u00fcne y\u00f6nelik duyarl\u0131l\u0131\u011f\u0131n\u0131 art\u0131r\u0131r. Uran\u00fcs ise, ileri gelen, yenilik\u00e7i ve farkl\u0131l\u0131k a\u015fklar\u0131na sahip planetidir. Trine aspect'inin pozitif etkisiyle, bu iki planet aras\u0131ndaki do\u011fal alilik, ki\u015finin kaderine ve \u00f6zg\u00fcrl\u00fc\u011f\u00fcne ili\u015fkin duyarl\u0131l\u0131\u011f\u0131n\u0131 geli\u015f",
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Pluto": {
+      "Saturn": [
+        {
+          "angle": 116.90098755749017,
+          "interpretation": "Pl\u00fcton ve Sat\u00fcrn'in Trine aspecti, iki planetin do\u011fal y\u00f6nlerini bir araya getirir. Pl\u00fcton, yenilik, transformasyon ve derinlik temsil ederken, Sat\u00fcrn ise y\u00f6neticilik, s\u0131n\u0131rlama ve kurallar temsil eder. Trine aspectinin pozitif etkisi sayesinde, bu iki y\u00f6n, birbirlerine kolayca uyum sa\u011flayarak, ki\u015finin derinliklerine inen ve yeni yollara odaklanan yetenekleri geli\u015ftir",
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Trine"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 58.80561024533165,
+          "interpretation": "Pl\u00fcton, g\u00fc\u00e7l\u00fc d\u00fc\u015f\u00fcnceler ve derinlikleri temsil eder, Uran\u00fcs ise de\u011fi\u015fim, \u00f6zg\u00fcrl\u00fck ve ileri geli\u015fmeyle ilgili. Sextile aspectinin kolayl\u0131k sarho\u015flu\u011fu sayesinde, bu iki planeta aras\u0131nda complementer olur. Bu aspect, ki\u015finin derinli\u011fi ve orijinal d\u00fc\u015f\u00fcnceleriyle birlikte, yenilik\u00e7i ve \u00f6zg\u00fcr bir ya\u015fam \u015fekli olu\u015fturmaya y\u00f6nelik",
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Sextile"
+        }
+      ],
+      "Venus": [
+        {
+          "angle": 9.456864158946104,
+          "interpretation": "E\u011fer Pl\u00fcton ve Ven\u00fcs'in birlikte oldu\u011funu d\u00fc\u015f\u00fcn\u00fcrsek, ki\u015finin derinlik ve sevgiyi bir araya getirdi\u011fini ifade eder. Bu birlik, ki\u015finin kendine \u00f6zg\u00fc, saklanm\u0131\u015f duygular\u0131 ve istemlerini tan\u0131mlar. Ayn\u0131 zamanda, bu konjunksiyon, ki\u015finin sevilme ve sahip olma konusunda zorluklarla kar\u015f\u0131la\u015ft\u0131\u011f\u0131n\u0131 da g\u00f6sterebilir.",
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Ven\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Saturn": {
+      "Sun": [
+        {
+          "angle": 84.4072051963156,
+          "interpretation": "Sat\u00fcrn, g\u00fcc, y\u00f6netim ve yasama d\u00fczeni temsil eder. G\u00fcne\u015f ise ki\u015fisel g\u00fc\u00e7, ego ve beyin i\u015flevleriyle ilgili. Square aspecti, birbirlerine 90 derece a\u00e7\u0131l\u0131\u015f\u0131 olan planetleri, birbirlerine tehdit eder ve engel olur, ayn\u0131 anda f\u0131rt\u0131nal\u0131 ve yarat\u0131c\u0131d\u0131r. Bu nedenle, bu kenarla\u015fma, ki\u015finin \u00f6zg\u00fcrl\u00fc\u011f\u00fcn\u00fc, kendi",
+          "planet1_tr": "Sat\u00fcrn",
+          "planet2_tr": "G\u00fcne\u015f",
+          "type": "Square"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 58.09537731215852,
+          "interpretation": "Sat\u00fcrn, y\u00f6netici ve yapayan planeti olarak bilinir, Uran\u00fcs ise ileri teknoloji ve \u00f6zg\u00fcrl\u00fck i\u00e7in symbolize edilir. Sextile aspectinin pozitif etkisiyle, bireyin yetkinlikleri ve ilgi alanlar\u0131 aras\u0131nda ileri teknoloji ve y\u00f6netim konular\u0131nda \u00f6zg\u00fcrl\u00fck duygusu ve fikirleri bulunur. Bu, ki\u015finin ad\u0131m ad\u0131m ilerlemesine ve kendisini tan\u0131mlayan",
+          "planet1_tr": "Sat\u00fcrn",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Sextile"
+        }
+      ]
+    },
+    "Sun": {},
+    "Uranus": {},
+    "Venus": {}
+  },
+  "house_positions": [
+    271.1858269441459,
+    310.26312763399625,
+    351.821641948635,
+    25.282459267739,
+    50.446076476099734,
+    71.19174160559635,
+    91.1858269441459,
+    130.26312763399625,
+    171.82164194863503,
+    205.28245926773903,
+    230.4460764760997,
+    251.19174160559635
+  ],
+  "midheaven": 205.28245926773903,
+  "planet_positions": {
+    "Jupiter": {
+      "degree": 24,
+      "house": 1,
+      "longitude": 294.2983242045063,
+      "minutes": 17,
+      "name_tr": "J\u00fcpiter",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Mars": {
+      "degree": 27,
+      "house": 9,
+      "longitude": 177.93132347009853,
+      "minutes": 55,
+      "name_tr": "Mars",
+      "zodiac_sign": "Ba\u015fak"
+    },
+    "Mercury": {
+      "degree": 17,
+      "house": 1,
+      "longitude": 287.36578661146353,
+      "minutes": 21,
+      "name_tr": "Merk\u00fcr",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Moon": {
+      "degree": 13,
+      "house": 8,
+      "longitude": 133.94804692234,
+      "minutes": 56,
+      "name_tr": "Ay",
+      "zodiac_sign": "Aslan"
+    },
+    "Neptune": {
+      "degree": 26,
+      "house": 1,
+      "longitude": 296.69054138713403,
+      "minutes": 41,
+      "name_tr": "Nept\u00fcn",
+      "zodiac_sign": "O\u011flak"
+    },
+    "North Node": {
+      "degree": 3,
+      "house": 9,
+      "longitude": 183.2561958299854,
+      "minutes": 15,
+      "name_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+      "zodiac_sign": "Terazi"
+    },
+    "Pluto": {
+      "degree": 4,
+      "house": 11,
+      "longitude": 244.2569873055865,
+      "minutes": 15,
+      "name_tr": "Pl\u00fcton",
+      "zodiac_sign": "Yay"
+    },
+    "Saturn": {
+      "degree": 1,
+      "house": 3,
+      "longitude": 1.1579748630766857,
+      "minutes": 9,
+      "name_tr": "Sat\u00fcrn",
+      "zodiac_sign": "Ko\u00e7"
+    },
+    "Sun": {
+      "degree": 6,
+      "house": 1,
+      "longitude": 276.7507696667611,
+      "minutes": 45,
+      "name_tr": "G\u00fcne\u015f",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Uranus": {
+      "degree": 3,
+      "house": 1,
+      "longitude": 303.06259755091816,
+      "minutes": 3,
+      "name_tr": "Uran\u00fcs",
+      "zodiac_sign": "Kova"
+    },
+    "Venus": {
+      "degree": 13,
+      "house": 12,
+      "longitude": 253.7138514645326,
+      "minutes": 42,
+      "name_tr": "Ven\u00fcs",
+      "zodiac_sign": "Yay"
+    }
+  }
+}
+
+2025-02-21 12:36:42,647 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:36:42] "POST /calculate_natal_chart HTTP/1.1" 200 -
