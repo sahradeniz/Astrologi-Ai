@@ -11175,3 +11175,5 @@ AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
 2025-02-21 17:57:42,859 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 17:57:42] "OPTIONS /api/chat HTTP/1.1" 200 -
 2025-02-21 17:57:43,019 - __main__ - ERROR - Chat error: GROQ_API_KEY bulunamadı
 2025-02-21 17:57:43,020 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 17:57:43] "[35m[1mPOST /api/chat HTTP/1.1[0m" 500 -
+2025-02-21 18:06:31,374 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:06:31] "OPTIONS /login HTTP/1.1" 200 -
+2025-02-21 18:06:31,532 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:06:31] "[31m[1mPOST /login HTTP/1.1[0m" 401 -

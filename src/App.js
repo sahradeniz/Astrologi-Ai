@@ -59,11 +59,56 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-function App() {
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
+const Navigation = ({ isAuthenticated, setIsAuthenticated }) => {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
+  const navBgColor = useColorModeValue('white', 'gray.800');
+  const bgColor = useColorModeValue('gray.50', 'gray.900');
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    navigate(tab === 'home' ? '/' : `/${tab}`);
+  };
+
+  if (!isAuthenticated) return null;
+
+  return (
+    <Box bg={navBgColor} px={4} shadow="sm">
+      <Flex h={16} alignItems="center" justifyContent="space-between">
+        <Tabs 
+          variant="soft-rounded" 
+          colorScheme="purple"
+          index={['home', 'profile', 'friends', 'chat'].indexOf(activeTab)}
+          onChange={(index) => handleTabChange(['home', 'profile', 'friends', 'chat'][index])}
+        >
+          <TabList>
+            <Tab>Ana Sayfa</Tab>
+            <Tab>Profil</Tab>
+            <Tab>Arkadaşlar</Tab>
+            <Tab>Sohbet</Tab>
+          </TabList>
+        </Tabs>
+        <Flex alignItems="center">
+          <ColorModeSwitch />
+          <Button
+            variant="ghost"
+            onClick={() => {
+              localStorage.clear();
+              setIsAuthenticated(false);
+              navigate('/login');
+            }}
+            ml={4}
+          >
+            Çıkış
+          </Button>
+        </Flex>
+      </Flex>
+    </Box>
+  );
+};
+
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -72,48 +117,13 @@ function App() {
     }
   }, []);
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    navigate(tab === 'home' ? '/' : `/${tab}`);
-  };
-
   return (
     <ChakraProvider>
-      <Box minH="100vh" bg={bgColor}>
-        {isAuthenticated && (
-          <Box bg={useColorModeValue('white', 'gray.800')} px={4} shadow="sm">
-            <Flex h={16} alignItems="center" justifyContent="space-between">
-              <Tabs 
-                variant="soft-rounded" 
-                colorScheme="purple"
-                index={['home', 'profile', 'friends', 'chat'].indexOf(activeTab)}
-                onChange={(index) => handleTabChange(['home', 'profile', 'friends', 'chat'][index])}
-              >
-                <TabList>
-                  <Tab>Ana Sayfa</Tab>
-                  <Tab>Profil</Tab>
-                  <Tab>Arkadaşlar</Tab>
-                  <Tab>Sohbet</Tab>
-                </TabList>
-              </Tabs>
-              <Flex alignItems="center">
-                <ColorModeSwitch />
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    localStorage.clear();
-                    setIsAuthenticated(false);
-                    navigate('/login');
-                  }}
-                  ml={4}
-                >
-                  Çıkış
-                </Button>
-              </Flex>
-            </Flex>
-          </Box>
-        )}
-        
+      <Box minH="100vh" bg={useColorModeValue('gray.50', 'gray.900')}>
+        <Navigation 
+          isAuthenticated={isAuthenticated} 
+          setIsAuthenticated={setIsAuthenticated}
+        />
         <Box p={4}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
