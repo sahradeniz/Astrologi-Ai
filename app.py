@@ -43,7 +43,7 @@ logger.info(f"Loading environment variables from: {env_path}")
 load_dotenv(dotenv_path=env_path, override=True)  # Force override any existing env vars
 
 OPENCAGE_API_KEY = os.getenv('OPENCAGE_API_KEY')
-ASTROLOGY_API_KEY = os.getenv('ASTROLOGY_API_KEY')
+ASTROLOGY_API_KEY = os.getenv('ASTROLOGY_API_KEY', 'HJ860PA-9HD4EZQ-NFDS992-QB5584S')
 ASTROLOGY_API_URL = "https://api.anythinglmm.com/v1"
 
 logger.info(f"OpenCage API Key: {OPENCAGE_API_KEY}")
