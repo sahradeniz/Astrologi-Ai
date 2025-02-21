@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { ChakraProvider, Box, Flex, Tabs, TabList, Tab, Button, ColorModeToggle } from "@chakra-ui/react";
+import {
+  ChakraProvider,
+  Box,
+  Flex,
+  Tabs,
+  TabList,
+  Tab,
+  Button,
+  useColorMode,
+  useColorModeValue,
+  IconButton,
+} from "@chakra-ui/react";
+import { FaSun, FaMoon } from 'react-icons/fa';
 import Group1 from "./assets/Group1.png";
 import Group2 from "./assets/group2.png";
 import Chart from "./assets/chart.png";
@@ -24,11 +36,26 @@ import SynastryResultsPage from './pages/SynastryResultsPage';
 import ChatPage from './pages/ChatPage';
 import "./App.css";
 
+const ColorModeSwitch = () => {
+  const { colorMode, toggleColorMode } = useColorMode();
+  return (
+    <IconButton
+      aria-label="Toggle color mode"
+      icon={colorMode === 'light' ? <FaMoon /> : <FaSun />}
+      onClick={toggleColorMode}
+      variant="ghost"
+    />
+  );
+};
+
 const ProtectedRoute = ({ children }) => {
-  const userId = localStorage.getItem('userId');
-  if (!userId) {
-    return <Navigate to="/login" />;
+  const token = localStorage.getItem('token');
+  const location = useLocation();
+
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
   return children;
 };
 
@@ -70,7 +97,7 @@ function App() {
                 </TabList>
               </Tabs>
               <Flex alignItems="center">
-                <ColorModeToggle />
+                <ColorModeSwitch />
                 <Button
                   variant="ghost"
                   onClick={() => {
@@ -217,4 +244,12 @@ function App() {
   );
 }
 
-export default App;
+const AppWrapper = () => {
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+};
+
+export default AppWrapper;
