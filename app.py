@@ -21,6 +21,7 @@ from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 import certifi
 import ssl
+from pymongo import MongoClient
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'txt'}
@@ -64,17 +65,19 @@ try:
 
     logger.info("Connecting to MongoDB Atlas...")
     
-    # Configure MongoDB with SSL
-    app.config["MONGO_URI"] = MONGO_URI
-    app.config["MONGO_SSL"] = True
-    app.config["MONGO_SSL_CERT_REQS"] = ssl.CERT_NONE
-    app.config["MONGO_SSL_CA_CERTS"] = certifi.where()
+    # Create MongoClient with TLS configuration
+    client = MongoClient(MONGO_URI, 
+                        tls=True,
+                        tlsAllowInvalidCertificates=True,
+                        serverSelectionTimeoutMS=5000)
     
-    mongo = PyMongo(app)
-    
-    # Test database connection
-    mongo.db.command('ping')
+    # Test connection
+    client.admin.command('ping')
     logger.info("Successfully connected to MongoDB")
+    
+    # Configure Flask-PyMongo
+    app.config["MONGO_URI"] = MONGO_URI
+    mongo = PyMongo(app)
     
 except Exception as e:
     logger.error(f"Failed to connect to MongoDB: {str(e)}")
@@ -83,7 +86,7 @@ except Exception as e:
 # Enable CORS
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3000"],
+        "origins": ["http://localhost:3000", "https://your-render-app-url.onrender.com"],
         "methods": ["GET", "POST", "PUT", "DELETE"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
