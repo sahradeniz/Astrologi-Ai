@@ -59,7 +59,6 @@ app = Flask(__name__)
 
 try:
     from pymongo import MongoClient
-    import certifi
     
     # Get MongoDB URI from environment
     MONGO_URI = os.getenv("MONGO_URI")
@@ -68,20 +67,12 @@ try:
 
     logger.info("Connecting to MongoDB Atlas...")
     
-    # Create MongoClient with Atlas recommended settings
-    client = MongoClient(
-        MONGO_URI,
-        tlsCAFile=certifi.where(),
-        connectTimeoutMS=30000,
-        socketTimeoutMS=None,
-        connect=True,
-        maxPoolSize=1,
-        retryWrites=True
-    )
+    # Create a basic MongoClient
+    client = MongoClient(MONGO_URI)
     
     # Test connection and get database
-    client.admin.command('ping')
-    db = client.get_database('astrologiAi')
+    db = client.astrologiAi
+    db.command("ping")
     logger.info("Successfully connected to MongoDB")
     
 except Exception as e:
