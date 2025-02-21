@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   VStack,
@@ -23,7 +23,7 @@ import {
 import { FaHeart, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const FriendCard = ({ friend, friends, onDelete, onAnalyze }) => {
+const FriendCard = ({ friend, friends, currentUser, onDelete, onAnalyze }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState('');
   const bgColor = useColorModeValue('white', 'gray.700');
@@ -36,11 +36,15 @@ const FriendCard = ({ friend, friends, onDelete, onAnalyze }) => {
   const handlePartnerSelect = () => {
     if (!selectedPartner) return;
     
-    const partner = friends.find(f => f.name === selectedPartner);
-    if (partner) {
-      onAnalyze(friend, partner);
-      setIsModalOpen(false);
+    if (selectedPartner === 'currentUser') {
+      onAnalyze(friend, currentUser);
+    } else {
+      const partner = friends.find(f => f.name === selectedPartner);
+      if (partner) {
+        onAnalyze(friend, partner);
+      }
     }
+    setIsModalOpen(false);
   };
 
   return (
@@ -95,6 +99,20 @@ const FriendCard = ({ friend, friends, onDelete, onAnalyze }) => {
           <ModalBody pb={6}>
             <RadioGroup onChange={setSelectedPartner} value={selectedPartner}>
               <Stack direction="column" spacing={4}>
+                {/* Profil sahibi seçeneği */}
+                <Radio value="currentUser">
+                  <HStack spacing={3}>
+                    <Avatar name={currentUser.name} size="sm" />
+                    <VStack align="start" spacing={0}>
+                      <Text fontWeight="bold">{currentUser.name} (Profil Sahibi)</Text>
+                      <Text fontSize="xs" color="gray.500">
+                        {currentUser.birthDate}
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </Radio>
+
+                {/* Diğer arkadaşlar */}
                 {friends
                   .filter(f => f.name !== friend.name)
                   .map((f, index) => (
@@ -133,9 +151,18 @@ const FriendsList = () => {
   const [friends, setFriends] = useState(() => {
     return JSON.parse(localStorage.getItem('friends') || '[]');
   });
+  const [currentUser, setCurrentUser] = useState(null);
 
   const navigate = useNavigate();
   const toast = useToast();
+
+  useEffect(() => {
+    // Get current user data
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+  }, []);
 
   const handleDelete = (friendToDelete) => {
     const newFriends = friends.filter(
@@ -160,6 +187,14 @@ const FriendsList = () => {
     navigate('/synastry');
   };
 
+  if (!currentUser) {
+    return (
+      <Box textAlign="center" p={6}>
+        <Text>Lütfen önce giriş yapın.</Text>
+      </Box>
+    );
+  }
+
   return (
     <VStack spacing={4} width="full">
       <Button
@@ -179,6 +214,7 @@ const FriendsList = () => {
             key={index}
             friend={friend}
             friends={friends}
+            currentUser={currentUser}
             onDelete={handleDelete}
             onAnalyze={handleAnalyze}
           />
