@@ -56,6 +56,13 @@ load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:3000", "https://your-render-app-url.onrender.com"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 try:
     from pymongo import MongoClient
@@ -78,15 +85,6 @@ try:
 except Exception as e:
     logger.error(f"Failed to connect to MongoDB: {str(e)}")
     raise  # Re-raise the exception to prevent the app from starting with broken DB
-
-# Enable CORS
-CORS(app, resources={
-    r"/api/*": {
-        "origins": ["http://localhost:3000", "https://your-render-app-url.onrender.com"],
-        "methods": ["GET", "POST", "PUT", "DELETE"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
 
 OPENCAGE_API_KEY = os.getenv('OPENCAGE_API_KEY')
 ASTROLOGY_API_KEY = os.getenv('ASTROLOGY_API_KEY', 'HJ860PA-9HD4EZQ-NFDS992-QB5584S')
@@ -960,6 +958,96 @@ def health_check():
         'mongodb_connected': db is not None
     }
     return jsonify(status)
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        
+        # Check if user exists in MongoDB
+        user = db.users.find_one({'email': email})
+        
+        if user:
+            # TODO: Add proper password hashing
+            if password == user.get('password'):  # In production, use proper password comparison
+                return jsonify({
+                    'userId': str(user['_id']),
+                    'name': user.get('name', 'User'),
+                    'email': email
+                })
+            else:
+                return jsonify({'error': 'Invalid password'}), 401
+        else:
+            return jsonify({'error': 'User not found'}), 404
+            
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        name = data.get('name')
+        
+        # Check if user already exists
+        if db.users.find_one({'email': email}):
+            return jsonify({'error': 'Email already registered'}), 400
+            
+        # Create new user
+        user_data = {
+            'email': email,
+            'password': password,  # TODO: Add password hashing
+            'name': name,
+            'created_at': datetime.utcnow()
+        }
+        
+        result = db.users.insert_one(user_data)
+        
+        return jsonify({
+            'userId': str(result.inserted_id),
+            'name': name,
+            'email': email
+        })
+            
+    except Exception as e:
+        logger.error(f"Registration error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/update_user_data', methods=['POST'])
+def update_user_data():
+    try:
+        data = request.get_json()
+        user_id = data.get('userId')
+        user_data = data.get('userData')
+        
+        if not user_id or not user_data:
+            return jsonify({'error': 'Missing required data'}), 400
+            
+        # Update user data
+        result = db.users.update_one(
+            {'_id': ObjectId(user_id)},
+            {'$set': {
+                'birth_data': user_data,
+                'updated_at': datetime.utcnow()
+            }}
+        )
+        
+        if result.modified_count > 0:
+            return jsonify({
+                'success': True,
+                'message': 'User data updated successfully'
+            })
+        else:
+            return jsonify({'error': 'User not found'}), 404
+            
+    except Exception as e:
+        logger.error(f"Update user data error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
     # Start the Flask app
