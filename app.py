@@ -26,8 +26,13 @@ groq_client = Groq(api_key=GROQ_API_KEY)
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf'}
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+REQUIRED_DIRS = ['logs', 'uploads', 'ephe']
+for directory in REQUIRED_DIRS:
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        logging.info(f"Created directory: {directory}")
+
+KNOWLEDGE_BASE_PATH = os.path.join(os.path.dirname(__file__), 'astro_knowledge.json')
 
 # Create logs directory if it doesn't exist
 if not os.path.exists('logs'):
@@ -111,10 +116,10 @@ ASPECTS = {
 
 ASTRO_KNOWLEDGE = {}
 try:
-    with open('astro_knowledge.json', 'r', encoding='utf-8') as f:
+    with open(KNOWLEDGE_BASE_PATH, 'r', encoding='utf-8') as f:
         ASTRO_KNOWLEDGE = json.load(f)
-except FileNotFoundError:
-    logger.warning("No astro_knowledge.json found. Will use base prompts.")
+except (FileNotFoundError, json.JSONDecodeError):
+    logger.warning("No astro_knowledge.json found or invalid JSON. Will use base prompts.")
 
 def init_swiss_ephemeris():
     try:
@@ -255,8 +260,13 @@ def get_aspect_interpretation(aspect_type, planet1, planet2):
 
         # Add any relevant knowledge from our database
         aspect_key = f"{planet1}_{planet2}_{aspect_type}".lower()
-        if aspect_key in ASTRO_KNOWLEDGE:
-            prompt += f"\nConsider this reference: {ASTRO_KNOWLEDGE[aspect_key]}"
+        try:
+            with open(KNOWLEDGE_BASE_PATH, 'r', encoding='utf-8') as f:
+                knowledge_base = json.load(f)
+                if aspect_key in knowledge_base:
+                    prompt += f"\nConsider this reference: {knowledge_base[aspect_key]}"
+        except (FileNotFoundError, json.JSONDecodeError):
+            logger.warning("No knowledge base found or invalid JSON")
 
         # Make API call to Groq
         chat_completion = groq_client.chat.completions.create(
@@ -270,7 +280,7 @@ def get_aspect_interpretation(aspect_type, planet1, planet2):
                     "content": prompt
                 }
             ],
-            model="mixtral-8x7b-32768",  # Using Mixtral for better multilingual support
+            model="mixtral-8x7b-32768",
             temperature=0.7,
             max_tokens=150
         )
@@ -558,16 +568,16 @@ def process_pdf(file_path):
         
         # Update existing knowledge base
         try:
-            with open('astro_knowledge.json', 'r', encoding='utf-8') as f:
+            with open(KNOWLEDGE_BASE_PATH, 'r', encoding='utf-8') as f:
                 current_knowledge = json.load(f)
-        except FileNotFoundError:
+        except (FileNotFoundError, json.JSONDecodeError):
             current_knowledge = {}
 
         # Merge new knowledge
         current_knowledge.update(new_knowledge)
 
         # Save updated knowledge base
-        with open('astro_knowledge.json', 'w', encoding='utf-8') as f:
+        with open(KNOWLEDGE_BASE_PATH, 'w', encoding='utf-8') as f:
             json.dump(current_knowledge, f, ensure_ascii=False, indent=2)
 
         return len(new_knowledge)
@@ -745,10 +755,5 @@ def upload_pdf():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # Ensure the ephe directory exists
-    ephe_path = os.path.join(os.path.dirname(__file__), 'ephe')
-    if not os.path.exists(ephe_path):
-        os.makedirs(ephe_path)
-        
     # Start the Flask app
     app.run(host='0.0.0.0', port=5003, debug=True)
