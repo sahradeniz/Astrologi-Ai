@@ -4,29 +4,24 @@ import {
   Button,
   FormControl,
   FormLabel,
-  Input,
   VStack,
   Container,
   Heading,
   Text,
   useToast,
   useColorModeValue,
-  FormErrorMessage,
-  InputGroup,
-  InputLeftElement,
-  Icon,
   Divider,
   HStack,
   Avatar,
   Select,
 } from '@chakra-ui/react';
-import { FaCalendar, FaClock, FaMapMarkerAlt, FaUser, FaHeart } from 'react-icons/fa';
+import { FaHeart } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const SynastryForm = () => {
-  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [person1, setPerson1] = useState(null);
+  const [person2, setPerson2] = useState(null);
   const [friends, setFriends] = useState([]);
-  const [selectedFriend, setSelectedFriend] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
@@ -34,32 +29,33 @@ const SynastryForm = () => {
   const bgLight = useColorModeValue('gray.50', 'gray.600');
 
   useEffect(() => {
-    // Get logged-in user data
-    const userData = localStorage.getItem('userData');
-    if (userData) {
-      setLoggedInUser(JSON.parse(userData));
-    }
-
     // Get friends list
     const friendsList = localStorage.getItem('friends');
     if (friendsList) {
       setFriends(JSON.parse(friendsList));
     }
 
-    // Check for pre-selected friend from friends list
-    const preSelectedFriend = localStorage.getItem('selectedFriend');
-    if (preSelectedFriend) {
-      setSelectedFriend(JSON.parse(preSelectedFriend));
-      localStorage.removeItem('selectedFriend'); // Clear after using
+    // Check for pre-selected people from friends list
+    const selectedPerson1 = localStorage.getItem('selectedPerson1');
+    const selectedPerson2 = localStorage.getItem('selectedPerson2');
+    
+    if (selectedPerson1) {
+      setPerson1(JSON.parse(selectedPerson1));
+      localStorage.removeItem('selectedPerson1');
+    }
+    
+    if (selectedPerson2) {
+      setPerson2(JSON.parse(selectedPerson2));
+      localStorage.removeItem('selectedPerson2');
     }
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!loggedInUser || !selectedFriend) {
+    if (!person1 || !person2) {
       toast({
         title: "Eksik Bilgi",
-        description: "Lütfen bir arkadaş seçin",
+        description: "Lütfen iki kişi seçin",
         status: "error",
         duration: 3000,
       });
@@ -76,14 +72,14 @@ const SynastryForm = () => {
         },
         body: JSON.stringify({
           person1: {
-            birthDate: loggedInUser.birthDate,
-            birthTime: loggedInUser.birthTime,
-            location: loggedInUser.birthPlace,
+            birthDate: person1.birthDate,
+            birthTime: person1.birthTime,
+            location: person1.birthPlace,
           },
           person2: {
-            birthDate: selectedFriend.birthDate,
-            birthTime: selectedFriend.birthTime,
-            location: selectedFriend.birthPlace,
+            birthDate: person2.birthDate,
+            birthTime: person2.birthTime,
+            location: person2.birthPlace,
           },
         }),
       });
@@ -94,7 +90,6 @@ const SynastryForm = () => {
         throw new Error(data.error || 'Analiz hesaplanamadı');
       }
 
-      // Navigate to results page
       navigate('/synastry-result', { state: { result: data } });
 
     } catch (error) {
@@ -109,10 +104,10 @@ const SynastryForm = () => {
     }
   };
 
-  if (!loggedInUser) {
+  if (friends.length === 0) {
     return (
       <Box textAlign="center" p={6}>
-        <Text>Lütfen önce giriş yapın.</Text>
+        <Text>Henüz kayıtlı kişi yok. Lütfen önce kişi ekleyin.</Text>
       </Box>
     );
   }
@@ -124,25 +119,12 @@ const SynastryForm = () => {
           <VStack spacing={4} align="stretch">
             <Heading size="md" mb={4}>Uyum Analizi</Heading>
 
-            <Box borderRadius="md" p={4} bg={bgLight}>
-              <HStack spacing={4}>
-                <Avatar name={loggedInUser.name} size="md" />
-                <VStack align="start" spacing={1}>
-                  <Text fontWeight="bold">{loggedInUser.name}</Text>
-                  <Text fontSize="sm">{loggedInUser.birthDate}</Text>
-                  <Text fontSize="sm">{loggedInUser.birthPlace}</Text>
-                </VStack>
-              </HStack>
-            </Box>
-
-            <Divider />
-
             <FormControl isRequired>
-              <FormLabel>Arkadaşınızı Seçin</FormLabel>
+              <FormLabel>Birinci Kişi</FormLabel>
               <Select
-                placeholder="Arkadaş seçin"
-                value={selectedFriend ? JSON.stringify(selectedFriend) : ''}
-                onChange={(e) => setSelectedFriend(e.target.value ? JSON.parse(e.target.value) : null)}
+                placeholder="Kişi seçin"
+                value={person1 ? JSON.stringify(person1) : ''}
+                onChange={(e) => setPerson1(e.target.value ? JSON.parse(e.target.value) : null)}
               >
                 {friends.map((friend, index) => (
                   <option key={index} value={JSON.stringify(friend)}>
@@ -152,14 +134,47 @@ const SynastryForm = () => {
               </Select>
             </FormControl>
 
-            {selectedFriend && (
+            {person1 && (
               <Box borderRadius="md" p={4} bg={bgLight}>
                 <HStack spacing={4}>
-                  <Avatar name={selectedFriend.name} size="md" />
+                  <Avatar name={person1.name} size="md" />
                   <VStack align="start" spacing={1}>
-                    <Text fontWeight="bold">{selectedFriend.name}</Text>
-                    <Text fontSize="sm">{selectedFriend.birthDate}</Text>
-                    <Text fontSize="sm">{selectedFriend.birthPlace}</Text>
+                    <Text fontWeight="bold">{person1.name}</Text>
+                    <Text fontSize="sm">{person1.birthDate}</Text>
+                    <Text fontSize="sm">{person1.birthPlace}</Text>
+                  </VStack>
+                </HStack>
+              </Box>
+            )}
+
+            <Divider />
+
+            <FormControl isRequired>
+              <FormLabel>İkinci Kişi</FormLabel>
+              <Select
+                placeholder="Kişi seçin"
+                value={person2 ? JSON.stringify(person2) : ''}
+                onChange={(e) => setPerson2(e.target.value ? JSON.parse(e.target.value) : null)}
+                isDisabled={!person1}
+              >
+                {friends
+                  .filter(friend => !person1 || friend.name !== person1.name)
+                  .map((friend, index) => (
+                    <option key={index} value={JSON.stringify(friend)}>
+                      {friend.name} ({friend.birthDate})
+                    </option>
+                  ))}
+              </Select>
+            </FormControl>
+
+            {person2 && (
+              <Box borderRadius="md" p={4} bg={bgLight}>
+                <HStack spacing={4}>
+                  <Avatar name={person2.name} size="md" />
+                  <VStack align="start" spacing={1}>
+                    <Text fontWeight="bold">{person2.name}</Text>
+                    <Text fontSize="sm">{person2.birthDate}</Text>
+                    <Text fontSize="sm">{person2.birthPlace}</Text>
                   </VStack>
                 </HStack>
               </Box>
@@ -171,7 +186,8 @@ const SynastryForm = () => {
               width="full"
               onClick={handleSubmit}
               isLoading={isLoading}
-              leftIcon={<Icon as={FaHeart} />}
+              leftIcon={<FaHeart />}
+              isDisabled={!person1 || !person2}
             >
               Uyum Analizi Yap
             </Button>

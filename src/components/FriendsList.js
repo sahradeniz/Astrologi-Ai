@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   VStack,
@@ -10,61 +10,126 @@ import {
   Button,
   Divider,
   useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  Radio,
+  RadioGroup,
+  Stack,
 } from '@chakra-ui/react';
 import { FaHeart, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const FriendCard = ({ friend, onDelete, onAnalyze }) => {
+const FriendCard = ({ friend, friends, onDelete, onAnalyze }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState('');
   const bgColor = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
 
+  const handleAnalyze = () => {
+    setIsModalOpen(true);
+  };
+
+  const handlePartnerSelect = () => {
+    if (!selectedPartner) return;
+    
+    const partner = friends.find(f => f.name === selectedPartner);
+    if (partner) {
+      onAnalyze(friend, partner);
+      setIsModalOpen(false);
+    }
+  };
+
   return (
-    <Box
-      p={4}
-      bg={bgColor}
-      borderWidth="1px"
-      borderColor={borderColor}
-      borderRadius="lg"
-      width="full"
-      transition="all 0.2s"
-      _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
-    >
-      <HStack spacing={4} justify="space-between">
-        <HStack spacing={4}>
-          <Avatar name={friend.name} size="md" />
-          <VStack align="start" spacing={0}>
-            <Text fontWeight="bold">{friend.name}</Text>
-            <Text fontSize="sm" color="gray.500">
-              {friend.birthDate}
-            </Text>
-            <Text fontSize="xs" color="gray.500">
-              {friend.birthPlace}
-            </Text>
-          </VStack>
+    <>
+      <Box
+        p={4}
+        bg={bgColor}
+        borderWidth="1px"
+        borderColor={borderColor}
+        borderRadius="lg"
+        width="full"
+        transition="all 0.2s"
+        _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
+      >
+        <HStack spacing={4} justify="space-between">
+          <HStack spacing={4}>
+            <Avatar name={friend.name} size="md" />
+            <VStack align="start" spacing={0}>
+              <Text fontWeight="bold">{friend.name}</Text>
+              <Text fontSize="sm" color="gray.500">
+                {friend.birthDate}
+              </Text>
+              <Text fontSize="xs" color="gray.500">
+                {friend.birthPlace}
+              </Text>
+            </VStack>
+          </HStack>
+          <HStack>
+            <IconButton
+              icon={<FaHeart />}
+              colorScheme="purple"
+              variant="ghost"
+              onClick={handleAnalyze}
+              aria-label="Analyze compatibility"
+            />
+            <IconButton
+              icon={<FaTrash />}
+              colorScheme="red"
+              variant="ghost"
+              onClick={() => onDelete(friend)}
+              aria-label="Delete friend"
+            />
+          </HStack>
         </HStack>
-        <HStack>
-          <IconButton
-            icon={<FaHeart />}
-            colorScheme="purple"
-            variant="ghost"
-            onClick={() => onAnalyze(friend)}
-            aria-label="Analyze compatibility"
-          />
-          <IconButton
-            icon={<FaTrash />}
-            colorScheme="red"
-            variant="ghost"
-            onClick={() => onDelete(friend)}
-            aria-label="Delete friend"
-          />
-        </HStack>
-      </HStack>
-    </Box>
+      </Box>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Partner Seçin</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <RadioGroup onChange={setSelectedPartner} value={selectedPartner}>
+              <Stack direction="column" spacing={4}>
+                {friends
+                  .filter(f => f.name !== friend.name)
+                  .map((f, index) => (
+                    <Radio key={index} value={f.name}>
+                      <HStack spacing={3}>
+                        <Avatar name={f.name} size="sm" />
+                        <VStack align="start" spacing={0}>
+                          <Text fontWeight="bold">{f.name}</Text>
+                          <Text fontSize="xs" color="gray.500">
+                            {f.birthDate}
+                          </Text>
+                        </VStack>
+                      </HStack>
+                    </Radio>
+                  ))}
+              </Stack>
+            </RadioGroup>
+            <Button
+              colorScheme="purple"
+              mt={6}
+              width="full"
+              onClick={handlePartnerSelect}
+              leftIcon={<FaHeart />}
+              isDisabled={!selectedPartner}
+            >
+              Uyum Analizi Yap
+            </Button>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </>
   );
 };
 
 const FriendsList = () => {
-  const [friends, setFriends] = React.useState(() => {
+  const [friends, setFriends] = useState(() => {
     return JSON.parse(localStorage.getItem('friends') || '[]');
   });
 
@@ -87,9 +152,10 @@ const FriendsList = () => {
     });
   };
 
-  const handleAnalyze = (friend) => {
-    // Store selected friend data for synastry
-    localStorage.setItem('selectedFriend', JSON.stringify(friend));
+  const handleAnalyze = (person1, person2) => {
+    // Store both people's data for synastry
+    localStorage.setItem('selectedPerson1', JSON.stringify(person1));
+    localStorage.setItem('selectedPerson2', JSON.stringify(person2));
     navigate('/synastry');
   };
 
@@ -111,6 +177,7 @@ const FriendsList = () => {
           <FriendCard
             key={index}
             friend={friend}
+            friends={friends}
             onDelete={handleDelete}
             onAnalyze={handleAnalyze}
           />
