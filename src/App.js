@@ -9,6 +9,7 @@ import CharacterPage from "./pages/CharacterPage";
 import TransitPage from "./pages/TransitPage";
 import SynastryPage from "./pages/SynastryPage";
 import LifePurposePage from "./pages/LifePurposePage";
+import AdminPage from './pages/AdminPage';
 import "./App.css";
 
 const App = () => {
@@ -70,6 +71,7 @@ const App = () => {
             />
             <Route path="/synastry" element={<SynastryPage />} />
             <Route path="/life-purpose" element={<LifePurposePage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </div>
       </div>

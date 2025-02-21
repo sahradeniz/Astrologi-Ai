@@ -15,6 +15,19 @@ import urllib.request
 import zipfile
 import io
 import traceback
+import json
+from groq import Groq
+import PyPDF2
+from werkzeug.utils import secure_filename
+
+GROQ_API_KEY = "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"
+groq_client = Groq(api_key=GROQ_API_KEY)
+
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'pdf'}
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 # Create logs directory if it doesn't exist
 if not os.path.exists('logs'):
@@ -95,6 +108,13 @@ ASPECTS = {
     'Square': {'angle': 90, 'orb': 7},
     'Sextile': {'angle': 60, 'orb': 6}
 }
+
+ASTRO_KNOWLEDGE = {}
+try:
+    with open('astro_knowledge.json', 'r', encoding='utf-8') as f:
+        ASTRO_KNOWLEDGE = json.load(f)
+except FileNotFoundError:
+    logger.warning("No astro_knowledge.json found. Will use base prompts.")
 
 def init_swiss_ephemeris():
     try:
@@ -222,31 +242,43 @@ def get_house(longitude, houses):
 
 def get_aspect_interpretation(aspect_type, planet1, planet2):
     try:
-        url = f"{ASTROLOGY_API_URL}/aspects/interpret"  # Updated endpoint path
-        headers = {
-            "Authorization": f"Bearer {ASTROLOGY_API_KEY}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "aspect_type": aspect_type,
-            "planet1": planet1,
-            "planet2": planet2,
-            "language": "tr"  # Add language parameter
-        }
-        logger.info(f"Making API request to {url} with data: {data}")
-        response = requests.post(url, headers=headers, json=data)
-        logger.info(f"API response status: {response.status_code}")
-        logger.info(f"API response content: {response.text}")
+        # Create a context-rich prompt
+        prompt = f"""As an expert astrologer, provide a detailed interpretation of the {aspect_type} aspect between {planet1} and {planet2}.
+        Consider:
+        1. The nature of both planets
+        2. The type of aspect ({aspect_type}) and its influence
+        3. The potential manifestations in personality and life
         
-        if response.status_code == 404:
-            logger.warning(f"No interpretation found for {aspect_type} between {planet1} and {planet2}")
-            return None
-            
-        response.raise_for_status()
-        result = response.json()
-        interpretation = result.get('interpretation') or result.get('message')
-        logger.info(f"Got interpretation: {interpretation}")
+        Please provide the interpretation in Turkish language.
+        Keep the response concise but meaningful (2-3 sentences).
+        """
+
+        # Add any relevant knowledge from our database
+        aspect_key = f"{planet1}_{planet2}_{aspect_type}".lower()
+        if aspect_key in ASTRO_KNOWLEDGE:
+            prompt += f"\nConsider this reference: {ASTRO_KNOWLEDGE[aspect_key]}"
+
+        # Make API call to Groq
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert astrologer specializing in natal chart interpretation."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            model="mixtral-8x7b-32768",  # Using Mixtral for better multilingual support
+            temperature=0.7,
+            max_tokens=150
+        )
+
+        interpretation = chat_completion.choices[0].message.content.strip()
+        logger.info(f"Generated interpretation for {aspect_type} between {planet1} and {planet2}")
         return interpretation
+
     except Exception as e:
         logger.error(f"Error getting aspect interpretation: {str(e)}")
         return None
@@ -486,6 +518,64 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
     return decorated
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def process_pdf(file_path):
+    """Extract text from PDF and update knowledge base"""
+    try:
+        with open(file_path, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            text_content = ""
+            
+            # Extract text from all pages
+            for page in pdf_reader.pages:
+                text_content += page.extract_text()
+
+        # Process the content with Groq to extract astrological knowledge
+        prompt = """Analyze this astrological text and extract key interpretations for aspects between planets.
+        Format the output as JSON with keys in the format: "planet1_planet2_aspect_type" (all lowercase).
+        Example: {"sun_moon_conjunction": "interpretation text"}
+        Only include actual interpretations found in the text."""
+
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert at analyzing astrological texts and extracting structured information."
+                },
+                {
+                    "role": "user",
+                    "content": prompt + "\n\nText to analyze:\n" + text_content[:8000]  # Limit text length
+                }
+            ],
+            model="mixtral-8x7b-32768",
+            temperature=0.3,
+            max_tokens=1000
+        )
+
+        new_knowledge = json.loads(chat_completion.choices[0].message.content)
+        
+        # Update existing knowledge base
+        try:
+            with open('astro_knowledge.json', 'r', encoding='utf-8') as f:
+                current_knowledge = json.load(f)
+        except FileNotFoundError:
+            current_knowledge = {}
+
+        # Merge new knowledge
+        current_knowledge.update(new_knowledge)
+
+        # Save updated knowledge base
+        with open('astro_knowledge.json', 'w', encoding='utf-8') as f:
+            json.dump(current_knowledge, f, ensure_ascii=False, indent=2)
+
+        return len(new_knowledge)
+
+    except Exception as e:
+        logger.error(f"Error processing PDF: {str(e)}")
+        raise
+
 @app.route('/calculate_natal_chart', methods=['POST'])
 def calculate_natal_chart():
     try:
@@ -619,6 +709,39 @@ def calculate_transits():
         })
         
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/upload_pdf', methods=['POST'])
+def upload_pdf():
+    """Endpoint to handle PDF uploads for training"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Only PDF files are allowed'}), 400
+
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(file_path)
+
+        # Process the PDF and update knowledge base
+        num_interpretations = process_pdf(file_path)
+
+        # Clean up
+        os.remove(file_path)
+
+        return jsonify({
+            'message': f'Successfully processed PDF and extracted {num_interpretations} interpretations',
+            'status': 'success'
+        })
+
+    except Exception as e:
+        logger.error(f"Error in upload_pdf: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

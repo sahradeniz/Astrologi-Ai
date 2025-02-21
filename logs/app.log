@@ -8452,3 +8452,1423 @@ AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
 }
 
 2025-02-21 12:09:42,278 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:09:42] "POST /calculate_natal_chart HTTP/1.1" 200 -
+2025-02-21 12:10:33,357 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 12:10:33,402 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 12:10:33,728 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:10:33,729 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:10:33,729 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:10:33,729 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:10:33,729 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:10:33,763 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 12:10:33,788 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 12:10:50,498 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:10:50,499 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:10:50,499 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:10:50,499 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:10:50,499 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:11:05,568 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:11:05] "OPTIONS /calculate_natal_chart HTTP/1.1" 200 -
+2025-02-21 12:11:05,575 - __main__ - INFO - Received request data: {'birthDate': '1996-12-28', 'birthTime': '07:10', 'location': 'istanbul'}
+2025-02-21 12:11:05,576 - __main__ - INFO - Attempting to get coordinates for location: istanbul
+2025-02-21 12:11:05,577 - __main__ - INFO - Making request to OpenCage API: https://api.opencagedata.com/geocode/v1/json?q=istanbul&key=242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:11:06,260 - __main__ - INFO - OpenCage API response: {'documentation': 'https://opencagedata.com/api', 'licenses': [{'name': 'see attribution guide', 'url': 'https://opencagedata.com/credits'}], 'rate': {'limit': 2500, 'remaining': 2485, 'reset': 1740182400}, 'results': [{'annotations': {'DMS': {'lat': "41° 0' 22.97160'' N", 'lng': "28° 58' 33.13740'' E"}, 'MGRS': '35TPF6616241345', 'Maidenhead': 'KN41la71cm', 'Mercator': {'x': 3225579.261, 'y': 4985240.162}, 'NUTS': {'NUTS0': {'code': 'TR'}, 'NUTS1': {'code': 'TR1'}, 'NUTS2': {'code': 'TR10'}, 'NUTS3': {'code': 'TR100'}}, 'OSM': {'edit_url': 'https://www.openstreetmap.org/edit?node=1882099475#map=17/41.00638/28.97587', 'note_url': 'https://www.openstreetmap.org/note/new#map=17/41.00638/28.97587&layers=N', 'url': 'https://www.openstreetmap.org/?mlat=41.00638&mlon=28.97587#map=17/41.00638/28.97587'}, 'UN_M49': {'regions': {'ASIA': '142', 'TR': '792', 'WESTERN_ASIA': '145', 'WORLD': '001'}, 'statistical_groupings': ['LEDC']}, 'callingcode': 90, 'currency': {'alternate_symbols': ['TL'], 'decimal_mark': ',', 'html_entity': '&#8378;', 'iso_code': 'TRY', 'iso_numeric': '949', 'name': 'Turkish Lira', 'smallest_denomination': 1, 'subunit': 'kuruş', 'subunit_to_unit': 100, 'symbol': '₺', 'symbol_first': 1, 'thousands_separator': '.'}, 'flag': '🇹🇷', 'geohash': 'sxk972gx6xry8z1yu71m', 'qibla': 151.61, 'roadinfo': {'drive_on': 'right', 'speed_in': 'km/h'}, 'sun': {'rise': {'apparent': 1740113460, 'astronomical': 1740108000, 'civil': 1740111780, 'nautical': 1740109860}, 'set': {'apparent': 1740152700, 'astronomical': 1740158160, 'civil': 1740154380, 'nautical': 1740156300}}, 'timezone': {'name': 'Europe/Istanbul', 'now_in_dst': 0, 'offset_sec': 10800, 'offset_string': '+0300', 'short_name': '+03'}, 'what3words': {'words': 'reboot.offer.organ'}, 'wikidata': 'Q406'}, 'bounds': {'northeast': {'lat': 41.166381, 'lng': 29.1358715}, 'southwest': {'lat': 40.846381, 'lng': 28.8158715}}, 'components': {'ISO_3166-1_alpha-2': 'TR', 'ISO_3166-1_alpha-3': 'TUR', 'ISO_3166-2': ['TR-34'], '_category': 'place', '_normalized_city': 'Istanbul', '_type': 'city', 'city': 'Istanbul', 'continent': 'Europe', 'country': 'Turkey', 'country_code': 'tr', 'postcode': '34122', 'province': 'Istanbul', 'region': 'Marmara Region', 'state': 'Istanbul', 'town': 'Fatih'}, 'confidence': 3, 'formatted': 'Istanbul, Turkey', 'geometry': {'lat': 41.006381, 'lng': 28.9758715}}, {'annotations': {'DMS': {'lat': "41° 4' 35.76684'' N", 'lng': "29° 3' 8.98200'' E"}, 'MGRS': '35TPF7242349290', 'Maidenhead': 'KN41mb68hj', 'Mercator': {'x': 3234108.95, 'y': 4995564.674}, 'NUTS': {'NUTS0': {'code': 'TR'}, 'NUTS1': {'code': 'TR1'}, 'NUTS2': {'code': 'TR10'}, 'NUTS3': {'code': 'TR100'}}, 'OSM': {'edit_url': 'https://www.openstreetmap.org/edit?relation=223474#map=17/41.07660/29.05250', 'note_url': 'https://www.openstreetmap.org/note/new#map=17/41.07660/29.05250&layers=N', 'url': 'https://www.openstreetmap.org/?mlat=41.07660&mlon=29.05250#map=17/41.07660/29.05250'}, 'UN_M49': {'regions': {'ASIA': '142', 'TR': '792', 'WESTERN_ASIA': '145', 'WORLD': '001'}, 'statistical_groupings': ['LEDC']}, 'callingcode': 90, 'currency': {'alternate_symbols': ['TL'], 'decimal_mark': ',', 'html_entity': '&#8378;', 'iso_code': 'TRY', 'iso_numeric': '949', 'name': 'Turkish Lira', 'smallest_denomination': 1, 'subunit': 'kuruş', 'subunit_to_unit': 100, 'symbol': '₺', 'symbol_first': 1, 'thousands_separator': '.'}, 'flag': '🇹🇷', 'geohash': 'sxk9tjg2s1w6swxx0n6g', 'qibla': 151.87, 'roadinfo': {'drive_on': 'right', 'speed_in': 'km/h'}, 'sun': {'rise': {'apparent': 1740113460, 'astronomical': 1740107940, 'civil': 1740111780, 'nautical': 1740109860}, 'set': {'apparent': 1740152640, 'astronomical': 1740158160, 'civil': 1740154320, 'nautical': 1740156240}}, 'timezone': {'name': 'Europe/Istanbul', 'now_in_dst': 0, 'offset_sec': 10800, 'offset_string': '+0300', 'short_name': '+03'}, 'what3words': {'words': 'polite.mission.ready'}, 'wikidata': 'Q534799'}, 'bounds': {'northeast': {'lat': 41.671, 'lng': 29.9588048}, 'southwest': {'lat': 40.7376735, 'lng': 27.9708481}}, 'components': {'ISO_3166-1_alpha-2': 'TR', 'ISO_3166-1_alpha-3': 'TUR', 'ISO_3166-2': ['TR-34'], '_category': 'place', '_type': 'state', 'continent': 'Asia', 'country': 'Turkey', 'country_code': 'tr', 'province': 'Istanbul', 'region': 'Marmara Region', 'state': 'Istanbul'}, 'confidence': 1, 'formatted': 'Istanbul, Turkey', 'geometry': {'lat': 41.0766019, 'lng': 29.052495}}], 'status': {'code': 200, 'message': 'OK'}, 'stay_informed': {'blog': 'https://blog.opencagedata.com', 'mastodon': 'https://en.osm.town/@opencage'}, 'thanks': 'For using an OpenCage API', 'timestamp': {'created_http': 'Fri, 21 Feb 2025 09:11:05 GMT', 'created_unix': 1740129065}, 'total_results': 2}
+2025-02-21 12:11:06,262 - __main__ - INFO - Successfully got coordinates: lat=41.006381, lng=28.9758715, timezone=Europe/Istanbul
+2025-02-21 12:11:06,263 - __main__ - INFO - Location data: {'latitude': 41.006381, 'longitude': 28.9758715, 'timezone': 'Europe/Istanbul'}
+2025-02-21 12:11:06,263 - __main__ - INFO - Starting chart calculation with date=1996-12-28, time=07:10, location={'latitude': 41.006381, 'longitude': 28.9758715, 'timezone': 'Europe/Istanbul'}
+2025-02-21 12:11:06,269 - __main__ - INFO - Parsed local datetime: 1996-12-28 07:10:00
+2025-02-21 12:11:06,309 - __main__ - INFO - Converted to UTC: 1996-12-28 05:10:00+00:00
+2025-02-21 12:11:06,309 - __main__ - INFO - Calculated Julian day: 2450445.715277778
+2025-02-21 12:11:06,310 - __main__ - INFO - Calculated houses: (271.1858269441459, 310.26312763399625, 351.821641948635, 25.282459267739, 50.446076476099734, 71.19174160559635, 91.1858269441459, 130.26312763399625, 171.82164194863503, 205.28245926773903, 230.4460764760997, 251.19174160559635)
+2025-02-21 12:11:06,310 - __main__ - INFO - Calculated ascmc: (271.1858269441459, 205.28245926773903, 203.42978224097405, 131.86522678091868, 291.682935239813, 307.75803992876445, 264.2356878747288, 127.75803992876445)
+2025-02-21 12:11:06,310 - __main__ - INFO - Calculating position for Sun (ID: 0)
+2025-02-21 12:11:06,311 - __main__ - INFO - Raw calculation result for Sun: ((276.7507696667611, -0.0001758872339995798, 0.9833297505841149, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,311 - __main__ - INFO - Normalized longitude for Sun: 276.7507696667611
+2025-02-21 12:11:06,311 - __main__ - INFO - Position in sign for Sun: Oğlak 6°45'
+2025-02-21 12:11:06,311 - __main__ - INFO - Final position for Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:11:06,311 - __main__ - INFO - Calculating position for Moon (ID: 1)
+2025-02-21 12:11:06,311 - __main__ - INFO - Raw calculation result for Moon: ((133.94804692234, -3.774783307346077, 0.0027072527693113154, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,311 - __main__ - INFO - Normalized longitude for Moon: 133.94804692234
+2025-02-21 12:11:06,311 - __main__ - INFO - Position in sign for Moon: Aslan 13°56'
+2025-02-21 12:11:06,311 - __main__ - INFO - Final position for Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:11:06,311 - __main__ - INFO - Calculating position for Mercury (ID: 2)
+2025-02-21 12:11:06,311 - __main__ - INFO - Raw calculation result for Mercury: ((287.36578661146353, 1.176039025481328, 0.718255494901402, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,311 - __main__ - INFO - Normalized longitude for Mercury: 287.36578661146353
+2025-02-21 12:11:06,312 - __main__ - INFO - Position in sign for Mercury: Oğlak 17°21'
+2025-02-21 12:11:06,312 - __main__ - INFO - Final position for Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:11:06,312 - __main__ - INFO - Calculating position for Venus (ID: 3)
+2025-02-21 12:11:06,312 - __main__ - INFO - Raw calculation result for Venus: ((253.7138514645326, 0.9310716144650166, 1.5170279156537079, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,312 - __main__ - INFO - Normalized longitude for Venus: 253.7138514645326
+2025-02-21 12:11:06,312 - __main__ - INFO - Position in sign for Venus: Yay 13°42'
+2025-02-21 12:11:06,312 - __main__ - INFO - Final position for Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:11:06,312 - __main__ - INFO - Calculating position for Mars (ID: 4)
+2025-02-21 12:11:06,312 - __main__ - INFO - Raw calculation result for Mars: ((177.93132347009853, 2.565561250241301, 1.1962471239946229, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,312 - __main__ - INFO - Normalized longitude for Mars: 177.93132347009853
+2025-02-21 12:11:06,312 - __main__ - INFO - Position in sign for Mars: Başak 27°55'
+2025-02-21 12:11:06,312 - __main__ - INFO - Final position for Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:11:06,312 - __main__ - INFO - Calculating position for Jupiter (ID: 5)
+2025-02-21 12:11:06,313 - __main__ - INFO - Raw calculation result for Jupiter: ((294.2983242045063, -0.32622532951679906, 6.067748781827586, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,313 - __main__ - INFO - Normalized longitude for Jupiter: 294.2983242045063
+2025-02-21 12:11:06,313 - __main__ - INFO - Position in sign for Jupiter: Oğlak 24°17'
+2025-02-21 12:11:06,313 - __main__ - INFO - Final position for Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:11:06,313 - __main__ - INFO - Calculating position for Saturn (ID: 6)
+2025-02-21 12:11:06,313 - __main__ - INFO - Raw calculation result for Saturn: ((1.1579748630766857, -2.372029366969906, 9.51718007460616, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,313 - __main__ - INFO - Normalized longitude for Saturn: 1.1579748630766857
+2025-02-21 12:11:06,313 - __main__ - INFO - Position in sign for Saturn: Koç 1°9'
+2025-02-21 12:11:06,313 - __main__ - INFO - Final position for Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:11:06,313 - __main__ - INFO - Calculating position for Uranus (ID: 7)
+2025-02-21 12:11:06,313 - __main__ - INFO - Raw calculation result for Uranus: ((303.06259755091816, -0.5694183485002708, 20.673445239850505, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,313 - __main__ - INFO - Normalized longitude for Uranus: 303.06259755091816
+2025-02-21 12:11:06,313 - __main__ - INFO - Position in sign for Uranus: Kova 3°3'
+2025-02-21 12:11:06,313 - __main__ - INFO - Final position for Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:11:06,314 - __main__ - INFO - Calculating position for Neptune (ID: 8)
+2025-02-21 12:11:06,314 - __main__ - INFO - Raw calculation result for Neptune: ((296.69054138713403, 0.4276026737517369, 31.078617788335507, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,314 - __main__ - INFO - Normalized longitude for Neptune: 296.69054138713403
+2025-02-21 12:11:06,314 - __main__ - INFO - Position in sign for Neptune: Oğlak 26°41'
+2025-02-21 12:11:06,314 - __main__ - INFO - Final position for Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:11:06,314 - __main__ - INFO - Calculating position for Pluto (ID: 9)
+2025-02-21 12:11:06,314 - __main__ - INFO - Raw calculation result for Pluto: ((244.2569873055865, 12.380932854035862, 30.751657702589373, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:11:06,314 - __main__ - INFO - Normalized longitude for Pluto: 244.2569873055865
+2025-02-21 12:11:06,314 - __main__ - INFO - Position in sign for Pluto: Yay 4°15'
+2025-02-21 12:11:06,314 - __main__ - INFO - Final position for Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:11:06,315 - __main__ - INFO - Calculating position for North Node (ID: 10)
+2025-02-21 12:11:06,315 - __main__ - INFO - Raw calculation result for North Node: ((183.2561958299854, 0.0, 0.0025695552897999903, -0.05294735022669475, 0.0, 0.0), 258)
+2025-02-21 12:11:06,315 - __main__ - INFO - Normalized longitude for North Node: 183.2561958299854
+2025-02-21 12:11:06,315 - __main__ - INFO - Position in sign for North Node: Terazi 3°15'
+2025-02-21 12:11:06,315 - __main__ - INFO - Final position for North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:11:06,315 - __main__ - INFO - Calculating position for Chiron (ID: 15)
+2025-02-21 12:11:06,315 - __main__ - ERROR - Error calculating Chiron: swisseph.calc_ut: SwissEph file 'seas_18.se1' not found in PATH '/usr/share/swisseph:/usr/local/share/swisseph/'
+2025-02-21 12:11:06,317 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/ofis/Astrologi-Ai/app.py", line 315, in calculate_planet_position
+    result = swe.calc_ut(jd, planet_id, flags)
+swisseph.Error: swisseph.calc_ut: SwissEph file 'seas_18.se1' not found in PATH '/usr/share/swisseph:/usr/local/share/swisseph/'
+
+2025-02-21 12:11:06,317 - __main__ - ERROR - Failed to calculate position for Chiron
+2025-02-21 12:11:06,317 - __main__ - INFO - Calculating position for Lilith (ID: 12)
+2025-02-21 12:11:06,317 - __main__ - ERROR - Error calculating Lilith: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
+2025-02-21 12:11:06,317 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/ofis/Astrologi-Ai/app.py", line 312, in calculate_planet_position
+    flags |= swe.FLG_MEAN_APOG
+AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
+
+2025-02-21 12:11:06,317 - __main__ - ERROR - Failed to calculate position for Lilith
+2025-02-21 12:11:06,317 - __main__ - WARNING - Missing planets: {'Lilith', 'Chiron'}
+2025-02-21 12:11:06,317 - __main__ - INFO - Successfully calculated positions for planets:
+2025-02-21 12:11:06,317 - __main__ - INFO - Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:11:06,317 - __main__ - INFO - Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:11:06,317 - __main__ - INFO - Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:11:06,317 - __main__ - INFO - Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:11:06,318 - __main__ - INFO - Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:11:06,318 - __main__ - INFO - Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:11:06,318 - __main__ - INFO - Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:11:06,318 - __main__ - INFO - Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:11:06,318 - __main__ - INFO - Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:11:06,318 - __main__ - INFO - Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:11:06,318 - __main__ - INFO - North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:11:06,321 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cd970>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,325 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5370>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,332 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5d30>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,338 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f0730>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,341 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5ca0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,343 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5190>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,345 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cd8e0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,347 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f0700>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,350 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5fa130>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,352 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10d83f850>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,353 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cd3d0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,355 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f0580>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,356 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f0ac0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,358 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5730>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,359 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5fa040>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,361 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5ca0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,362 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5760>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,364 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f05e0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,366 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5faaf0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,367 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5faa30>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,368 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cd880>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,371 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f0580>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:11:06,372 - __main__ - INFO - Calculated aspects: {'Sun': {}, 'Moon': {'Venus': [{'type': 'Trine', 'angle': 119.7658045421926, 'planet1_tr': 'Ay', 'planet2_tr': 'Venüs'}]}, 'Mercury': {'Neptune': [{'type': 'Conjunction', 'angle': 9.324754775670499, 'planet1_tr': 'Merkür', 'planet2_tr': 'Neptün'}]}, 'Venus': {}, 'Mars': {'Saturn': [{'type': 'Opposition', 'angle': 176.77334860702186, 'planet1_tr': 'Mars', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Trine', 'angle': 125.13127408081962, 'planet1_tr': 'Mars', 'planet2_tr': 'Uranüs'}], 'Neptune': [{'type': 'Trine', 'angle': 118.7592179170355, 'planet1_tr': 'Mars', 'planet2_tr': 'Neptün'}], 'North Node': [{'type': 'Conjunction', 'angle': 5.324872359886854, 'planet1_tr': 'Mars', 'planet2_tr': 'Kuzey Ay Düğümü'}]}, 'Jupiter': {'Mercury': [{'type': 'Conjunction', 'angle': 6.932537593042753, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Merkür'}], 'Mars': [{'type': 'Trine', 'angle': 116.36700073440775, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Mars'}], 'Uranus': [{'type': 'Conjunction', 'angle': 8.76427334641187, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Uranüs'}], 'Neptune': [{'type': 'Conjunction', 'angle': 2.3922171826277463, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Neptün'}]}, 'Saturn': {'Sun': [{'type': 'Square', 'angle': 84.4072051963156, 'planet1_tr': 'Satürn', 'planet2_tr': 'Güneş'}], 'Uranus': [{'type': 'Sextile', 'angle': 58.09537731215852, 'planet1_tr': 'Satürn', 'planet2_tr': 'Uranüs'}]}, 'Uranus': {}, 'Neptune': {'Saturn': [{'type': 'Sextile', 'angle': 64.46743347594264, 'planet1_tr': 'Neptün', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Conjunction', 'angle': 6.372056163784123, 'planet1_tr': 'Neptün', 'planet2_tr': 'Uranüs'}], 'North Node': [{'type': 'Trine', 'angle': 113.43434555714865, 'planet1_tr': 'Neptün', 'planet2_tr': 'Kuzey Ay Düğümü'}]}, 'Pluto': {'Venus': [{'type': 'Conjunction', 'angle': 9.456864158946104, 'planet1_tr': 'Plüton', 'planet2_tr': 'Venüs'}], 'Saturn': [{'type': 'Trine', 'angle': 116.90098755749017, 'planet1_tr': 'Plüton', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Sextile', 'angle': 58.80561024533165, 'planet1_tr': 'Plüton', 'planet2_tr': 'Uranüs'}]}, 'North Node': {'Sun': [{'type': 'Square', 'angle': 93.49457383677569, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Güneş'}], 'Saturn': [{'type': 'Opposition', 'angle': 177.9017790330913, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Trine', 'angle': 119.80640172093277, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Uranüs'}], 'Pluto': [{'type': 'Sextile', 'angle': 61.00079147560112, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Plüton'}]}}
+2025-02-21 12:11:06,372 - __main__ - INFO - Chart calculation completed successfully
+2025-02-21 12:11:06,372 - __main__ - INFO - Calculated chart data:
+2025-02-21 12:11:06,372 - __main__ - INFO - Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:11:06,372 - __main__ - INFO - Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:11:06,372 - __main__ - INFO - Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:11:06,372 - __main__ - INFO - Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:11:06,372 - __main__ - INFO - Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:11:06,372 - __main__ - INFO - Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:11:06,372 - __main__ - INFO - Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:11:06,372 - __main__ - INFO - Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:11:06,372 - __main__ - INFO - Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:11:06,372 - __main__ - INFO - Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:11:06,373 - __main__ - INFO - North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:11:06,373 - __main__ - INFO - Number of aspects: 11
+2025-02-21 12:11:06,373 - __main__ - INFO - House positions: [271.1858269441459, 310.26312763399625, 351.821641948635, 25.282459267739, 50.446076476099734, 71.19174160559635, 91.1858269441459, 130.26312763399625, 171.82164194863503, 205.28245926773903, 230.4460764760997, 251.19174160559635]
+2025-02-21 12:11:06,373 - __main__ - WARNING - Missing planets in calculation: {'Lilith', 'Chiron'}
+2025-02-21 12:11:06,374 - __main__ - INFO - Sending response: {
+  "ascendant": 271.1858269441459,
+  "aspects": {
+    "Jupiter": {
+      "Mars": [
+        {
+          "angle": 116.36700073440775,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Mars",
+          "type": "Trine"
+        }
+      ],
+      "Mercury": [
+        {
+          "angle": 6.932537593042753,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Merk\u00fcr",
+          "type": "Conjunction"
+        }
+      ],
+      "Neptune": [
+        {
+          "angle": 2.3922171826277463,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Conjunction"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 8.76427334641187,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Mars": {
+      "Neptune": [
+        {
+          "angle": 118.7592179170355,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Trine"
+        }
+      ],
+      "North Node": [
+        {
+          "angle": 5.324872359886854,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "type": "Conjunction"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 176.77334860702186,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Opposition"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 125.13127408081962,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Mercury": {
+      "Neptune": [
+        {
+          "angle": 9.324754775670499,
+          "planet1_tr": "Merk\u00fcr",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Moon": {
+      "Venus": [
+        {
+          "angle": 119.7658045421926,
+          "planet1_tr": "Ay",
+          "planet2_tr": "Ven\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Neptune": {
+      "North Node": [
+        {
+          "angle": 113.43434555714865,
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "type": "Trine"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 64.46743347594264,
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Sextile"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 6.372056163784123,
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "North Node": {
+      "Pluto": [
+        {
+          "angle": 61.00079147560112,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Pl\u00fcton",
+          "type": "Sextile"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 177.9017790330913,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Opposition"
+        }
+      ],
+      "Sun": [
+        {
+          "angle": 93.49457383677569,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "G\u00fcne\u015f",
+          "type": "Square"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 119.80640172093277,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Pluto": {
+      "Saturn": [
+        {
+          "angle": 116.90098755749017,
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Trine"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 58.80561024533165,
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Sextile"
+        }
+      ],
+      "Venus": [
+        {
+          "angle": 9.456864158946104,
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Ven\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Saturn": {
+      "Sun": [
+        {
+          "angle": 84.4072051963156,
+          "planet1_tr": "Sat\u00fcrn",
+          "planet2_tr": "G\u00fcne\u015f",
+          "type": "Square"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 58.09537731215852,
+          "planet1_tr": "Sat\u00fcrn",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Sextile"
+        }
+      ]
+    },
+    "Sun": {},
+    "Uranus": {},
+    "Venus": {}
+  },
+  "house_positions": [
+    271.1858269441459,
+    310.26312763399625,
+    351.821641948635,
+    25.282459267739,
+    50.446076476099734,
+    71.19174160559635,
+    91.1858269441459,
+    130.26312763399625,
+    171.82164194863503,
+    205.28245926773903,
+    230.4460764760997,
+    251.19174160559635
+  ],
+  "midheaven": 205.28245926773903,
+  "planet_positions": {
+    "Jupiter": {
+      "degree": 24,
+      "house": 1,
+      "longitude": 294.2983242045063,
+      "minutes": 17,
+      "name_tr": "J\u00fcpiter",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Mars": {
+      "degree": 27,
+      "house": 9,
+      "longitude": 177.93132347009853,
+      "minutes": 55,
+      "name_tr": "Mars",
+      "zodiac_sign": "Ba\u015fak"
+    },
+    "Mercury": {
+      "degree": 17,
+      "house": 1,
+      "longitude": 287.36578661146353,
+      "minutes": 21,
+      "name_tr": "Merk\u00fcr",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Moon": {
+      "degree": 13,
+      "house": 8,
+      "longitude": 133.94804692234,
+      "minutes": 56,
+      "name_tr": "Ay",
+      "zodiac_sign": "Aslan"
+    },
+    "Neptune": {
+      "degree": 26,
+      "house": 1,
+      "longitude": 296.69054138713403,
+      "minutes": 41,
+      "name_tr": "Nept\u00fcn",
+      "zodiac_sign": "O\u011flak"
+    },
+    "North Node": {
+      "degree": 3,
+      "house": 9,
+      "longitude": 183.2561958299854,
+      "minutes": 15,
+      "name_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+      "zodiac_sign": "Terazi"
+    },
+    "Pluto": {
+      "degree": 4,
+      "house": 11,
+      "longitude": 244.2569873055865,
+      "minutes": 15,
+      "name_tr": "Pl\u00fcton",
+      "zodiac_sign": "Yay"
+    },
+    "Saturn": {
+      "degree": 1,
+      "house": 3,
+      "longitude": 1.1579748630766857,
+      "minutes": 9,
+      "name_tr": "Sat\u00fcrn",
+      "zodiac_sign": "Ko\u00e7"
+    },
+    "Sun": {
+      "degree": 6,
+      "house": 1,
+      "longitude": 276.7507696667611,
+      "minutes": 45,
+      "name_tr": "G\u00fcne\u015f",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Uranus": {
+      "degree": 3,
+      "house": 1,
+      "longitude": 303.06259755091816,
+      "minutes": 3,
+      "name_tr": "Uran\u00fcs",
+      "zodiac_sign": "Kova"
+    },
+    "Venus": {
+      "degree": 13,
+      "house": 12,
+      "longitude": 253.7138514645326,
+      "minutes": 42,
+      "name_tr": "Ven\u00fcs",
+      "zodiac_sign": "Yay"
+    }
+  }
+}
+
+2025-02-21 12:11:06,375 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:11:06] "POST /calculate_natal_chart HTTP/1.1" 200 -
+2025-02-21 12:16:46,938 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:16:46] "OPTIONS /calculate_natal_chart HTTP/1.1" 200 -
+2025-02-21 12:16:46,947 - __main__ - INFO - Received request data: {'birthDate': '1996-12-28', 'birthTime': '07:10', 'location': 'istanbul'}
+2025-02-21 12:16:46,947 - __main__ - INFO - Attempting to get coordinates for location: istanbul
+2025-02-21 12:16:46,947 - __main__ - INFO - Making request to OpenCage API: https://api.opencagedata.com/geocode/v1/json?q=istanbul&key=242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:16:47,577 - __main__ - INFO - OpenCage API response: {'documentation': 'https://opencagedata.com/api', 'licenses': [{'name': 'see attribution guide', 'url': 'https://opencagedata.com/credits'}], 'rate': {'limit': 2500, 'remaining': 2484, 'reset': 1740182400}, 'results': [{'annotations': {'DMS': {'lat': "41° 0' 22.97160'' N", 'lng': "28° 58' 33.13740'' E"}, 'MGRS': '35TPF6616241345', 'Maidenhead': 'KN41la71cm', 'Mercator': {'x': 3225579.261, 'y': 4985240.162}, 'NUTS': {'NUTS0': {'code': 'TR'}, 'NUTS1': {'code': 'TR1'}, 'NUTS2': {'code': 'TR10'}, 'NUTS3': {'code': 'TR100'}}, 'OSM': {'edit_url': 'https://www.openstreetmap.org/edit?node=1882099475#map=16/41.00638/28.97587', 'note_url': 'https://www.openstreetmap.org/note/new#map=16/41.00638/28.97587&layers=N', 'url': 'https://www.openstreetmap.org/?mlat=41.00638&mlon=28.97587#map=16/41.00638/28.97587'}, 'UN_M49': {'regions': {'ASIA': '142', 'TR': '792', 'WESTERN_ASIA': '145', 'WORLD': '001'}, 'statistical_groupings': ['LEDC']}, 'callingcode': 90, 'currency': {'alternate_symbols': ['TL'], 'decimal_mark': ',', 'html_entity': '&#8378;', 'iso_code': 'TRY', 'iso_numeric': '949', 'name': 'Turkish Lira', 'smallest_denomination': 1, 'subunit': 'kuruş', 'subunit_to_unit': 100, 'symbol': '₺', 'symbol_first': 1, 'thousands_separator': '.'}, 'flag': '🇹🇷', 'geohash': 'sxk972gx6xry8z1yu71m', 'qibla': 151.61, 'roadinfo': {'drive_on': 'right', 'speed_in': 'km/h'}, 'sun': {'rise': {'apparent': 1740113460, 'astronomical': 1740108000, 'civil': 1740111780, 'nautical': 1740109860}, 'set': {'apparent': 1740152700, 'astronomical': 1740158160, 'civil': 1740154380, 'nautical': 1740156300}}, 'timezone': {'name': 'Europe/Istanbul', 'now_in_dst': 0, 'offset_sec': 10800, 'offset_string': '+0300', 'short_name': '+03'}, 'what3words': {'words': 'reboot.offer.organ'}, 'wikidata': 'Q406'}, 'bounds': {'northeast': {'lat': 41.166381, 'lng': 29.1358715}, 'southwest': {'lat': 40.846381, 'lng': 28.8158715}}, 'components': {'ISO_3166-1_alpha-2': 'TR', 'ISO_3166-1_alpha-3': 'TUR', 'ISO_3166-2': ['TR-34'], '_category': 'place', '_normalized_city': 'Istanbul', '_type': 'city', 'city': 'Istanbul', 'continent': 'Europe', 'country': 'Turkey', 'country_code': 'tr', 'postcode': '34122', 'province': 'Istanbul', 'region': 'Marmara Region', 'state': 'Istanbul', 'town': 'Fatih'}, 'confidence': 3, 'formatted': 'Istanbul, Turkey', 'geometry': {'lat': 41.006381, 'lng': 28.9758715}}, {'annotations': {'DMS': {'lat': "41° 4' 35.76684'' N", 'lng': "29° 3' 8.98200'' E"}, 'MGRS': '35TPF7242349290', 'Maidenhead': 'KN41mb68hj', 'Mercator': {'x': 3234108.95, 'y': 4995564.674}, 'NUTS': {'NUTS0': {'code': 'TR'}, 'NUTS1': {'code': 'TR1'}, 'NUTS2': {'code': 'TR10'}, 'NUTS3': {'code': 'TR100'}}, 'OSM': {'edit_url': 'https://www.openstreetmap.org/edit?relation=223474#map=16/41.07660/29.05250', 'note_url': 'https://www.openstreetmap.org/note/new#map=16/41.07660/29.05250&layers=N', 'url': 'https://www.openstreetmap.org/?mlat=41.07660&mlon=29.05250#map=16/41.07660/29.05250'}, 'UN_M49': {'regions': {'ASIA': '142', 'TR': '792', 'WESTERN_ASIA': '145', 'WORLD': '001'}, 'statistical_groupings': ['LEDC']}, 'callingcode': 90, 'currency': {'alternate_symbols': ['TL'], 'decimal_mark': ',', 'html_entity': '&#8378;', 'iso_code': 'TRY', 'iso_numeric': '949', 'name': 'Turkish Lira', 'smallest_denomination': 1, 'subunit': 'kuruş', 'subunit_to_unit': 100, 'symbol': '₺', 'symbol_first': 1, 'thousands_separator': '.'}, 'flag': '🇹🇷', 'geohash': 'sxk9tjg2s1w6swxx0n6g', 'qibla': 151.87, 'roadinfo': {'drive_on': 'right', 'speed_in': 'km/h'}, 'sun': {'rise': {'apparent': 1740113460, 'astronomical': 1740107940, 'civil': 1740111780, 'nautical': 1740109860}, 'set': {'apparent': 1740152640, 'astronomical': 1740158160, 'civil': 1740154320, 'nautical': 1740156240}}, 'timezone': {'name': 'Europe/Istanbul', 'now_in_dst': 0, 'offset_sec': 10800, 'offset_string': '+0300', 'short_name': '+03'}, 'what3words': {'words': 'polite.mission.ready'}, 'wikidata': 'Q534799'}, 'bounds': {'northeast': {'lat': 41.671, 'lng': 29.9588048}, 'southwest': {'lat': 40.7376735, 'lng': 27.9708481}}, 'components': {'ISO_3166-1_alpha-2': 'TR', 'ISO_3166-1_alpha-3': 'TUR', 'ISO_3166-2': ['TR-34'], '_category': 'place', '_type': 'state', 'continent': 'Asia', 'country': 'Turkey', 'country_code': 'tr', 'province': 'Istanbul', 'region': 'Marmara Region', 'state': 'Istanbul'}, 'confidence': 1, 'formatted': 'Istanbul, Turkey', 'geometry': {'lat': 41.0766019, 'lng': 29.052495}}], 'status': {'code': 200, 'message': 'OK'}, 'stay_informed': {'blog': 'https://blog.opencagedata.com', 'mastodon': 'https://en.osm.town/@opencage'}, 'thanks': 'For using an OpenCage API', 'timestamp': {'created_http': 'Fri, 21 Feb 2025 09:16:47 GMT', 'created_unix': 1740129407}, 'total_results': 2}
+2025-02-21 12:16:47,578 - __main__ - INFO - Successfully got coordinates: lat=41.006381, lng=28.9758715, timezone=Europe/Istanbul
+2025-02-21 12:16:47,579 - __main__ - INFO - Location data: {'latitude': 41.006381, 'longitude': 28.9758715, 'timezone': 'Europe/Istanbul'}
+2025-02-21 12:16:47,579 - __main__ - INFO - Starting chart calculation with date=1996-12-28, time=07:10, location={'latitude': 41.006381, 'longitude': 28.9758715, 'timezone': 'Europe/Istanbul'}
+2025-02-21 12:16:47,580 - __main__ - INFO - Parsed local datetime: 1996-12-28 07:10:00
+2025-02-21 12:16:47,580 - __main__ - INFO - Converted to UTC: 1996-12-28 05:10:00+00:00
+2025-02-21 12:16:47,582 - __main__ - INFO - Calculated Julian day: 2450445.715277778
+2025-02-21 12:16:47,586 - __main__ - INFO - Calculated houses: (271.1858269441459, 310.26312763399625, 351.821641948635, 25.282459267739, 50.446076476099734, 71.19174160559635, 91.1858269441459, 130.26312763399625, 171.82164194863503, 205.28245926773903, 230.4460764760997, 251.19174160559635)
+2025-02-21 12:16:47,586 - __main__ - INFO - Calculated ascmc: (271.1858269441459, 205.28245926773903, 203.42978224097405, 131.86522678091868, 291.682935239813, 307.75803992876445, 264.2356878747288, 127.75803992876445)
+2025-02-21 12:16:47,586 - __main__ - INFO - Calculating position for Sun (ID: 0)
+2025-02-21 12:16:47,588 - __main__ - INFO - Raw calculation result for Sun: ((276.7507696667611, -0.0001758872339995798, 0.9833297505841149, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,588 - __main__ - INFO - Normalized longitude for Sun: 276.7507696667611
+2025-02-21 12:16:47,589 - __main__ - INFO - Position in sign for Sun: Oğlak 6°45'
+2025-02-21 12:16:47,589 - __main__ - INFO - Final position for Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:16:47,589 - __main__ - INFO - Calculating position for Moon (ID: 1)
+2025-02-21 12:16:47,589 - __main__ - INFO - Raw calculation result for Moon: ((133.94804692234, -3.774783307346077, 0.0027072527693113154, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,590 - __main__ - INFO - Normalized longitude for Moon: 133.94804692234
+2025-02-21 12:16:47,590 - __main__ - INFO - Position in sign for Moon: Aslan 13°56'
+2025-02-21 12:16:47,590 - __main__ - INFO - Final position for Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:16:47,590 - __main__ - INFO - Calculating position for Mercury (ID: 2)
+2025-02-21 12:16:47,591 - __main__ - INFO - Raw calculation result for Mercury: ((287.36578661146353, 1.176039025481328, 0.718255494901402, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,591 - __main__ - INFO - Normalized longitude for Mercury: 287.36578661146353
+2025-02-21 12:16:47,591 - __main__ - INFO - Position in sign for Mercury: Oğlak 17°21'
+2025-02-21 12:16:47,591 - __main__ - INFO - Final position for Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:16:47,591 - __main__ - INFO - Calculating position for Venus (ID: 3)
+2025-02-21 12:16:47,591 - __main__ - INFO - Raw calculation result for Venus: ((253.7138514645326, 0.9310716144650166, 1.5170279156537079, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,592 - __main__ - INFO - Normalized longitude for Venus: 253.7138514645326
+2025-02-21 12:16:47,592 - __main__ - INFO - Position in sign for Venus: Yay 13°42'
+2025-02-21 12:16:47,592 - __main__ - INFO - Final position for Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:16:47,592 - __main__ - INFO - Calculating position for Mars (ID: 4)
+2025-02-21 12:16:47,593 - __main__ - INFO - Raw calculation result for Mars: ((177.93132347009853, 2.565561250241301, 1.1962471239946229, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,593 - __main__ - INFO - Normalized longitude for Mars: 177.93132347009853
+2025-02-21 12:16:47,593 - __main__ - INFO - Position in sign for Mars: Başak 27°55'
+2025-02-21 12:16:47,593 - __main__ - INFO - Final position for Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:16:47,593 - __main__ - INFO - Calculating position for Jupiter (ID: 5)
+2025-02-21 12:16:47,593 - __main__ - INFO - Raw calculation result for Jupiter: ((294.2983242045063, -0.32622532951679906, 6.067748781827586, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,594 - __main__ - INFO - Normalized longitude for Jupiter: 294.2983242045063
+2025-02-21 12:16:47,594 - __main__ - INFO - Position in sign for Jupiter: Oğlak 24°17'
+2025-02-21 12:16:47,594 - __main__ - INFO - Final position for Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:16:47,594 - __main__ - INFO - Calculating position for Saturn (ID: 6)
+2025-02-21 12:16:47,594 - __main__ - INFO - Raw calculation result for Saturn: ((1.1579748630766857, -2.372029366969906, 9.51718007460616, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,594 - __main__ - INFO - Normalized longitude for Saturn: 1.1579748630766857
+2025-02-21 12:16:47,594 - __main__ - INFO - Position in sign for Saturn: Koç 1°9'
+2025-02-21 12:16:47,595 - __main__ - INFO - Final position for Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:16:47,595 - __main__ - INFO - Calculating position for Uranus (ID: 7)
+2025-02-21 12:16:47,595 - __main__ - INFO - Raw calculation result for Uranus: ((303.06259755091816, -0.5694183485002708, 20.673445239850505, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,595 - __main__ - INFO - Normalized longitude for Uranus: 303.06259755091816
+2025-02-21 12:16:47,595 - __main__ - INFO - Position in sign for Uranus: Kova 3°3'
+2025-02-21 12:16:47,595 - __main__ - INFO - Final position for Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:16:47,595 - __main__ - INFO - Calculating position for Neptune (ID: 8)
+2025-02-21 12:16:47,596 - __main__ - INFO - Raw calculation result for Neptune: ((296.69054138713403, 0.4276026737517369, 31.078617788335507, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,596 - __main__ - INFO - Normalized longitude for Neptune: 296.69054138713403
+2025-02-21 12:16:47,596 - __main__ - INFO - Position in sign for Neptune: Oğlak 26°41'
+2025-02-21 12:16:47,596 - __main__ - INFO - Final position for Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:16:47,596 - __main__ - INFO - Calculating position for Pluto (ID: 9)
+2025-02-21 12:16:47,598 - __main__ - INFO - Raw calculation result for Pluto: ((244.2569873055865, 12.380932854035862, 30.751657702589373, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:16:47,598 - __main__ - INFO - Normalized longitude for Pluto: 244.2569873055865
+2025-02-21 12:16:47,598 - __main__ - INFO - Position in sign for Pluto: Yay 4°15'
+2025-02-21 12:16:47,598 - __main__ - INFO - Final position for Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:16:47,598 - __main__ - INFO - Calculating position for North Node (ID: 10)
+2025-02-21 12:16:47,599 - __main__ - INFO - Raw calculation result for North Node: ((183.2561958299854, 0.0, 0.0025695552897999903, -0.05294735022669475, 0.0, 0.0), 258)
+2025-02-21 12:16:47,599 - __main__ - INFO - Normalized longitude for North Node: 183.2561958299854
+2025-02-21 12:16:47,599 - __main__ - INFO - Position in sign for North Node: Terazi 3°15'
+2025-02-21 12:16:47,599 - __main__ - INFO - Final position for North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:16:47,599 - __main__ - INFO - Calculating position for Chiron (ID: 15)
+2025-02-21 12:16:47,599 - __main__ - ERROR - Error calculating Chiron: swisseph.calc_ut: SwissEph file 'seas_18.se1' not found in PATH '/usr/share/swisseph:/usr/local/share/swisseph/'
+2025-02-21 12:16:47,600 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/ofis/Astrologi-Ai/app.py", line 315, in calculate_planet_position
+    result = swe.calc_ut(jd, planet_id, flags)
+swisseph.Error: swisseph.calc_ut: SwissEph file 'seas_18.se1' not found in PATH '/usr/share/swisseph:/usr/local/share/swisseph/'
+
+2025-02-21 12:16:47,600 - __main__ - ERROR - Failed to calculate position for Chiron
+2025-02-21 12:16:47,600 - __main__ - INFO - Calculating position for Lilith (ID: 12)
+2025-02-21 12:16:47,600 - __main__ - ERROR - Error calculating Lilith: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
+2025-02-21 12:16:47,600 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/ofis/Astrologi-Ai/app.py", line 312, in calculate_planet_position
+    flags |= swe.FLG_MEAN_APOG
+AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
+
+2025-02-21 12:16:47,601 - __main__ - ERROR - Failed to calculate position for Lilith
+2025-02-21 12:16:47,601 - __main__ - WARNING - Missing planets: {'Lilith', 'Chiron'}
+2025-02-21 12:16:47,601 - __main__ - INFO - Successfully calculated positions for planets:
+2025-02-21 12:16:47,601 - __main__ - INFO - Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:16:47,601 - __main__ - INFO - Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:16:47,601 - __main__ - INFO - Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:16:47,601 - __main__ - INFO - Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:16:47,601 - __main__ - INFO - Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:16:47,601 - __main__ - INFO - Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:16:47,601 - __main__ - INFO - Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:16:47,602 - __main__ - INFO - Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:16:47,602 - __main__ - INFO - Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:16:47,602 - __main__ - INFO - Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:16:47,602 - __main__ - INFO - North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:16:47,606 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5fa670>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,609 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5ac0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,611 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cd7f0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,615 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5e20>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,617 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5460>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,621 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5fa7c0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,626 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f3232e0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,631 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f0520>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,633 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cd2b0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,636 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f0490>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,648 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f323220>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,651 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5faee0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,653 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cd2e0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,655 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cda90>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,658 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5ac0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,663 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5fabe0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,665 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f0a60>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,667 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5f0d60>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,669 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cd190>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,672 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f323940>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,675 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5e5400>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,680 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.anythinglmm.com', port=443): Max retries exceeded with url: /v1/aspects (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10f5cdbe0>: Failed to resolve 'api.anythinglmm.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:16:47,680 - __main__ - INFO - Calculated aspects: {'Sun': {}, 'Moon': {'Venus': [{'type': 'Trine', 'angle': 119.7658045421926, 'planet1_tr': 'Ay', 'planet2_tr': 'Venüs'}]}, 'Mercury': {'Neptune': [{'type': 'Conjunction', 'angle': 9.324754775670499, 'planet1_tr': 'Merkür', 'planet2_tr': 'Neptün'}]}, 'Venus': {}, 'Mars': {'Saturn': [{'type': 'Opposition', 'angle': 176.77334860702186, 'planet1_tr': 'Mars', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Trine', 'angle': 125.13127408081962, 'planet1_tr': 'Mars', 'planet2_tr': 'Uranüs'}], 'Neptune': [{'type': 'Trine', 'angle': 118.7592179170355, 'planet1_tr': 'Mars', 'planet2_tr': 'Neptün'}], 'North Node': [{'type': 'Conjunction', 'angle': 5.324872359886854, 'planet1_tr': 'Mars', 'planet2_tr': 'Kuzey Ay Düğümü'}]}, 'Jupiter': {'Mercury': [{'type': 'Conjunction', 'angle': 6.932537593042753, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Merkür'}], 'Mars': [{'type': 'Trine', 'angle': 116.36700073440775, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Mars'}], 'Uranus': [{'type': 'Conjunction', 'angle': 8.76427334641187, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Uranüs'}], 'Neptune': [{'type': 'Conjunction', 'angle': 2.3922171826277463, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Neptün'}]}, 'Saturn': {'Sun': [{'type': 'Square', 'angle': 84.4072051963156, 'planet1_tr': 'Satürn', 'planet2_tr': 'Güneş'}], 'Uranus': [{'type': 'Sextile', 'angle': 58.09537731215852, 'planet1_tr': 'Satürn', 'planet2_tr': 'Uranüs'}]}, 'Uranus': {}, 'Neptune': {'Saturn': [{'type': 'Sextile', 'angle': 64.46743347594264, 'planet1_tr': 'Neptün', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Conjunction', 'angle': 6.372056163784123, 'planet1_tr': 'Neptün', 'planet2_tr': 'Uranüs'}], 'North Node': [{'type': 'Trine', 'angle': 113.43434555714865, 'planet1_tr': 'Neptün', 'planet2_tr': 'Kuzey Ay Düğümü'}]}, 'Pluto': {'Venus': [{'type': 'Conjunction', 'angle': 9.456864158946104, 'planet1_tr': 'Plüton', 'planet2_tr': 'Venüs'}], 'Saturn': [{'type': 'Trine', 'angle': 116.90098755749017, 'planet1_tr': 'Plüton', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Sextile', 'angle': 58.80561024533165, 'planet1_tr': 'Plüton', 'planet2_tr': 'Uranüs'}]}, 'North Node': {'Sun': [{'type': 'Square', 'angle': 93.49457383677569, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Güneş'}], 'Saturn': [{'type': 'Opposition', 'angle': 177.9017790330913, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Trine', 'angle': 119.80640172093277, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Uranüs'}], 'Pluto': [{'type': 'Sextile', 'angle': 61.00079147560112, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Plüton'}]}}
+2025-02-21 12:16:47,680 - __main__ - INFO - Chart calculation completed successfully
+2025-02-21 12:16:47,681 - __main__ - INFO - Calculated chart data:
+2025-02-21 12:16:47,681 - __main__ - INFO - Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:16:47,681 - __main__ - INFO - North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:16:47,681 - __main__ - INFO - Number of aspects: 11
+2025-02-21 12:16:47,681 - __main__ - INFO - House positions: [271.1858269441459, 310.26312763399625, 351.821641948635, 25.282459267739, 50.446076476099734, 71.19174160559635, 91.1858269441459, 130.26312763399625, 171.82164194863503, 205.28245926773903, 230.4460764760997, 251.19174160559635]
+2025-02-21 12:16:47,681 - __main__ - WARNING - Missing planets in calculation: {'Lilith', 'Chiron'}
+2025-02-21 12:16:47,682 - __main__ - INFO - Sending response: {
+  "ascendant": 271.1858269441459,
+  "aspects": {
+    "Jupiter": {
+      "Mars": [
+        {
+          "angle": 116.36700073440775,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Mars",
+          "type": "Trine"
+        }
+      ],
+      "Mercury": [
+        {
+          "angle": 6.932537593042753,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Merk\u00fcr",
+          "type": "Conjunction"
+        }
+      ],
+      "Neptune": [
+        {
+          "angle": 2.3922171826277463,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Conjunction"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 8.76427334641187,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Mars": {
+      "Neptune": [
+        {
+          "angle": 118.7592179170355,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Trine"
+        }
+      ],
+      "North Node": [
+        {
+          "angle": 5.324872359886854,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "type": "Conjunction"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 176.77334860702186,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Opposition"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 125.13127408081962,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Mercury": {
+      "Neptune": [
+        {
+          "angle": 9.324754775670499,
+          "planet1_tr": "Merk\u00fcr",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Moon": {
+      "Venus": [
+        {
+          "angle": 119.7658045421926,
+          "planet1_tr": "Ay",
+          "planet2_tr": "Ven\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Neptune": {
+      "North Node": [
+        {
+          "angle": 113.43434555714865,
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "type": "Trine"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 64.46743347594264,
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Sextile"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 6.372056163784123,
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "North Node": {
+      "Pluto": [
+        {
+          "angle": 61.00079147560112,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Pl\u00fcton",
+          "type": "Sextile"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 177.9017790330913,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Opposition"
+        }
+      ],
+      "Sun": [
+        {
+          "angle": 93.49457383677569,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "G\u00fcne\u015f",
+          "type": "Square"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 119.80640172093277,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Pluto": {
+      "Saturn": [
+        {
+          "angle": 116.90098755749017,
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Trine"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 58.80561024533165,
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Sextile"
+        }
+      ],
+      "Venus": [
+        {
+          "angle": 9.456864158946104,
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Ven\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Saturn": {
+      "Sun": [
+        {
+          "angle": 84.4072051963156,
+          "planet1_tr": "Sat\u00fcrn",
+          "planet2_tr": "G\u00fcne\u015f",
+          "type": "Square"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 58.09537731215852,
+          "planet1_tr": "Sat\u00fcrn",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Sextile"
+        }
+      ]
+    },
+    "Sun": {},
+    "Uranus": {},
+    "Venus": {}
+  },
+  "house_positions": [
+    271.1858269441459,
+    310.26312763399625,
+    351.821641948635,
+    25.282459267739,
+    50.446076476099734,
+    71.19174160559635,
+    91.1858269441459,
+    130.26312763399625,
+    171.82164194863503,
+    205.28245926773903,
+    230.4460764760997,
+    251.19174160559635
+  ],
+  "midheaven": 205.28245926773903,
+  "planet_positions": {
+    "Jupiter": {
+      "degree": 24,
+      "house": 1,
+      "longitude": 294.2983242045063,
+      "minutes": 17,
+      "name_tr": "J\u00fcpiter",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Mars": {
+      "degree": 27,
+      "house": 9,
+      "longitude": 177.93132347009853,
+      "minutes": 55,
+      "name_tr": "Mars",
+      "zodiac_sign": "Ba\u015fak"
+    },
+    "Mercury": {
+      "degree": 17,
+      "house": 1,
+      "longitude": 287.36578661146353,
+      "minutes": 21,
+      "name_tr": "Merk\u00fcr",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Moon": {
+      "degree": 13,
+      "house": 8,
+      "longitude": 133.94804692234,
+      "minutes": 56,
+      "name_tr": "Ay",
+      "zodiac_sign": "Aslan"
+    },
+    "Neptune": {
+      "degree": 26,
+      "house": 1,
+      "longitude": 296.69054138713403,
+      "minutes": 41,
+      "name_tr": "Nept\u00fcn",
+      "zodiac_sign": "O\u011flak"
+    },
+    "North Node": {
+      "degree": 3,
+      "house": 9,
+      "longitude": 183.2561958299854,
+      "minutes": 15,
+      "name_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+      "zodiac_sign": "Terazi"
+    },
+    "Pluto": {
+      "degree": 4,
+      "house": 11,
+      "longitude": 244.2569873055865,
+      "minutes": 15,
+      "name_tr": "Pl\u00fcton",
+      "zodiac_sign": "Yay"
+    },
+    "Saturn": {
+      "degree": 1,
+      "house": 3,
+      "longitude": 1.1579748630766857,
+      "minutes": 9,
+      "name_tr": "Sat\u00fcrn",
+      "zodiac_sign": "Ko\u00e7"
+    },
+    "Sun": {
+      "degree": 6,
+      "house": 1,
+      "longitude": 276.7507696667611,
+      "minutes": 45,
+      "name_tr": "G\u00fcne\u015f",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Uranus": {
+      "degree": 3,
+      "house": 1,
+      "longitude": 303.06259755091816,
+      "minutes": 3,
+      "name_tr": "Uran\u00fcs",
+      "zodiac_sign": "Kova"
+    },
+    "Venus": {
+      "degree": 13,
+      "house": 12,
+      "longitude": 253.7138514645326,
+      "minutes": 42,
+      "name_tr": "Ven\u00fcs",
+      "zodiac_sign": "Yay"
+    }
+  }
+}
+
+2025-02-21 12:16:47,683 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:16:47] "POST /calculate_natal_chart HTTP/1.1" 200 -
+2025-02-21 12:17:20,147 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 12:17:20,212 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 12:17:20,621 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:17:20,622 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:17:20,622 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:17:20,622 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:17:20,622 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:17:20,657 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 12:17:20,678 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 12:17:40,598 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:17:40,598 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:17:40,598 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:17:40,599 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:17:40,599 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:17:40,661 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 12:17:40,661 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 12:17:40,662 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 12:17:40,887 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:17:40,887 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:17:40,887 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:17:40,887 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:17:40,887 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:17:40,910 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 12:17:40,923 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 12:18:41,641 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 12:18:41,745 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 12:18:42,250 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:18:42,251 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:18:42,251 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:18:42,251 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:18:42,251 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:18:42,295 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 12:18:42,331 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 12:19:28,502 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:19:28,503 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:19:28,503 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:19:28,503 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:19:28,503 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:19:28,560 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 12:19:28,561 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 12:19:28,562 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 12:19:28,784 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:19:28,785 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:19:28,785 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:19:28,785 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:19:28,785 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:19:28,809 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 12:19:28,822 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 12:21:51,623 - __main__ - INFO - Received request data: {'birthDate': '1996-12-28', 'birthTime': '07:10', 'location': 'istanbul'}
+2025-02-21 12:21:51,624 - __main__ - INFO - Attempting to get coordinates for location: istanbul
+2025-02-21 12:21:51,624 - __main__ - INFO - Making request to OpenCage API: https://api.opencagedata.com/geocode/v1/json?q=istanbul&key=242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:21:52,386 - __main__ - INFO - OpenCage API response: {'documentation': 'https://opencagedata.com/api', 'licenses': [{'name': 'see attribution guide', 'url': 'https://opencagedata.com/credits'}], 'rate': {'limit': 2500, 'remaining': 2483, 'reset': 1740182400}, 'results': [{'annotations': {'DMS': {'lat': "41° 0' 22.97160'' N", 'lng': "28° 58' 33.13740'' E"}, 'MGRS': '35TPF6616241345', 'Maidenhead': 'KN41la71cm', 'Mercator': {'x': 3225579.261, 'y': 4985240.162}, 'NUTS': {'NUTS0': {'code': 'TR'}, 'NUTS1': {'code': 'TR1'}, 'NUTS2': {'code': 'TR10'}, 'NUTS3': {'code': 'TR100'}}, 'OSM': {'edit_url': 'https://www.openstreetmap.org/edit?node=1882099475#map=16/41.00638/28.97587', 'note_url': 'https://www.openstreetmap.org/note/new#map=16/41.00638/28.97587&layers=N', 'url': 'https://www.openstreetmap.org/?mlat=41.00638&mlon=28.97587#map=16/41.00638/28.97587'}, 'UN_M49': {'regions': {'ASIA': '142', 'TR': '792', 'WESTERN_ASIA': '145', 'WORLD': '001'}, 'statistical_groupings': ['LEDC']}, 'callingcode': 90, 'currency': {'alternate_symbols': ['TL'], 'decimal_mark': ',', 'html_entity': '&#8378;', 'iso_code': 'TRY', 'iso_numeric': '949', 'name': 'Turkish Lira', 'smallest_denomination': 1, 'subunit': 'kuruş', 'subunit_to_unit': 100, 'symbol': '₺', 'symbol_first': 1, 'thousands_separator': '.'}, 'flag': '🇹🇷', 'geohash': 'sxk972gx6xry8z1yu71m', 'qibla': 151.61, 'roadinfo': {'drive_on': 'right', 'speed_in': 'km/h'}, 'sun': {'rise': {'apparent': 1740113460, 'astronomical': 1740108000, 'civil': 1740111780, 'nautical': 1740109860}, 'set': {'apparent': 1740152700, 'astronomical': 1740158160, 'civil': 1740154380, 'nautical': 1740156300}}, 'timezone': {'name': 'Europe/Istanbul', 'now_in_dst': 0, 'offset_sec': 10800, 'offset_string': '+0300', 'short_name': '+03'}, 'what3words': {'words': 'reboot.offer.organ'}, 'wikidata': 'Q406'}, 'bounds': {'northeast': {'lat': 41.166381, 'lng': 29.1358715}, 'southwest': {'lat': 40.846381, 'lng': 28.8158715}}, 'components': {'ISO_3166-1_alpha-2': 'TR', 'ISO_3166-1_alpha-3': 'TUR', 'ISO_3166-2': ['TR-34'], '_category': 'place', '_normalized_city': 'Istanbul', '_type': 'city', 'city': 'Istanbul', 'continent': 'Europe', 'country': 'Turkey', 'country_code': 'tr', 'postcode': '34122', 'province': 'Istanbul', 'region': 'Marmara Region', 'state': 'Istanbul', 'town': 'Fatih'}, 'confidence': 3, 'formatted': 'Istanbul, Turkey', 'geometry': {'lat': 41.006381, 'lng': 28.9758715}}, {'annotations': {'DMS': {'lat': "41° 4' 35.76684'' N", 'lng': "29° 3' 8.98200'' E"}, 'MGRS': '35TPF7242349290', 'Maidenhead': 'KN41mb68hj', 'Mercator': {'x': 3234108.95, 'y': 4995564.674}, 'NUTS': {'NUTS0': {'code': 'TR'}, 'NUTS1': {'code': 'TR1'}, 'NUTS2': {'code': 'TR10'}, 'NUTS3': {'code': 'TR100'}}, 'OSM': {'edit_url': 'https://www.openstreetmap.org/edit?relation=223474#map=16/41.07660/29.05250', 'note_url': 'https://www.openstreetmap.org/note/new#map=16/41.07660/29.05250&layers=N', 'url': 'https://www.openstreetmap.org/?mlat=41.07660&mlon=29.05250#map=16/41.07660/29.05250'}, 'UN_M49': {'regions': {'ASIA': '142', 'TR': '792', 'WESTERN_ASIA': '145', 'WORLD': '001'}, 'statistical_groupings': ['LEDC']}, 'callingcode': 90, 'currency': {'alternate_symbols': ['TL'], 'decimal_mark': ',', 'html_entity': '&#8378;', 'iso_code': 'TRY', 'iso_numeric': '949', 'name': 'Turkish Lira', 'smallest_denomination': 1, 'subunit': 'kuruş', 'subunit_to_unit': 100, 'symbol': '₺', 'symbol_first': 1, 'thousands_separator': '.'}, 'flag': '🇹🇷', 'geohash': 'sxk9tjg2s1w6swxx0n6g', 'qibla': 151.87, 'roadinfo': {'drive_on': 'right', 'speed_in': 'km/h'}, 'sun': {'rise': {'apparent': 1740113460, 'astronomical': 1740107940, 'civil': 1740111780, 'nautical': 1740109860}, 'set': {'apparent': 1740152640, 'astronomical': 1740158160, 'civil': 1740154320, 'nautical': 1740156240}}, 'timezone': {'name': 'Europe/Istanbul', 'now_in_dst': 0, 'offset_sec': 10800, 'offset_string': '+0300', 'short_name': '+03'}, 'what3words': {'words': 'polite.mission.ready'}, 'wikidata': 'Q534799'}, 'bounds': {'northeast': {'lat': 41.671, 'lng': 29.9588048}, 'southwest': {'lat': 40.7376735, 'lng': 27.9708481}}, 'components': {'ISO_3166-1_alpha-2': 'TR', 'ISO_3166-1_alpha-3': 'TUR', 'ISO_3166-2': ['TR-34'], '_category': 'place', '_type': 'state', 'continent': 'Asia', 'country': 'Turkey', 'country_code': 'tr', 'province': 'Istanbul', 'region': 'Marmara Region', 'state': 'Istanbul'}, 'confidence': 1, 'formatted': 'Istanbul, Turkey', 'geometry': {'lat': 41.0766019, 'lng': 29.052495}}], 'status': {'code': 200, 'message': 'OK'}, 'stay_informed': {'blog': 'https://blog.opencagedata.com', 'mastodon': 'https://en.osm.town/@opencage'}, 'thanks': 'For using an OpenCage API', 'timestamp': {'created_http': 'Fri, 21 Feb 2025 09:21:52 GMT', 'created_unix': 1740129712}, 'total_results': 2}
+2025-02-21 12:21:52,387 - __main__ - INFO - Successfully got coordinates: lat=41.006381, lng=28.9758715, timezone=Europe/Istanbul
+2025-02-21 12:21:52,387 - __main__ - INFO - Location data: {'latitude': 41.006381, 'longitude': 28.9758715, 'timezone': 'Europe/Istanbul'}
+2025-02-21 12:21:52,387 - __main__ - INFO - Starting chart calculation with date=1996-12-28, time=07:10, location={'latitude': 41.006381, 'longitude': 28.9758715, 'timezone': 'Europe/Istanbul'}
+2025-02-21 12:21:52,389 - __main__ - INFO - Parsed local datetime: 1996-12-28 07:10:00
+2025-02-21 12:21:52,412 - __main__ - INFO - Converted to UTC: 1996-12-28 05:10:00+00:00
+2025-02-21 12:21:52,413 - __main__ - INFO - Calculated Julian day: 2450445.715277778
+2025-02-21 12:21:52,415 - __main__ - INFO - Calculated houses: (271.1858269441459, 310.26312763399625, 351.821641948635, 25.282459267739, 50.446076476099734, 71.19174160559635, 91.1858269441459, 130.26312763399625, 171.82164194863503, 205.28245926773903, 230.4460764760997, 251.19174160559635)
+2025-02-21 12:21:52,415 - __main__ - INFO - Calculated ascmc: (271.1858269441459, 205.28245926773903, 203.42978224097405, 131.86522678091868, 291.682935239813, 307.75803992876445, 264.2356878747288, 127.75803992876445)
+2025-02-21 12:21:52,415 - __main__ - INFO - Calculating position for Sun (ID: 0)
+2025-02-21 12:21:52,417 - __main__ - INFO - Raw calculation result for Sun: ((276.7507696667611, -0.0001758872339995798, 0.9833297505841149, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,417 - __main__ - INFO - Normalized longitude for Sun: 276.7507696667611
+2025-02-21 12:21:52,417 - __main__ - INFO - Position in sign for Sun: Oğlak 6°45'
+2025-02-21 12:21:52,417 - __main__ - INFO - Final position for Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:21:52,417 - __main__ - INFO - Calculating position for Moon (ID: 1)
+2025-02-21 12:21:52,417 - __main__ - INFO - Raw calculation result for Moon: ((133.94804692234, -3.774783307346077, 0.0027072527693113154, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,417 - __main__ - INFO - Normalized longitude for Moon: 133.94804692234
+2025-02-21 12:21:52,417 - __main__ - INFO - Position in sign for Moon: Aslan 13°56'
+2025-02-21 12:21:52,417 - __main__ - INFO - Final position for Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:21:52,417 - __main__ - INFO - Calculating position for Mercury (ID: 2)
+2025-02-21 12:21:52,417 - __main__ - INFO - Raw calculation result for Mercury: ((287.36578661146353, 1.176039025481328, 0.718255494901402, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,418 - __main__ - INFO - Normalized longitude for Mercury: 287.36578661146353
+2025-02-21 12:21:52,418 - __main__ - INFO - Position in sign for Mercury: Oğlak 17°21'
+2025-02-21 12:21:52,418 - __main__ - INFO - Final position for Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:21:52,418 - __main__ - INFO - Calculating position for Venus (ID: 3)
+2025-02-21 12:21:52,418 - __main__ - INFO - Raw calculation result for Venus: ((253.7138514645326, 0.9310716144650166, 1.5170279156537079, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,418 - __main__ - INFO - Normalized longitude for Venus: 253.7138514645326
+2025-02-21 12:21:52,418 - __main__ - INFO - Position in sign for Venus: Yay 13°42'
+2025-02-21 12:21:52,418 - __main__ - INFO - Final position for Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:21:52,418 - __main__ - INFO - Calculating position for Mars (ID: 4)
+2025-02-21 12:21:52,418 - __main__ - INFO - Raw calculation result for Mars: ((177.93132347009853, 2.565561250241301, 1.1962471239946229, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,418 - __main__ - INFO - Normalized longitude for Mars: 177.93132347009853
+2025-02-21 12:21:52,418 - __main__ - INFO - Position in sign for Mars: Başak 27°55'
+2025-02-21 12:21:52,418 - __main__ - INFO - Final position for Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:21:52,418 - __main__ - INFO - Calculating position for Jupiter (ID: 5)
+2025-02-21 12:21:52,419 - __main__ - INFO - Raw calculation result for Jupiter: ((294.2983242045063, -0.32622532951679906, 6.067748781827586, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,419 - __main__ - INFO - Normalized longitude for Jupiter: 294.2983242045063
+2025-02-21 12:21:52,419 - __main__ - INFO - Position in sign for Jupiter: Oğlak 24°17'
+2025-02-21 12:21:52,419 - __main__ - INFO - Final position for Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:21:52,419 - __main__ - INFO - Calculating position for Saturn (ID: 6)
+2025-02-21 12:21:52,419 - __main__ - INFO - Raw calculation result for Saturn: ((1.1579748630766857, -2.372029366969906, 9.51718007460616, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,419 - __main__ - INFO - Normalized longitude for Saturn: 1.1579748630766857
+2025-02-21 12:21:52,419 - __main__ - INFO - Position in sign for Saturn: Koç 1°9'
+2025-02-21 12:21:52,419 - __main__ - INFO - Final position for Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:21:52,419 - __main__ - INFO - Calculating position for Uranus (ID: 7)
+2025-02-21 12:21:52,419 - __main__ - INFO - Raw calculation result for Uranus: ((303.06259755091816, -0.5694183485002708, 20.673445239850505, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,419 - __main__ - INFO - Normalized longitude for Uranus: 303.06259755091816
+2025-02-21 12:21:52,419 - __main__ - INFO - Position in sign for Uranus: Kova 3°3'
+2025-02-21 12:21:52,419 - __main__ - INFO - Final position for Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:21:52,419 - __main__ - INFO - Calculating position for Neptune (ID: 8)
+2025-02-21 12:21:52,419 - __main__ - INFO - Raw calculation result for Neptune: ((296.69054138713403, 0.4276026737517369, 31.078617788335507, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,419 - __main__ - INFO - Normalized longitude for Neptune: 296.69054138713403
+2025-02-21 12:21:52,420 - __main__ - INFO - Position in sign for Neptune: Oğlak 26°41'
+2025-02-21 12:21:52,420 - __main__ - INFO - Final position for Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:21:52,420 - __main__ - INFO - Calculating position for Pluto (ID: 9)
+2025-02-21 12:21:52,420 - __main__ - INFO - Raw calculation result for Pluto: ((244.2569873055865, 12.380932854035862, 30.751657702589373, 0.0, 0.0, 0.0), 4)
+2025-02-21 12:21:52,420 - __main__ - INFO - Normalized longitude for Pluto: 244.2569873055865
+2025-02-21 12:21:52,420 - __main__ - INFO - Position in sign for Pluto: Yay 4°15'
+2025-02-21 12:21:52,420 - __main__ - INFO - Final position for Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:21:52,420 - __main__ - INFO - Calculating position for North Node (ID: 10)
+2025-02-21 12:21:52,420 - __main__ - INFO - Raw calculation result for North Node: ((183.2561958299854, 0.0, 0.0025695552897999903, -0.05294735022669475, 0.0, 0.0), 258)
+2025-02-21 12:21:52,420 - __main__ - INFO - Normalized longitude for North Node: 183.2561958299854
+2025-02-21 12:21:52,420 - __main__ - INFO - Position in sign for North Node: Terazi 3°15'
+2025-02-21 12:21:52,420 - __main__ - INFO - Final position for North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:21:52,420 - __main__ - INFO - Calculating position for Chiron (ID: 15)
+2025-02-21 12:21:52,420 - __main__ - ERROR - Error calculating Chiron: swisseph.calc_ut: SwissEph file 'seas_18.se1' not found in PATH '/usr/share/swisseph:/usr/local/share/swisseph/'
+2025-02-21 12:21:52,421 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/ofis/Astrologi-Ai/app.py", line 327, in calculate_planet_position
+    result = swe.calc_ut(jd, planet_id, flags)
+swisseph.Error: swisseph.calc_ut: SwissEph file 'seas_18.se1' not found in PATH '/usr/share/swisseph:/usr/local/share/swisseph/'
+
+2025-02-21 12:21:52,421 - __main__ - ERROR - Failed to calculate position for Chiron
+2025-02-21 12:21:52,421 - __main__ - INFO - Calculating position for Lilith (ID: 12)
+2025-02-21 12:21:52,421 - __main__ - ERROR - Error calculating Lilith: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
+2025-02-21 12:21:52,422 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/ofis/Astrologi-Ai/app.py", line 324, in calculate_planet_position
+    flags |= swe.FLG_MEAN_APOG
+AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
+
+2025-02-21 12:21:52,422 - __main__ - ERROR - Failed to calculate position for Lilith
+2025-02-21 12:21:52,422 - __main__ - WARNING - Missing planets: {'Lilith', 'Chiron'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Successfully calculated positions for planets:
+2025-02-21 12:21:52,422 - __main__ - INFO - Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:21:52,422 - __main__ - INFO - North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:21:52,422 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Trine', 'planet1': 'Ay', 'planet2': 'Venüs', 'language': 'tr'}
+2025-02-21 12:21:52,426 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b5b6f40>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,426 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Conjunction', 'planet1': 'Merkür', 'planet2': 'Neptün', 'language': 'tr'}
+2025-02-21 12:21:52,429 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b62f940>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,429 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Opposition', 'planet1': 'Mars', 'planet2': 'Satürn', 'language': 'tr'}
+2025-02-21 12:21:52,431 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b5b6640>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,431 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Trine', 'planet1': 'Mars', 'planet2': 'Uranüs', 'language': 'tr'}
+2025-02-21 12:21:52,432 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b636340>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,433 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Trine', 'planet1': 'Mars', 'planet2': 'Neptün', 'language': 'tr'}
+2025-02-21 12:21:52,434 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b636d00>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,434 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Conjunction', 'planet1': 'Mars', 'planet2': 'Kuzey Ay Düğümü', 'language': 'tr'}
+2025-02-21 12:21:52,436 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b642700>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,436 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Conjunction', 'planet1': 'Jüpiter', 'planet2': 'Merkür', 'language': 'tr'}
+2025-02-21 12:21:52,437 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b64c100>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,437 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Trine', 'planet1': 'Jüpiter', 'planet2': 'Mars', 'language': 'tr'}
+2025-02-21 12:21:52,439 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b636f40>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,439 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Conjunction', 'planet1': 'Jüpiter', 'planet2': 'Uranüs', 'language': 'tr'}
+2025-02-21 12:21:52,442 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b636520>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,442 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Conjunction', 'planet1': 'Jüpiter', 'planet2': 'Neptün', 'language': 'tr'}
+2025-02-21 12:21:52,445 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b62fb20>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,445 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Square', 'planet1': 'Satürn', 'planet2': 'Güneş', 'language': 'tr'}
+2025-02-21 12:21:52,447 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b5b6e80>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,447 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Sextile', 'planet1': 'Satürn', 'planet2': 'Uranüs', 'language': 'tr'}
+2025-02-21 12:21:52,448 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b64cac0>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,448 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Sextile', 'planet1': 'Neptün', 'planet2': 'Satürn', 'language': 'tr'}
+2025-02-21 12:21:52,450 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b5b6f10>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,450 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Conjunction', 'planet1': 'Neptün', 'planet2': 'Uranüs', 'language': 'tr'}
+2025-02-21 12:21:52,451 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b62fc40>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,451 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Trine', 'planet1': 'Neptün', 'planet2': 'Kuzey Ay Düğümü', 'language': 'tr'}
+2025-02-21 12:21:52,453 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b6366a0>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,453 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Conjunction', 'planet1': 'Plüton', 'planet2': 'Venüs', 'language': 'tr'}
+2025-02-21 12:21:52,454 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b64ca90>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,454 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Trine', 'planet1': 'Plüton', 'planet2': 'Satürn', 'language': 'tr'}
+2025-02-21 12:21:52,456 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b642520>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,456 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Sextile', 'planet1': 'Plüton', 'planet2': 'Uranüs', 'language': 'tr'}
+2025-02-21 12:21:52,457 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b642190>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,457 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Square', 'planet1': 'Kuzey Ay Düğümü', 'planet2': 'Güneş', 'language': 'tr'}
+2025-02-21 12:21:52,459 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b636b20>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,459 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Opposition', 'planet1': 'Kuzey Ay Düğümü', 'planet2': 'Satürn', 'language': 'tr'}
+2025-02-21 12:21:52,464 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b62fa30>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,464 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Trine', 'planet1': 'Kuzey Ay Düğümü', 'planet2': 'Uranüs', 'language': 'tr'}
+2025-02-21 12:21:52,467 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b64c2e0>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,467 - __main__ - INFO - Making API request to https://api.astroloji.ai/v1/aspects/interpret with data: {'aspect_type': 'Sextile', 'planet1': 'Kuzey Ay Düğümü', 'planet2': 'Plüton', 'language': 'tr'}
+2025-02-21 12:21:52,469 - __main__ - ERROR - Error getting aspect interpretation: HTTPSConnectionPool(host='api.astroloji.ai', port=443): Max retries exceeded with url: /v1/aspects/interpret (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10b64cdf0>: Failed to resolve 'api.astroloji.ai' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-02-21 12:21:52,469 - __main__ - INFO - Calculated aspects: {'Sun': {}, 'Moon': {'Venus': [{'type': 'Trine', 'angle': 119.7658045421926, 'planet1_tr': 'Ay', 'planet2_tr': 'Venüs'}]}, 'Mercury': {'Neptune': [{'type': 'Conjunction', 'angle': 9.324754775670499, 'planet1_tr': 'Merkür', 'planet2_tr': 'Neptün'}]}, 'Venus': {}, 'Mars': {'Saturn': [{'type': 'Opposition', 'angle': 176.77334860702186, 'planet1_tr': 'Mars', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Trine', 'angle': 125.13127408081962, 'planet1_tr': 'Mars', 'planet2_tr': 'Uranüs'}], 'Neptune': [{'type': 'Trine', 'angle': 118.7592179170355, 'planet1_tr': 'Mars', 'planet2_tr': 'Neptün'}], 'North Node': [{'type': 'Conjunction', 'angle': 5.324872359886854, 'planet1_tr': 'Mars', 'planet2_tr': 'Kuzey Ay Düğümü'}]}, 'Jupiter': {'Mercury': [{'type': 'Conjunction', 'angle': 6.932537593042753, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Merkür'}], 'Mars': [{'type': 'Trine', 'angle': 116.36700073440775, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Mars'}], 'Uranus': [{'type': 'Conjunction', 'angle': 8.76427334641187, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Uranüs'}], 'Neptune': [{'type': 'Conjunction', 'angle': 2.3922171826277463, 'planet1_tr': 'Jüpiter', 'planet2_tr': 'Neptün'}]}, 'Saturn': {'Sun': [{'type': 'Square', 'angle': 84.4072051963156, 'planet1_tr': 'Satürn', 'planet2_tr': 'Güneş'}], 'Uranus': [{'type': 'Sextile', 'angle': 58.09537731215852, 'planet1_tr': 'Satürn', 'planet2_tr': 'Uranüs'}]}, 'Uranus': {}, 'Neptune': {'Saturn': [{'type': 'Sextile', 'angle': 64.46743347594264, 'planet1_tr': 'Neptün', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Conjunction', 'angle': 6.372056163784123, 'planet1_tr': 'Neptün', 'planet2_tr': 'Uranüs'}], 'North Node': [{'type': 'Trine', 'angle': 113.43434555714865, 'planet1_tr': 'Neptün', 'planet2_tr': 'Kuzey Ay Düğümü'}]}, 'Pluto': {'Venus': [{'type': 'Conjunction', 'angle': 9.456864158946104, 'planet1_tr': 'Plüton', 'planet2_tr': 'Venüs'}], 'Saturn': [{'type': 'Trine', 'angle': 116.90098755749017, 'planet1_tr': 'Plüton', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Sextile', 'angle': 58.80561024533165, 'planet1_tr': 'Plüton', 'planet2_tr': 'Uranüs'}]}, 'North Node': {'Sun': [{'type': 'Square', 'angle': 93.49457383677569, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Güneş'}], 'Saturn': [{'type': 'Opposition', 'angle': 177.9017790330913, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Satürn'}], 'Uranus': [{'type': 'Trine', 'angle': 119.80640172093277, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Uranüs'}], 'Pluto': [{'type': 'Sextile', 'angle': 61.00079147560112, 'planet1_tr': 'Kuzey Ay Düğümü', 'planet2_tr': 'Plüton'}]}}
+2025-02-21 12:21:52,469 - __main__ - INFO - Chart calculation completed successfully
+2025-02-21 12:21:52,469 - __main__ - INFO - Calculated chart data:
+2025-02-21 12:21:52,469 - __main__ - INFO - Sun: {'zodiac_sign': 'Oğlak', 'degree': 6, 'minutes': 45, 'house': 1, 'longitude': 276.7507696667611, 'name_tr': 'Güneş'}
+2025-02-21 12:21:52,469 - __main__ - INFO - Moon: {'zodiac_sign': 'Aslan', 'degree': 13, 'minutes': 56, 'house': 8, 'longitude': 133.94804692234, 'name_tr': 'Ay'}
+2025-02-21 12:21:52,469 - __main__ - INFO - Mercury: {'zodiac_sign': 'Oğlak', 'degree': 17, 'minutes': 21, 'house': 1, 'longitude': 287.36578661146353, 'name_tr': 'Merkür'}
+2025-02-21 12:21:52,469 - __main__ - INFO - Venus: {'zodiac_sign': 'Yay', 'degree': 13, 'minutes': 42, 'house': 12, 'longitude': 253.7138514645326, 'name_tr': 'Venüs'}
+2025-02-21 12:21:52,470 - __main__ - INFO - Mars: {'zodiac_sign': 'Başak', 'degree': 27, 'minutes': 55, 'house': 9, 'longitude': 177.93132347009853, 'name_tr': 'Mars'}
+2025-02-21 12:21:52,470 - __main__ - INFO - Jupiter: {'zodiac_sign': 'Oğlak', 'degree': 24, 'minutes': 17, 'house': 1, 'longitude': 294.2983242045063, 'name_tr': 'Jüpiter'}
+2025-02-21 12:21:52,470 - __main__ - INFO - Saturn: {'zodiac_sign': 'Koç', 'degree': 1, 'minutes': 9, 'house': 3, 'longitude': 1.1579748630766857, 'name_tr': 'Satürn'}
+2025-02-21 12:21:52,470 - __main__ - INFO - Uranus: {'zodiac_sign': 'Kova', 'degree': 3, 'minutes': 3, 'house': 1, 'longitude': 303.06259755091816, 'name_tr': 'Uranüs'}
+2025-02-21 12:21:52,470 - __main__ - INFO - Neptune: {'zodiac_sign': 'Oğlak', 'degree': 26, 'minutes': 41, 'house': 1, 'longitude': 296.69054138713403, 'name_tr': 'Neptün'}
+2025-02-21 12:21:52,470 - __main__ - INFO - Pluto: {'zodiac_sign': 'Yay', 'degree': 4, 'minutes': 15, 'house': 11, 'longitude': 244.2569873055865, 'name_tr': 'Plüton'}
+2025-02-21 12:21:52,470 - __main__ - INFO - North Node: {'zodiac_sign': 'Terazi', 'degree': 3, 'minutes': 15, 'house': 9, 'longitude': 183.2561958299854, 'name_tr': 'Kuzey Ay Düğümü'}
+2025-02-21 12:21:52,470 - __main__ - INFO - Number of aspects: 11
+2025-02-21 12:21:52,470 - __main__ - INFO - House positions: [271.1858269441459, 310.26312763399625, 351.821641948635, 25.282459267739, 50.446076476099734, 71.19174160559635, 91.1858269441459, 130.26312763399625, 171.82164194863503, 205.28245926773903, 230.4460764760997, 251.19174160559635]
+2025-02-21 12:21:52,470 - __main__ - WARNING - Missing planets in calculation: {'Lilith', 'Chiron'}
+2025-02-21 12:21:52,471 - __main__ - INFO - Sending response: {
+  "ascendant": 271.1858269441459,
+  "aspects": {
+    "Jupiter": {
+      "Mars": [
+        {
+          "angle": 116.36700073440775,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Mars",
+          "type": "Trine"
+        }
+      ],
+      "Mercury": [
+        {
+          "angle": 6.932537593042753,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Merk\u00fcr",
+          "type": "Conjunction"
+        }
+      ],
+      "Neptune": [
+        {
+          "angle": 2.3922171826277463,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Conjunction"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 8.76427334641187,
+          "planet1_tr": "J\u00fcpiter",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Mars": {
+      "Neptune": [
+        {
+          "angle": 118.7592179170355,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Trine"
+        }
+      ],
+      "North Node": [
+        {
+          "angle": 5.324872359886854,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "type": "Conjunction"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 176.77334860702186,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Opposition"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 125.13127408081962,
+          "planet1_tr": "Mars",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Mercury": {
+      "Neptune": [
+        {
+          "angle": 9.324754775670499,
+          "planet1_tr": "Merk\u00fcr",
+          "planet2_tr": "Nept\u00fcn",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Moon": {
+      "Venus": [
+        {
+          "angle": 119.7658045421926,
+          "planet1_tr": "Ay",
+          "planet2_tr": "Ven\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Neptune": {
+      "North Node": [
+        {
+          "angle": 113.43434555714865,
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "type": "Trine"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 64.46743347594264,
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Sextile"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 6.372056163784123,
+          "planet1_tr": "Nept\u00fcn",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "North Node": {
+      "Pluto": [
+        {
+          "angle": 61.00079147560112,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Pl\u00fcton",
+          "type": "Sextile"
+        }
+      ],
+      "Saturn": [
+        {
+          "angle": 177.9017790330913,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Opposition"
+        }
+      ],
+      "Sun": [
+        {
+          "angle": 93.49457383677569,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "G\u00fcne\u015f",
+          "type": "Square"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 119.80640172093277,
+          "planet1_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Trine"
+        }
+      ]
+    },
+    "Pluto": {
+      "Saturn": [
+        {
+          "angle": 116.90098755749017,
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Sat\u00fcrn",
+          "type": "Trine"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 58.80561024533165,
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Sextile"
+        }
+      ],
+      "Venus": [
+        {
+          "angle": 9.456864158946104,
+          "planet1_tr": "Pl\u00fcton",
+          "planet2_tr": "Ven\u00fcs",
+          "type": "Conjunction"
+        }
+      ]
+    },
+    "Saturn": {
+      "Sun": [
+        {
+          "angle": 84.4072051963156,
+          "planet1_tr": "Sat\u00fcrn",
+          "planet2_tr": "G\u00fcne\u015f",
+          "type": "Square"
+        }
+      ],
+      "Uranus": [
+        {
+          "angle": 58.09537731215852,
+          "planet1_tr": "Sat\u00fcrn",
+          "planet2_tr": "Uran\u00fcs",
+          "type": "Sextile"
+        }
+      ]
+    },
+    "Sun": {},
+    "Uranus": {},
+    "Venus": {}
+  },
+  "house_positions": [
+    271.1858269441459,
+    310.26312763399625,
+    351.821641948635,
+    25.282459267739,
+    50.446076476099734,
+    71.19174160559635,
+    91.1858269441459,
+    130.26312763399625,
+    171.82164194863503,
+    205.28245926773903,
+    230.4460764760997,
+    251.19174160559635
+  ],
+  "midheaven": 205.28245926773903,
+  "planet_positions": {
+    "Jupiter": {
+      "degree": 24,
+      "house": 1,
+      "longitude": 294.2983242045063,
+      "minutes": 17,
+      "name_tr": "J\u00fcpiter",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Mars": {
+      "degree": 27,
+      "house": 9,
+      "longitude": 177.93132347009853,
+      "minutes": 55,
+      "name_tr": "Mars",
+      "zodiac_sign": "Ba\u015fak"
+    },
+    "Mercury": {
+      "degree": 17,
+      "house": 1,
+      "longitude": 287.36578661146353,
+      "minutes": 21,
+      "name_tr": "Merk\u00fcr",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Moon": {
+      "degree": 13,
+      "house": 8,
+      "longitude": 133.94804692234,
+      "minutes": 56,
+      "name_tr": "Ay",
+      "zodiac_sign": "Aslan"
+    },
+    "Neptune": {
+      "degree": 26,
+      "house": 1,
+      "longitude": 296.69054138713403,
+      "minutes": 41,
+      "name_tr": "Nept\u00fcn",
+      "zodiac_sign": "O\u011flak"
+    },
+    "North Node": {
+      "degree": 3,
+      "house": 9,
+      "longitude": 183.2561958299854,
+      "minutes": 15,
+      "name_tr": "Kuzey Ay D\u00fc\u011f\u00fcm\u00fc",
+      "zodiac_sign": "Terazi"
+    },
+    "Pluto": {
+      "degree": 4,
+      "house": 11,
+      "longitude": 244.2569873055865,
+      "minutes": 15,
+      "name_tr": "Pl\u00fcton",
+      "zodiac_sign": "Yay"
+    },
+    "Saturn": {
+      "degree": 1,
+      "house": 3,
+      "longitude": 1.1579748630766857,
+      "minutes": 9,
+      "name_tr": "Sat\u00fcrn",
+      "zodiac_sign": "Ko\u00e7"
+    },
+    "Sun": {
+      "degree": 6,
+      "house": 1,
+      "longitude": 276.7507696667611,
+      "minutes": 45,
+      "name_tr": "G\u00fcne\u015f",
+      "zodiac_sign": "O\u011flak"
+    },
+    "Uranus": {
+      "degree": 3,
+      "house": 1,
+      "longitude": 303.06259755091816,
+      "minutes": 3,
+      "name_tr": "Uran\u00fcs",
+      "zodiac_sign": "Kova"
+    },
+    "Venus": {
+      "degree": 13,
+      "house": 12,
+      "longitude": 253.7138514645326,
+      "minutes": 42,
+      "name_tr": "Ven\u00fcs",
+      "zodiac_sign": "Yay"
+    }
+  }
+}
+
+2025-02-21 12:21:52,472 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:21:52] "POST /calculate_natal_chart HTTP/1.1" 200 -
+2025-02-21 12:26:18,833 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 12:26:18,905 - werkzeug - INFO -  * Restarting with stat
