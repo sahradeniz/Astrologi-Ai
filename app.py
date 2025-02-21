@@ -758,15 +758,15 @@ def download_file(filename):
 def register_user():
     try:
         data = request.json
-        print("Received registration data:", data)  # Debug print
+        logger.info("Received registration data: %s", data)
         
         # Check if user exists
         existing_user = db.users.find_one({"email": data['email']})
         if existing_user:
             return jsonify({"error": "Email already registered"}), 400
         
-        # Hash password
-        hashed_password = generate_password_hash(data['password'])
+        # Hash password using pbkdf2
+        hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
         
         # Create user document
         user = {
@@ -781,22 +781,23 @@ def register_user():
         
         # Insert user
         result = db.users.insert_one(user)
-        print("User inserted with ID:", result.inserted_id)  # Debug print
+        logger.info("User inserted with ID: %s", result.inserted_id)
         
-        # Return user data without password
-        user['_id'] = str(result.inserted_id)
-        del user['password']
-        return jsonify(user), 201
+        # Return success response
+        return jsonify({
+            "message": "User registered successfully",
+            "userId": str(result.inserted_id)
+        }), 201
         
     except Exception as e:
-        print("Error in register_user:", str(e))  # Debug print
+        logger.error("Registration error: %s", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/user/login', methods=['POST'])
 def login_user():
     try:
         data = request.json
-        print("Received login data:", data)  # Debug print
+        logger.info("Received login data: %s", data)
         
         user = db.users.find_one({"email": data['email']})
         
@@ -808,14 +809,14 @@ def login_user():
         return jsonify({"error": "Invalid credentials"}), 401
         
     except Exception as e:
-        print("Error in login_user:", str(e))  # Debug print
+        logger.error("Login error: %s", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/user/update/<user_id>', methods=['PUT'])
 def update_user(user_id):
     try:
         data = request.json
-        print("Updating user:", user_id, "with data:", data)  # Debug print
+        logger.info("Updating user: %s with data: %s", user_id, data)
         
         update_data = {
             "name": data.get('name'),
@@ -840,7 +841,7 @@ def update_user(user_id):
         return jsonify({"error": "User not found"}), 404
         
     except Exception as e:
-        print("Error in update_user:", str(e))  # Debug print
+        logger.error("Update user error: %s", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/user/friends/<user_id>', methods=['GET', 'POST'])
@@ -872,7 +873,7 @@ def manage_friends(user_id):
             return jsonify({"error": "User not found"}), 404
             
     except Exception as e:
-        print("Error in manage_friends:", str(e))  # Debug print
+        logger.error("Manage friends error: %s", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/user/pdf/<user_id>', methods=['POST'])
@@ -903,7 +904,7 @@ def upload_pdf(user_id):
         return jsonify({"error": "Invalid file type"}), 400
         
     except Exception as e:
-        print("Error in upload_pdf:", str(e))  # Debug print
+        logger.error("Upload PDF error: %s", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route('/health', methods=['GET'])
