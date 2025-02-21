@@ -59,6 +59,7 @@ app = Flask(__name__)
 
 try:
     from pymongo import MongoClient
+    import certifi
     
     # Get MongoDB URI from environment
     MONGO_URI = os.getenv("MONGO_URI")
@@ -67,11 +68,16 @@ try:
 
     logger.info("Connecting to MongoDB Atlas...")
     
-    # Create MongoClient with TLS configuration
-    client = MongoClient(MONGO_URI, 
-                        tls=True,
-                        tlsAllowInvalidCertificates=True,
-                        serverSelectionTimeoutMS=5000)
+    # Create MongoClient with Atlas recommended settings
+    client = MongoClient(
+        MONGO_URI,
+        tlsCAFile=certifi.where(),
+        connectTimeoutMS=30000,
+        socketTimeoutMS=None,
+        connect=True,
+        maxPoolSize=1,
+        retryWrites=True
+    )
     
     # Test connection and get database
     client.admin.command('ping')
