@@ -44,7 +44,7 @@ load_dotenv(dotenv_path=env_path, override=True)  # Force override any existing 
 
 OPENCAGE_API_KEY = os.getenv('OPENCAGE_API_KEY')
 ASTROLOGY_API_KEY = os.getenv('ASTROLOGY_API_KEY', 'HJ860PA-9HD4EZQ-NFDS992-QB5584S')
-ASTROLOGY_API_URL = "https://api.anythinglmm.com/v1"
+ASTROLOGY_API_URL = "https://api.astroloji.ai/v1"  # Updated API endpoint
 
 logger.info(f"OpenCage API Key: {OPENCAGE_API_KEY}")
 logger.info(f"Astrology API Key: {ASTROLOGY_API_KEY}")
@@ -222,7 +222,7 @@ def get_house(longitude, houses):
 
 def get_aspect_interpretation(aspect_type, planet1, planet2):
     try:
-        url = f"{ASTROLOGY_API_URL}/aspects"
+        url = f"{ASTROLOGY_API_URL}/aspects/interpret"  # Updated endpoint path
         headers = {
             "Authorization": f"Bearer {ASTROLOGY_API_KEY}",
             "Content-Type": "application/json"
@@ -230,11 +230,23 @@ def get_aspect_interpretation(aspect_type, planet1, planet2):
         data = {
             "aspect_type": aspect_type,
             "planet1": planet1,
-            "planet2": planet2
+            "planet2": planet2,
+            "language": "tr"  # Add language parameter
         }
+        logger.info(f"Making API request to {url} with data: {data}")
         response = requests.post(url, headers=headers, json=data)
+        logger.info(f"API response status: {response.status_code}")
+        logger.info(f"API response content: {response.text}")
+        
+        if response.status_code == 404:
+            logger.warning(f"No interpretation found for {aspect_type} between {planet1} and {planet2}")
+            return None
+            
         response.raise_for_status()
-        return response.json().get('interpretation', '')
+        result = response.json()
+        interpretation = result.get('interpretation') or result.get('message')
+        logger.info(f"Got interpretation: {interpretation}")
+        return interpretation
     except Exception as e:
         logger.error(f"Error getting aspect interpretation: {str(e)}")
         return None
@@ -432,7 +444,7 @@ def calculate_chart(birth_date, birth_time, location):
         missing_planets = expected_planets - calculated_planets
         if missing_planets:
             logger.warning(f"Missing planets: {missing_planets}")
-            
+
         logger.info("Successfully calculated positions for planets:")
         for name, data in planets.items():
             logger.info(f"{name}: {data}")
