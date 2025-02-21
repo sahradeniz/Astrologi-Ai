@@ -68,7 +68,8 @@ const InputForm = ({ setResult }) => {
       const data = await response.json();
       
       // Save to natal chart data
-      localStorage.setItem("natalChartData", JSON.stringify({ ...data, ...formData }));
+      const natalData = { ...data, ...formData };
+      localStorage.setItem("natalChartData", JSON.stringify(natalData));
       
       // Add to friends list if not exists
       const friends = JSON.parse(localStorage.getItem('friends') || '[]');
@@ -89,6 +90,25 @@ const InputForm = ({ setResult }) => {
           status: "success",
           duration: 3000,
         });
+      }
+      
+      // Update user data
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        try {
+          await fetch(`${API_URL}/update_user_data`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId,
+              userData: formData
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to update user data:', error);
+        }
       }
       
       setResult(data);

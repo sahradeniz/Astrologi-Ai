@@ -1,137 +1,82 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Container,
-  VStack,
-  Heading,
-  Text,
-  Input,
   Button,
+  Container,
   FormControl,
   FormLabel,
-  useToast,
+  Heading,
+  Input,
+  Stack,
+  Text,
   useColorModeValue,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
+  useToast,
+  VStack,
+  HStack,
+  IconButton,
+  InputGroup,
+  InputLeftElement,
 } from '@chakra-ui/react';
+import { FaUser, FaLock, FaEnvelope } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = 'http://localhost:5003';
+
 const LoginPage = () => {
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: '',
-    birthDate: '',
-    birthTime: '',
-    birthPlace: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
   const toast = useToast();
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
-  const boxBg = useColorModeValue('white', 'gray.800');
+  const bgColor = useColorModeValue('white', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
-  const handleLogin = async () => {
-    if (!loginData.email || !loginData.password) {
-      toast({
-        title: "Eksik Bilgi",
-        description: "Lütfen email ve şifrenizi girin",
-        status: "error",
-        duration: 3000
-      });
-      return;
-    }
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
+
     try {
-      const response = await fetch('http://localhost:5003/api/user/login', {
+      const endpoint = isLogin ? '/login' : '/register';
+      const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(loginData),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Giriş başarısız');
+        throw new Error(data.message || 'Bir hata oluştu');
       }
 
-      // Save user data to localStorage
-      localStorage.setItem('userId', data._id);
-      localStorage.setItem('userName', data.name);
-      localStorage.setItem('userEmail', data.email);
-      localStorage.setItem('userBirthDate', data.birthDate);
-      localStorage.setItem('userBirthTime', data.birthTime);
-      localStorage.setItem('userBirthPlace', data.birthPlace);
+      // Store user data
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('userEmail', formData.email);
+      localStorage.setItem('userName', data.name || formData.name);
 
       toast({
-        title: "Başarılı",
-        description: "Giriş yapıldı",
-        status: "success",
-        duration: 3000
+        title: isLogin ? 'Giriş başarılı!' : 'Kayıt başarılı!',
+        status: 'success',
+        duration: 3000,
       });
 
-      navigate('/');
+      // Redirect to input page if no natal chart data
+      const hasNatalData = localStorage.getItem('natalChartData');
+      navigate(hasNatalData ? '/' : '/input');
+
     } catch (error) {
       toast({
-        title: "Hata",
+        title: 'Hata',
         description: error.message,
-        status: "error",
-        duration: 3000
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegister = async () => {
-    if (!registerData.email || !registerData.password || !registerData.name || !registerData.birthDate) {
-      toast({
-        title: "Eksik Bilgi",
-        description: "Lütfen gerekli alanları doldurun",
-        status: "error",
-        duration: 3000
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await fetch('http://localhost:5003/api/user/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registerData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Kayıt başarısız');
-      }
-
-      toast({
-        title: "Başarılı",
-        description: "Hesabınız oluşturuldu. Giriş yapabilirsiniz.",
-        status: "success",
-        duration: 3000
-      });
-
-      // Switch to login tab
-      document.getElementById('login-tab').click();
-    } catch (error) {
-      toast({
-        title: "Hata",
-        description: error.message,
-        status: "error",
-        duration: 3000
+        status: 'error',
+        duration: 5000,
       });
     } finally {
       setIsLoading(false);
@@ -139,137 +84,104 @@ const LoginPage = () => {
   };
 
   return (
-    <Box bg={bgColor} minH="100vh" py={20}>
-      <Container maxW="container.sm">
-        <VStack spacing={8}>
-          <Heading>Astrologi AI</Heading>
-          <Box w="full" bg={boxBg} p={8} borderRadius="xl" shadow="lg">
-            <Tabs isFitted variant="enclosed">
-              <TabList mb="1em">
-                <Tab id="login-tab">Giriş</Tab>
-                <Tab>Kayıt Ol</Tab>
-              </TabList>
-              <TabPanels>
-                {/* Login Panel */}
-                <TabPanel>
-                  <VStack spacing={4}>
-                    <FormControl isRequired>
-                      <FormLabel>Email</FormLabel>
-                      <Input
-                        type="email"
-                        value={loginData.email}
-                        onChange={(e) => setLoginData({
-                          ...loginData,
-                          email: e.target.value
-                        })}
-                      />
-                    </FormControl>
-                    <FormControl isRequired>
-                      <FormLabel>Şifre</FormLabel>
-                      <Input
-                        type="password"
-                        value={loginData.password}
-                        onChange={(e) => setLoginData({
-                          ...loginData,
-                          password: e.target.value
-                        })}
-                      />
-                    </FormControl>
-                    <Button
-                      colorScheme="purple"
-                      width="full"
-                      onClick={handleLogin}
-                      isLoading={isLoading}
-                    >
-                      Giriş Yap
-                    </Button>
-                  </VStack>
-                </TabPanel>
+    <Container maxW="container.sm" py={10}>
+      <Box
+        p={8}
+        bg={bgColor}
+        borderWidth="1px"
+        borderColor={borderColor}
+        borderRadius="xl"
+        shadow="xl"
+      >
+        <VStack spacing={6}>
+          <Heading size="xl">
+            {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+          </Heading>
+          
+          <Text color="gray.600">
+            {isLogin 
+              ? 'Hesabınıza giriş yapın'
+              : 'Yeni bir hesap oluşturun'
+            }
+          </Text>
 
-                {/* Register Panel */}
-                <TabPanel>
-                  <VStack spacing={4}>
-                    <FormControl isRequired>
-                      <FormLabel>Email</FormLabel>
-                      <Input
-                        type="email"
-                        value={registerData.email}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          email: e.target.value
-                        })}
-                      />
-                    </FormControl>
-                    <FormControl isRequired>
-                      <FormLabel>Şifre</FormLabel>
-                      <Input
-                        type="password"
-                        value={registerData.password}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          password: e.target.value
-                        })}
-                      />
-                    </FormControl>
-                    <FormControl isRequired>
-                      <FormLabel>İsim</FormLabel>
-                      <Input
-                        value={registerData.name}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          name: e.target.value
-                        })}
-                      />
-                    </FormControl>
-                    <FormControl isRequired>
-                      <FormLabel>Doğum Tarihi</FormLabel>
-                      <Input
-                        type="date"
-                        value={registerData.birthDate}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          birthDate: e.target.value
-                        })}
-                      />
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel>Doğum Saati</FormLabel>
-                      <Input
-                        type="time"
-                        value={registerData.birthTime}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          birthTime: e.target.value
-                        })}
-                      />
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel>Doğum Yeri</FormLabel>
-                      <Input
-                        value={registerData.birthPlace}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          birthPlace: e.target.value
-                        })}
-                        placeholder="Şehir, Ülke"
-                      />
-                    </FormControl>
-                    <Button
-                      colorScheme="purple"
-                      width="full"
-                      onClick={handleRegister}
-                      isLoading={isLoading}
-                    >
-                      Kayıt Ol
-                    </Button>
-                  </VStack>
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
-          </Box>
+          <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+            <Stack spacing={4} width="full">
+              {!isLogin && (
+                <FormControl isRequired>
+                  <FormLabel>İsim</FormLabel>
+                  <InputGroup>
+                    <InputLeftElement>
+                      <FaUser color="gray.500" />
+                    </InputLeftElement>
+                    <Input
+                      type="text"
+                      placeholder="İsminizi girin"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </InputGroup>
+                </FormControl>
+              )}
+
+              <FormControl isRequired>
+                <FormLabel>Email</FormLabel>
+                <InputGroup>
+                  <InputLeftElement>
+                    <FaEnvelope color="gray.500" />
+                  </InputLeftElement>
+                  <Input
+                    type="email"
+                    placeholder="Email adresinizi girin"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </InputGroup>
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Şifre</FormLabel>
+                <InputGroup>
+                  <InputLeftElement>
+                    <FaLock color="gray.500" />
+                  </InputLeftElement>
+                  <Input
+                    type="password"
+                    placeholder="Şifrenizi girin"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                </InputGroup>
+              </FormControl>
+
+              <Button
+                type="submit"
+                colorScheme="purple"
+                size="lg"
+                width="full"
+                mt={6}
+                isLoading={isLoading}
+              >
+                {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+              </Button>
+            </Stack>
+          </form>
+
+          <HStack pt={4}>
+            <Text>
+              {isLogin ? "Hesabınız yok mu?" : "Zaten hesabınız var mı?"}
+            </Text>
+            <Button
+              variant="link"
+              color="purple.500"
+              onClick={() => setIsLogin(!isLogin)}
+            >
+              {isLogin ? "Kayıt Ol" : "Giriş Yap"}
+            </Button>
+          </HStack>
         </VStack>
-      </Container>
-    </Box>
+      </Box>
+    </Container>
   );
 };
 

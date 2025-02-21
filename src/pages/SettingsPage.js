@@ -25,6 +25,11 @@ const SettingsPage = () => {
     // Clear all user-related data
     localStorage.removeItem('natalChartData');
     localStorage.removeItem('friends');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('selectedPerson1');
+    localStorage.removeItem('selectedPerson2');
     
     toast({
       title: "Çıkış yapıldı",
@@ -33,8 +38,8 @@ const SettingsPage = () => {
       isClosable: true,
     });
     
-    // Redirect to home page
-    navigate('/');
+    // Redirect to login page
+    navigate('/login');
   };
 
   const handleEditProfile = () => {

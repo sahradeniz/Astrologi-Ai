@@ -22,8 +22,8 @@ import EditProfilePage from './pages/EditProfilePage';
 import "./App.css";
 
 const PrivateRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem('natalChartData');
-  return isAuthenticated ? children : <Navigate to="/input" />;
+  const isAuthenticated = localStorage.getItem('userId') && localStorage.getItem('natalChartData');
+  return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
 const App = () => {
@@ -42,16 +42,16 @@ const App = () => {
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route 
+                  path="/input" 
+                  element={<InputForm setResult={setResult} />} 
+                />
+                <Route 
                   path="/" 
                   element={
                     <PrivateRoute>
                       <HomePage />
                     </PrivateRoute>
                   } 
-                />
-                <Route 
-                  path="/input" 
-                  element={<InputForm setResult={setResult} />} 
                 />
                 <Route 
                   path="/character" 
