@@ -7,6 +7,7 @@ import {
   FormLabel,
   Heading,
   Input,
+  Link as ChakraLink,
   Stack,
   Text,
   useColorModeValue,
@@ -19,10 +20,9 @@ import {
   InputRightElement,
   Switch,
 } from '@chakra-ui/react';
+import { Link, useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-
-const API_URL = 'http://localhost:5003';
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -36,11 +36,11 @@ const LoginPage = () => {
     birthPlace: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
   const navigate = useNavigate();
   const toast = useToast();
-  const bgColor = useColorModeValue('white', 'gray.700');
+  
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.600', 'gray.200');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   const handleInputChange = (e) => {
@@ -58,35 +58,25 @@ const LoginPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Giriş başarısız');
+        throw new Error(data.error || 'Giriş yapılamadı');
       }
 
-      // Store user data in localStorage
+      // Save user data and token
+      localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.userId);
       localStorage.setItem('name', data.name);
       localStorage.setItem('email', data.email);
-      localStorage.setItem('birthDate', data.birthDate || '');
-      localStorage.setItem('birthTime', data.birthTime || '');
-      localStorage.setItem('birthPlace', data.birthPlace || '');
-
-      // Get user profile data
-      const profileResponse = await fetch(`${API_URL}/api/user/${data.userId}`);
-      const profileData = await profileResponse.json();
-
-      if (profileResponse.ok && profileData) {
-        localStorage.setItem('birthDate', profileData.birthDate || '');
-        localStorage.setItem('birthTime', profileData.birthTime || '');
-        localStorage.setItem('birthPlace', profileData.birthPlace || '');
-      }
+      
+      // Optional birth info
+      if (data.birthDate) localStorage.setItem('birthDate', data.birthDate);
+      if (data.birthTime) localStorage.setItem('birthTime', data.birthTime);
+      if (data.birthPlace) localStorage.setItem('birthPlace', data.birthPlace);
 
       toast({
         title: 'Başarılı',
@@ -132,6 +122,7 @@ const LoginPage = () => {
       }
 
       // Save user data to localStorage
+      localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.userId);
       localStorage.setItem('userEmail', data.email);
       localStorage.setItem('userName', data.name || 'User');
@@ -182,7 +173,7 @@ const LoginPage = () => {
             {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
           </Heading>
           
-          <Text color="gray.600">
+          <Text color={textColor}>
             {isLogin 
               ? 'Hesabınıza giriş yapın'
               : 'Yeni bir hesap oluşturun'
@@ -276,7 +267,7 @@ const LoginPage = () => {
                       onChange={handleInputChange}
                       placeholder="Doğum yerinizi girin"
                     />
-                  </FormControl>
+                  </InputGroup>
                 </>
               )}
 

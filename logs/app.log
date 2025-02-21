@@ -11177,3 +11177,19 @@ AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
 2025-02-21 17:57:43,020 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 17:57:43] "[35m[1mPOST /api/chat HTTP/1.1[0m" 500 -
 2025-02-21 18:06:31,374 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:06:31] "OPTIONS /login HTTP/1.1" 200 -
 2025-02-21 18:06:31,532 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:06:31] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+2025-02-21 18:06:38,836 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:06:38] "OPTIONS /login HTTP/1.1" 200 -
+2025-02-21 18:06:38,998 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:06:38] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+2025-02-21 18:06:43,373 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:06:43] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+2025-02-21 18:06:57,571 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:06:57] "[33mOPTIONS /register HTTP/1.1[0m" 404 -
+2025-02-21 18:07:04,975 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:07:04] "OPTIONS /login HTTP/1.1" 200 -
+2025-02-21 18:07:05,138 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:07:05] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+2025-02-21 18:07:34,909 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:07:34] "OPTIONS /login HTTP/1.1" 200 -
+2025-02-21 18:07:35,088 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 18:07:35] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+2025-02-21 18:07:51,325 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 18:07:52,210 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 18:07:53,618 - __main__ - INFO - Connecting to MongoDB Atlas...
+2025-02-21 18:07:55,690 - __main__ - INFO - Successfully connected to MongoDB
+2025-02-21 18:07:55,690 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 18:07:55,690 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 18:07:55,836 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 18:07:55,858 - werkzeug - INFO -  * Debugger PIN: 303-984-621

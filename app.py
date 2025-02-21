@@ -5,7 +5,7 @@ import pytz
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 import json
 from functools import wraps
@@ -818,7 +818,7 @@ def register_user():
 @app.route('/api/user/login', methods=['POST'])
 def login_user():
     try:
-        data = request.json
+        data = request.get_json()
         logger.info("Received login data: %s", data)
         
         user = db.users.find_one({"email": data['email']})
@@ -1023,21 +1023,36 @@ def health_check():
 def login():
     try:
         data = request.get_json()
+        
+        if not data:
+            return jsonify({"error": "Veri gerekli"}), 400
+            
         email = data.get('email')
         password = data.get('password')
-
+        
         if not email or not password:
             return jsonify({"error": "Email ve şifre gerekli"}), 400
 
+        # Find user by email
         user = db.users.find_one({"email": email})
+        
         if not user:
-            return jsonify({"error": "Kullanıcı bulunamadı"}), 404
-
-        if not check_password_hash(user['password'], password):
+            return jsonify({"error": "Kullanıcı bulunamadı"}), 401
+            
+        # Check password
+        if not check_password_hash(user.get('password', ''), password):
             return jsonify({"error": "Hatalı şifre"}), 401
 
-        # Return user data including birth info
+        # Generate token
+        token = jwt.encode({
+            'user_id': str(user['_id']),
+            'email': user['email'],
+            'exp': datetime.utcnow() + timedelta(days=1)
+        }, os.getenv('JWT_SECRET', 'your-secret-key'))
+
+        # Return user data and token
         return jsonify({
+            'token': token,
             'userId': str(user['_id']),
             'name': user.get('name', 'User'),
             'email': email,
