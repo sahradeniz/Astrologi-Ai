@@ -5,11 +5,13 @@ certifi==2024.12.14
 charset-normalizer==3.4.1
 click==8.1.8
 distro==1.9.0
+dnspython==2.4.2  # Required for MongoDB Atlas
 exceptiongroup==1.2.2
-Flask==3.1.0
-Flask-Cors==5.0.0
+Flask==3.0.0
+flask-cors==4.0.0
+Flask-PyMongo==2.3.0
 groq==0.18.0
-gunicorn==23.0.0
+gunicorn==21.2.0  # Required for production deployment
 h11==0.14.0
 httpcore==1.0.7
 httpx==0.28.1
@@ -19,17 +21,18 @@ itsdangerous==2.2.0
 Jinja2==3.1.5
 MarkupSafe==3.0.2
 packaging==24.2
+pymongo[srv]==4.6.1
 pydantic==2.10.6
 pydantic_core==2.27.2
 PyJWT==2.10.1
 PyPDF2==3.0.1
 pyswisseph==2.10.3.2
-python-dotenv==1.0.1
+python-dotenv==1.0.0
 pytz==2024.2
-requests==2.32.3
+requests==2.31.0
 sniffio==1.3.1
 swisseph==0.0.0.dev1
 typing_extensions==4.12.2
 urllib3==2.3.0
-Werkzeug==3.1.3
+Werkzeug==3.0.1
 zipp==3.21.0

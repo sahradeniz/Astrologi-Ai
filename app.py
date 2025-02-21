@@ -48,8 +48,31 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+# Load environment variables
+load_dotenv()
+
 # Initialize Flask app
 app = Flask(__name__)
+
+try:
+    # MongoDB Configuration
+    MONGO_URI = os.getenv("MONGO_URI")
+    if not MONGO_URI:
+        raise ValueError("MONGO_URI environment variable is not set")
+
+    logger.info("Connecting to MongoDB Atlas...")
+    app.config["MONGO_URI"] = MONGO_URI
+    mongo = PyMongo(app)
+    
+    # Test database connection
+    mongo.db.command('ping')
+    logger.info("Successfully connected to MongoDB")
+    
+except Exception as e:
+    logger.error(f"Failed to connect to MongoDB: {str(e)}")
+    mongo = None
+
+# Enable CORS
 CORS(app, resources={
     r"/api/*": {
         "origins": ["http://localhost:3000"],
@@ -57,11 +80,6 @@ CORS(app, resources={
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
-
-# Load environment variables
-env_path = os.path.join(os.path.dirname(__file__), '.env')
-logger.info(f"Loading environment variables from: {env_path}")
-load_dotenv(dotenv_path=env_path, override=True)  # Force override any existing env vars
 
 OPENCAGE_API_KEY = os.getenv('OPENCAGE_API_KEY')
 ASTROLOGY_API_KEY = os.getenv('ASTROLOGY_API_KEY', 'HJ860PA-9HD4EZQ-NFDS992-QB5584S')
@@ -74,8 +92,6 @@ if not OPENCAGE_API_KEY:
     raise ValueError("OpenCage API key not found in environment variables")
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')  # Change in production
-app.config["MONGO_URI"] = "mongodb://localhost:27017/astrologiAi"
-mongo = PyMongo(app)
 
 # Define planet IDs
 PLANETS = {
@@ -882,6 +898,16 @@ def upload_pdf(user_id):
     except Exception as e:
         print("Error in upload_pdf:", str(e))  # Debug print
         return jsonify({"error": str(e)}), 500
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint to verify the service is running"""
+    status = {
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'mongodb_connected': mongo is not None
+    }
+    return jsonify(status)
 
 if __name__ == '__main__':
     # Start the Flask app
