@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -25,10 +25,21 @@ import {
   FormLabel,
   Input,
   useToast,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Avatar,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from '@chakra-ui/react';
-import { FaStar, FaCrown, FaRegBookmark, FaChevronRight, FaUserPlus, FaCog } from 'react-icons/fa';
+import { FaStar, FaCrown, FaRegBookmark, FaChevronRight, FaUserPlus, FaCog, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import FriendsList from '../components/FriendsList';
 import AddFriendForm from '../components/AddFriendForm';
+import { API_URL, DEFAULT_AVATAR } from '../config';
 
 const ProfileCard = ({ title, value, icon, color }) => {
   const bgColor = useColorModeValue('white', 'gray.700');
@@ -116,33 +127,89 @@ const SessionCard = ({ number, title, description, duration, image }) => {
 };
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
+  const toast = useToast();
+  
   const bgColor = useColorModeValue('gray.50', 'gray.900');
   const { isOpen: isAddFriendOpen, onOpen: onAddFriendOpen, onClose: onAddFriendClose } = useDisclosure();
   const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onClose: onSettingsClose } = useDisclosure();
   const [userData, setUserData] = useState({
-    name: localStorage.getItem('userName') || '',
-    birthDate: localStorage.getItem('userBirthDate') || '',
-    birthTime: localStorage.getItem('userBirthTime') || '',
-    birthPlace: localStorage.getItem('userBirthPlace') || ''
+    name: '',
+    birthDate: '',
+    birthTime: '',
+    birthPlace: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const toast = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleUpdateProfile = async () => {
-    if (!userData.name || !userData.birthDate) {
-      toast({
-        title: "Eksik Bilgi",
-        description: "İsim ve doğum tarihi zorunludur",
-        status: "error",
-        duration: 3000
-      });
-      return;
-    }
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
-    setIsLoading(true);
+  const fetchUserData = async () => {
     try {
       const userId = localStorage.getItem('userId');
-      const response = await fetch(`http://localhost:5003/api/user/update/${userId}`, {
+      if (!userId) {
+        throw new Error('Kullanıcı girişi yapılmamış');
+      }
+
+      console.log('Fetching user data for:', userId);
+      const response = await fetch(`${API_URL}/api/user/${userId}`);
+      const data = await response.json();
+
+      console.log('User data response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Kullanıcı bilgileri alınamadı');
+      }
+
+      setUserData({
+        name: data.name || '',
+        birthDate: data.birthDate || '',
+        birthTime: data.birthTime || '',
+        birthPlace: data.birthPlace || ''
+      });
+
+      // Update localStorage
+      localStorage.setItem('name', data.name || '');
+      localStorage.setItem('birthDate', data.birthDate || '');
+      localStorage.setItem('birthTime', data.birthTime || '');
+      localStorage.setItem('birthPlace', data.birthPlace || '');
+
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setError(error.message);
+      toast({
+        title: 'Hata',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUserData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        throw new Error('Kullanıcı girişi yapılmamış');
+      }
+
+      const response = await fetch(`${API_URL}/api/user/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -150,37 +217,71 @@ const ProfilePage = () => {
         body: JSON.stringify(userData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Profil güncellenirken bir hata oluştu');
+        throw new Error(data.error || 'Profil güncellenemedi');
       }
 
-      const data = await response.json();
-      
       // Update localStorage
-      localStorage.setItem('userName', userData.name);
-      localStorage.setItem('userBirthDate', userData.birthDate);
-      localStorage.setItem('userBirthTime', userData.birthTime);
-      localStorage.setItem('userBirthPlace', userData.birthPlace);
+      localStorage.setItem('name', userData.name);
+      localStorage.setItem('birthDate', userData.birthDate);
+      localStorage.setItem('birthTime', userData.birthTime);
+      localStorage.setItem('birthPlace', userData.birthPlace);
 
       toast({
-        title: "Başarılı",
-        description: "Profil bilgileriniz güncellendi",
-        status: "success",
-        duration: 3000
+        title: 'Başarılı',
+        description: 'Profil güncellendi',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
       });
 
-      onSettingsClose();
     } catch (error) {
+      console.error('Error updating profile:', error);
       toast({
-        title: "Hata",
+        title: 'Hata',
         description: error.message,
-        status: "error",
-        duration: 3000
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleLogout = () => {
+    // Clear all user-related data
+    localStorage.removeItem('natalChartData');
+    localStorage.removeItem('friends');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('selectedPerson1');
+    localStorage.removeItem('selectedPerson2');
+    
+    toast({
+      title: "Çıkış yapıldı",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+    
+    navigate('/login');
+  };
+
+  const handleEditProfile = () => {
+    navigate('/profile/edit');
+  };
+
+  if (isLoading) {
+    return (
+      <Container maxW="container.sm" py={10}>
+        <Text>Yükleniyor...</Text>
+      </Container>
+    );
+  }
 
   return (
     <Box bg={bgColor} minH="100vh" pt={8} pb={20}>
@@ -189,34 +290,35 @@ const ProfilePage = () => {
           {/* Profile Header */}
           <VStack spacing={4} align="center" w="full">
             <HStack w="full" justify="flex-end">
-              <IconButton
-                icon={<FaCog />}
-                aria-label="Settings"
-                variant="ghost"
-                onClick={onSettingsOpen}
-              />
-            </HStack>
-            <Image
-              src={`https://ui-avatars.com/api/?name=${userData.name}&background=7928CA&color=fff`}
-              alt="Profile"
-              borderRadius="full"
-              boxSize="150px"
-              objectFit="cover"
-              fallback={
-                <Box
-                  width="150px"
-                  height="150px"
-                  borderRadius="full"
-                  bg="purple.500"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  variant="ghost"
+                  rightIcon={<Icon as={FaCog} />}
                 >
-                  <Text fontSize="4xl" color="white">
-                    {userData.name ? userData.name[0].toUpperCase() : 'U'}
-                  </Text>
-                </Box>
-              }
+                  Ayarlar
+                </MenuButton>
+                <MenuList>
+                  <MenuItem 
+                    icon={<Icon as={FaUser} />}
+                    onClick={handleEditProfile}
+                  >
+                    Profili Düzenle
+                  </MenuItem>
+                  <MenuItem 
+                    icon={<Icon as={FaSignOutAlt} />}
+                    color="red.500"
+                    onClick={handleLogout}
+                  >
+                    Çıkış Yap
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            </HStack>
+            <Avatar
+              size="xl"
+              name={userData.name}
+              src={DEFAULT_AVATAR}
             />
             <VStack spacing={1}>
               <Heading size="lg">{userData.name}</Heading>
@@ -314,7 +416,7 @@ const ProfilePage = () => {
                 <FormLabel>İsim</FormLabel>
                 <Input
                   value={userData.name}
-                  onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+                  onChange={handleInputChange}
                   placeholder="Adınız"
                 />
               </FormControl>
@@ -323,7 +425,7 @@ const ProfilePage = () => {
                 <Input
                   type="date"
                   value={userData.birthDate}
-                  onChange={(e) => setUserData({ ...userData, birthDate: e.target.value })}
+                  onChange={handleInputChange}
                 />
               </FormControl>
               <FormControl>
@@ -331,14 +433,14 @@ const ProfilePage = () => {
                 <Input
                   type="time"
                   value={userData.birthTime}
-                  onChange={(e) => setUserData({ ...userData, birthTime: e.target.value })}
+                  onChange={handleInputChange}
                 />
               </FormControl>
               <FormControl>
                 <FormLabel>Doğum Yeri</FormLabel>
                 <Input
                   value={userData.birthPlace}
-                  onChange={(e) => setUserData({ ...userData, birthPlace: e.target.value })}
+                  onChange={handleInputChange}
                   placeholder="Şehir, Ülke"
                 />
               </FormControl>
@@ -350,7 +452,7 @@ const ProfilePage = () => {
             </Button>
             <Button
               colorScheme="purple"
-              onClick={handleUpdateProfile}
+              onClick={handleSubmit}
               isLoading={isLoading}
             >
               Kaydet
@@ -359,7 +461,15 @@ const ProfilePage = () => {
         </ModalContent>
       </Modal>
 
-      <AddFriendForm isOpen={isAddFriendOpen} onClose={onAddFriendClose} />
+      {error ? (
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>Hata!</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : (
+        <AddFriendForm isOpen={isAddFriendOpen} onClose={onAddFriendClose} />
+      )}
     </Box>
   );
 };

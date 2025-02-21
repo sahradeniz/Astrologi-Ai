@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 const SettingsPage = () => {
   const navigate = useNavigate();
   const toast = useToast();
+
   const bgColor = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
 

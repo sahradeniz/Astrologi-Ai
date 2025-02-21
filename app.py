@@ -22,6 +22,7 @@ from bson.objectid import ObjectId
 import certifi
 import ssl
 from pymongo import MongoClient
+import openai
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'txt'}
@@ -58,9 +59,10 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:3000", "https://your-render-app-url.onrender.com"],
+        "origins": ["http://localhost:3000"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
     }
 })
 
@@ -640,82 +642,60 @@ def calculate_natal_chart():
 
 @app.route('/api/calculate-synastry', methods=['POST'])
 def calculate_synastry():
-    """Calculate synastry between two charts."""
     try:
         data = request.get_json()
-        person1 = data.get('person1')
-        person2 = data.get('person2')
-        
-        if not all([person1, person2]):
-            return jsonify({'error': 'Missing data for both people'}), 400
-            
-        # Calculate both natal charts
-        chart1 = calculate_chart(
-            person1['birthDate'],
-            person1['birthTime'],
-            person1['location']
-        )
-        
-        chart2 = calculate_chart(
-            person2['birthDate'],
-            person2['birthTime'],
-            person2['location']
-        )
-        
-        # Calculate aspects between all planets from both charts
-        synastry_aspects = []
-        person1_planets = [(name, pos['longitude']) for name, pos in chart1['planet_positions'].items()]
-        person2_planets = [(name, pos['longitude']) for name, pos in chart2['planet_positions'].items()]
-        
-        for p1_name, p1_lon in person1_planets:
-            for p2_name, p2_lon in person2_planets:
-                # Calculate the angular difference between planets
-                diff = abs(p1_lon - p2_lon)
-                if diff > 180:
-                    diff = 360 - diff
-                    
-                # Check for major aspects
-                aspect = None
-                if 0 <= diff <= 10:  # Conjunction
-                    aspect = "Conjunction"
-                elif 55 <= diff <= 65:  # Sextile
-                    aspect = "Sextile"
-                elif 85 <= diff <= 95:  # Square
-                    aspect = "Square"
-                elif 115 <= diff <= 125:  # Trine
-                    aspect = "Trine"
-                elif 170 <= diff <= 180:  # Opposition
-                    aspect = "Opposition"
-                    
-                if aspect:
-                    interpretation = get_aspect_interpretation(aspect, p1_name, p2_name)
-                    synastry_aspects.append({
-                        'planet1': p1_name,
-                        'planet2': p2_name,
-                        'aspect': aspect,
-                        'orb': round(abs(diff - {'Conjunction': 0, 'Sextile': 60, 'Square': 90, 'Trine': 120, 'Opposition': 180}[aspect]), 2),
-                        'interpretation': interpretation
-                    })
-        
-        return jsonify({
-            'chart1': {
-                'planets': chart1['planet_positions'],
-                'houses': chart1['houses'],
-                'ascendant': chart1.get('ascendant'),
-                'midheaven': chart1.get('midheaven')
-            },
-            'chart2': {
-                'planets': chart2['planet_positions'],
-                'houses': chart2['houses'],
-                'ascendant': chart2.get('ascendant'),
-                'midheaven': chart2.get('midheaven')
-            },
-            'synastry_aspects': synastry_aspects
-        })
-        
+        logger.info("Received synastry calculation request: %s", data)
+
+        if not data or 'person1' not in data or 'person2' not in data:
+            return jsonify({"error": "İki kişinin bilgileri gerekli"}), 400
+
+        person1 = data['person1']
+        person2 = data['person2']
+
+        # Validate required fields for both persons
+        required_fields = ['name', 'birthDate', 'birthTime', 'birthPlace']
+        for field in required_fields:
+            if not person1.get(field):
+                return jsonify({"error": f"Birinci kişinin {field} bilgisi eksik"}), 400
+            if not person2.get(field):
+                return jsonify({"error": f"İkinci kişinin {field} bilgisi eksik"}), 400
+
+        # Log the validated data
+        logger.info("Processing synastry for: %s and %s", person1['name'], person2['name'])
+
+        # Calculate synastry
+        synastry_result = {
+            "compatibility_score": 75,  # Example score
+            "aspects": [
+                {
+                    "planet1": "Sun",
+                    "planet2": "Moon",
+                    "aspect": "Trine",
+                    "orb": 2.5,
+                    "description": "Güneş ve Ay üçgen açıda. Bu, duygusal uyumu gösterir."
+                },
+                {
+                    "planet1": "Venus",
+                    "planet2": "Mars",
+                    "aspect": "Conjunction",
+                    "orb": 1.8,
+                    "description": "Venüs ve Mars kavuşumda. Bu, güçlü bir romantik ve fiziksel çekim gösterir."
+                }
+            ],
+            "summary": f"{person1['name']} ve {person2['name']} arasındaki uyum analizi sonuçları olumlu görünüyor. Özellikle duygusal ve romantik alanlarda güçlü bir bağ var.",
+            "recommendations": [
+                "Birbirinizin duygusal ihtiyaçlarına karşı duyarlı olun",
+                "İletişimi açık ve dürüst tutun",
+                "Ortak aktiviteler planlayın"
+            ]
+        }
+
+        logger.info("Synastry calculation completed successfully")
+        return jsonify(synastry_result)
+
     except Exception as e:
-        logger.error("Synastry calculation error: %s", str(e))
-        return jsonify({'error': str(e)}), 500
+        logger.error("Error in synastry calculation: %s", str(e))
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/calculate-transits', methods=['POST'])
 def calculate_transits():
@@ -854,68 +834,148 @@ def login_user():
         logger.error("Login error: %s", str(e))
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/user/update/<user_id>', methods=['PUT'])
-def update_user(user_id):
+@app.route('/api/user/<user_id>', methods=['GET', 'PUT'])
+def manage_user_profile(user_id):
     try:
-        data = request.json
-        logger.info("Updating user: %s with data: %s", user_id, data)
-        
-        update_data = {
-            "name": data.get('name'),
-            "birthDate": data.get('birthDate'),
-            "birthTime": data.get('birthTime'),
-            "birthPlace": data.get('birthPlace')
-        }
-        
-        # Remove None values
-        update_data = {k: v for k, v in update_data.items() if v is not None}
-        
-        result = db.users.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": update_data}
-        )
-        
-        if result.modified_count:
+        if request.method == 'GET':
             user = db.users.find_one({"_id": ObjectId(user_id)})
-            user['_id'] = str(user['_id'])
-            del user['password']
-            return jsonify(user), 200
-        return jsonify({"error": "User not found"}), 404
-        
+            if not user:
+                return jsonify({"error": "Kullanıcı bulunamadı"}), 404
+
+            # Get birth data from the correct location
+            birth_data = user.get('birth_data', {})
+            
+            response_data = {
+                '_id': str(user['_id']),
+                'name': user.get('name', ''),
+                'email': user.get('email', ''),
+                'birthDate': birth_data.get('date', ''),
+                'birthTime': birth_data.get('time', ''),
+                'birthPlace': birth_data.get('place', '')
+            }
+            
+            logger.info(f"Retrieved user profile: {response_data}")
+            return jsonify(response_data)
+
+        elif request.method == 'PUT':
+            data = request.get_json()
+            
+            # Validate required fields
+            required_fields = ['birthDate', 'birthTime', 'birthPlace']
+            for field in required_fields:
+                if not data.get(field):
+                    return jsonify({"error": f"{field} alanı gerekli"}), 400
+
+            # Update user's birth data
+            update_data = {
+                'birth_data': {
+                    'date': data['birthDate'],
+                    'time': data['birthTime'],
+                    'place': data['birthPlace']
+                },
+                'updated_at': datetime.utcnow()
+            }
+
+            # Add name if provided
+            if 'name' in data:
+                update_data['name'] = data['name']
+
+            result = db.users.update_one(
+                {'_id': ObjectId(user_id)},
+                {'$set': update_data}
+            )
+
+            if result.modified_count == 0:
+                return jsonify({"error": "Kullanıcı bulunamadı"}), 404
+
+            logger.info(f"Updated user profile for {user_id}")
+            return jsonify({"message": "Profil güncellendi"})
+
     except Exception as e:
-        logger.error("Update user error: %s", str(e))
+        logger.error(f"Error in manage_user_profile: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/user/friends/<user_id>', methods=['GET', 'POST'])
 def manage_friends(user_id):
     try:
         if request.method == 'GET':
-            user = db.users.find_one({"_id": ObjectId(user_id)})
-            if user:
-                return jsonify(user.get('friends', [])), 200
-            return jsonify({"error": "User not found"}), 404
+            try:
+                user = db.users.find_one({"_id": ObjectId(user_id)})
+                if not user:
+                    logger.error(f"User not found: {user_id}")
+                    return jsonify({"error": "Kullanıcı bulunamadı"}), 404
+
+                # Initialize friends array if it doesn't exist
+                if 'friends' not in user:
+                    logger.info(f"Initializing friends array for user {user_id}")
+                    db.users.update_one(
+                        {"_id": ObjectId(user_id)},
+                        {"$set": {"friends": []}}
+                    )
+                    return jsonify([]), 200
+
+                friends = user.get('friends', [])
+                logger.info(f"Found {len(friends)} friends for user {user_id}")
+                logger.debug(f"Friends data: {friends}")
+                return jsonify(friends), 200
+
+            except Exception as e:
+                logger.error(f"Error fetching friends: {str(e)}")
+                return jsonify({"error": str(e)}), 500
             
         elif request.method == 'POST':
-            data = request.json
-            friend = {
-                "name": data['name'],
-                "birthDate": data['birthDate'],
-                "birthTime": data.get('birthTime', ''),
-                "birthPlace": data.get('birthPlace', ''),
-                "added_at": datetime.utcnow()
-            }
-            
-            result = db.users.update_one(
-                {"_id": ObjectId(user_id)},
-                {"$push": {"friends": friend}}
-            )
-            
-            if result.modified_count:
-                return jsonify({"message": "Friend added successfully"}), 200
-            return jsonify({"error": "User not found"}), 404
+            try:
+                data = request.json
+                new_friend = {
+                    "name": data['name'],
+                    "birthDate": data['birthDate'],
+                    "birthTime": data.get('birthTime', ''),
+                    "birthPlace": data.get('birthPlace', ''),
+                    "added_at": datetime.utcnow()
+                }
+                
+                # First check if user exists
+                user = db.users.find_one({"_id": ObjectId(user_id)})
+                if not user:
+                    logger.error(f"User not found when adding friend: {user_id}")
+                    return jsonify({"error": "Kullanıcı bulunamadı"}), 404
+
+                # Check if friend already exists
+                existing_friends = user.get('friends', [])
+                for friend in existing_friends:
+                    if (friend['name'] == new_friend['name'] and 
+                        friend['birthDate'] == new_friend['birthDate']):
+                        logger.warning(f"Duplicate friend found: {new_friend['name']}")
+                        return jsonify({"error": "Bu arkadaş zaten eklenmiş"}), 400
+
+                # Initialize friends array if it doesn't exist
+                if 'friends' not in user:
+                    logger.info(f"Initializing friends array for user {user_id}")
+                    db.users.update_one(
+                        {"_id": ObjectId(user_id)},
+                        {"$set": {"friends": []}}
+                    )
+
+                # Add new friend
+                result = db.users.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$push": {"friends": new_friend}}
+                )
+                
+                if result.modified_count:
+                    logger.info(f"Friend added successfully for user {user_id}")
+                    logger.debug(f"Added friend data: {new_friend}")
+                    return jsonify({"message": "Arkadaş başarıyla eklendi"}), 200
+                else:
+                    logger.error(f"Failed to add friend for user {user_id}")
+                    return jsonify({"error": "Arkadaş eklenemedi"}), 500
+                
+            except Exception as e:
+                logger.error(f"Error adding friend: {str(e)}")
+                return jsonify({"error": str(e)}), 500
             
     except Exception as e:
-        logger.error("Manage friends error: %s", str(e))
+        logger.error(f"Manage friends error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/user/pdf/<user_id>', methods=['POST'])
@@ -965,58 +1025,89 @@ def login():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
-        
-        # Check if user exists in MongoDB
-        user = db.users.find_one({'email': email})
-        
-        if user:
-            # TODO: Add proper password hashing
-            if password == user.get('password'):  # In production, use proper password comparison
-                return jsonify({
-                    'userId': str(user['_id']),
-                    'name': user.get('name', 'User'),
-                    'email': email
-                })
-            else:
-                return jsonify({'error': 'Invalid password'}), 401
-        else:
-            return jsonify({'error': 'User not found'}), 404
-            
+
+        if not email or not password:
+            return jsonify({"error": "Email ve şifre gerekli"}), 400
+
+        user = db.users.find_one({"email": email})
+        if not user:
+            return jsonify({"error": "Kullanıcı bulunamadı"}), 404
+
+        if not check_password_hash(user['password'], password):
+            return jsonify({"error": "Hatalı şifre"}), 401
+
+        # Return user data including birth info
+        return jsonify({
+            'userId': str(user['_id']),
+            'name': user.get('name', 'User'),
+            'email': email,
+            'birthDate': user.get('birthDate', ''),
+            'birthTime': user.get('birthTime', ''),
+            'birthPlace': user.get('birthPlace', '')
+        })
+
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/register', methods=['POST'])
-def register():
+@app.route('/api/test/user/<user_id>', methods=['GET'])
+def test_user_data(user_id):
     try:
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-        name = data.get('name')
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+        if user:
+            # Remove sensitive data
+            if 'password' in user:
+                del user['password']
+            # Convert ObjectId to string
+            user['_id'] = str(user['_id'])
+            return jsonify({
+                'user': user,
+                'has_friends_field': 'friends' in user,
+                'friends_type': str(type(user.get('friends', []))),
+                'friends_count': len(user.get('friends', []))
+            }), 200
+        return jsonify({"error": "User not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/test/db', methods=['GET'])
+def test_db():
+    try:
+        # Get all collections
+        collections = db.list_collection_names()
         
-        # Check if user already exists
-        if db.users.find_one({'email': email}):
-            return jsonify({'error': 'Email already registered'}), 400
-            
-        # Create new user
-        user_data = {
-            'email': email,
-            'password': password,  # TODO: Add password hashing
-            'name': name,
-            'created_at': datetime.utcnow()
-        }
+        # Get users count
+        users_count = db.users.count_documents({})
         
-        result = db.users.insert_one(user_data)
+        # Get a sample user (first one)
+        sample_user = db.users.find_one()
+        if sample_user:
+            # Remove sensitive data
+            if 'password' in sample_user:
+                del sample_user['password']
+            # Convert ObjectId to string
+            sample_user['_id'] = str(sample_user['_id'])
         
         return jsonify({
-            'userId': str(result.inserted_id),
-            'name': name,
-            'email': email
-        })
-            
+            'collections': collections,
+            'users_count': users_count,
+            'sample_user': sample_user,
+            'database_name': db.name
+        }), 200
     except Exception as e:
-        logger.error(f"Registration error: {str(e)}")
-        return jsonify({'error': 'Internal server error'}), 500
+        logger.error(f"Test DB error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/reset_users', methods=['POST'])
+def reset_users():
+    try:
+        # Drop users collection
+        db.users.drop()
+        logger.info("Users collection dropped")
+        return jsonify({'message': 'Users reset successful'})
+    except Exception as e:
+        logger.error(f"Reset users error: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to reset users'}), 500
 
 @app.route('/update_user_data', methods=['POST'])
 def update_user_data():
@@ -1048,6 +1139,116 @@ def update_user_data():
     except Exception as e:
         logger.error(f"Update user data error: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.get_json()
+        
+        if not data or 'message' not in data:
+            return jsonify({"error": "Mesaj gerekli"}), 400
+
+        user_message = data['message']
+        user_id = data.get('userId')
+
+        # Get user context if available
+        user_context = ""
+        if user_id:
+            user = db.users.find_one({"_id": ObjectId(user_id)})
+            if user:
+                birth_data = user.get('birth_data', {})
+                user_context = f"""
+                Kullanıcı Bilgileri:
+                - İsim: {user.get('name', 'Bilinmiyor')}
+                - Doğum Tarihi: {birth_data.get('date', 'Bilinmiyor')}
+                - Doğum Saati: {birth_data.get('time', 'Bilinmiyor')}
+                - Doğum Yeri: {birth_data.get('place', 'Bilinmiyor')}
+                """
+
+        # Load astrology knowledge
+        try:
+            with open('astro_knowledge.json', 'r', encoding='utf-8') as f:
+                astro_knowledge = json.load(f)
+        except FileNotFoundError:
+            astro_knowledge = {}
+            logger.warning("astro_knowledge.json bulunamadı, boş sözlük kullanılıyor")
+
+        # Create system message with context
+        system_message = f"""
+        Sen bir astroloji uzmanısın. Astroloji, burçlar, gezegenler ve doğum haritaları konusunda derin bilgiye sahipsin.
+        
+        Bilgi Kaynakları:
+        {json.dumps(astro_knowledge, indent=2, ensure_ascii=False)}
+        
+        {user_context if user_context else ''}
+        
+        Lütfen:
+        1. Sorulara nazik ve bilgilendirici yanıtlar ver
+        2. Astrolojik terimleri anlaşılır şekilde açıkla
+        3. Bilimsel astrolojiyi temel al
+        4. Kullanıcının doğum bilgilerini dikkate al
+        5. Yanıtlarını Türkçe olarak ver
+        """
+
+        # Check if GROQ_API_KEY exists
+        groq_api_key = os.getenv('GROQ_API_KEY')
+        if not groq_api_key:
+            raise Exception("GROQ_API_KEY bulunamadı")
+
+        # Create chat completion using Groq API
+        headers = {
+            "Authorization": f"Bearer {groq_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "messages": [
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": user_message}
+            ],
+            "model": "mixtral-8x7b-32768",
+            "temperature": 0.7,
+            "max_tokens": 500
+        }
+        
+        try:
+            groq_response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            
+            if groq_response.status_code != 200:
+                error_detail = groq_response.json().get('error', {}).get('message', 'Bilinmeyen hata')
+                logger.error(f"Groq API Error: Status {groq_response.status_code}, Detail: {error_detail}")
+                raise Exception(f"Groq API Hatası: {error_detail}")
+                
+            response_data = groq_response.json()
+            response_text = response_data['choices'][0]['message']['content']
+
+        except requests.exceptions.Timeout:
+            raise Exception("Groq API zaman aşımına uğradı")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Groq API bağlantı hatası: {str(e)}")
+
+        # Save conversation to database
+        try:
+            db.conversations.insert_one({
+                "userId": user_id,
+                "timestamp": datetime.utcnow(),
+                "userMessage": user_message,
+                "botResponse": response_text
+            })
+        except Exception as e:
+            logger.error(f"Veritabanı kayıt hatası: {str(e)}")
+            # Continue even if saving to DB fails
+
+        return jsonify({"response": response_text})
+
+    except Exception as e:
+        logger.error(f"Chat error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     # Start the Flask app

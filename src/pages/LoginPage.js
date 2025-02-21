@@ -16,33 +16,108 @@ import {
   IconButton,
   InputGroup,
   InputLeftElement,
+  InputRightElement,
+  Switch,
 } from '@chakra-ui/react';
-import { FaUser, FaLock, FaEnvelope } from 'react-icons/fa';
+import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const API_URL = 'http://localhost:5003';
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: '',
+    birthDate: '',
+    birthTime: '',
+    birthPlace: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
   const toast = useToast();
   const bgColor = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
 
-  const handleSubmit = async (e) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const endpoint = isLogin ? '/login' : '/register';
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Giriş başarısız');
+      }
+
+      // Store user data in localStorage
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('name', data.name);
+      localStorage.setItem('email', data.email);
+      localStorage.setItem('birthDate', data.birthDate || '');
+      localStorage.setItem('birthTime', data.birthTime || '');
+      localStorage.setItem('birthPlace', data.birthPlace || '');
+
+      // Get user profile data
+      const profileResponse = await fetch(`${API_URL}/api/user/${data.userId}`);
+      const profileData = await profileResponse.json();
+
+      if (profileResponse.ok && profileData) {
+        localStorage.setItem('birthDate', profileData.birthDate || '');
+        localStorage.setItem('birthTime', profileData.birthTime || '');
+        localStorage.setItem('birthPlace', profileData.birthPlace || '');
+      }
+
+      toast({
+        title: 'Başarılı',
+        description: 'Giriş yapıldı',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      navigate('/');
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: 'Hata',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,35 +128,44 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Bir hata oluştu');
+        throw new Error(data.error || 'Bir hata oluştu');
       }
 
-      // Store user data
+      // Save user data to localStorage
       localStorage.setItem('userId', data.userId);
-      localStorage.setItem('userEmail', formData.email);
-      localStorage.setItem('userName', data.name || formData.name);
+      localStorage.setItem('userEmail', data.email);
+      localStorage.setItem('userName', data.name || 'User');
+      
+      console.log('Saved to localStorage:', {
+        userId: data.userId,
+        userEmail: data.email,
+        userName: data.name
+      });
 
       toast({
-        title: isLogin ? 'Giriş başarılı!' : 'Kayıt başarılı!',
-        status: 'success',
+        title: "Kayıt başarılı!",
+        status: "success",
         duration: 3000,
       });
 
-      // Redirect to input page if no natal chart data
-      const hasNatalData = localStorage.getItem('natalChartData');
-      navigate(hasNatalData ? '/' : '/input');
+      // Always navigate to home page after successful login/register
+      navigate('/');
 
     } catch (error) {
+      console.error('Auth error:', error);
+      setError(error.message);
       toast({
-        title: 'Hata',
+        title: "Hata",
         description: error.message,
-        status: 'error',
+        status: "error",
         duration: 5000,
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSubmit = isLogin ? handleLogin : handleRegister;
 
   return (
     <Container maxW="container.sm" py={10}>
@@ -107,23 +191,6 @@ const LoginPage = () => {
 
           <form onSubmit={handleSubmit} style={{ width: '100%' }}>
             <Stack spacing={4} width="full">
-              {!isLogin && (
-                <FormControl isRequired>
-                  <FormLabel>İsim</FormLabel>
-                  <InputGroup>
-                    <InputLeftElement>
-                      <FaUser color="gray.500" />
-                    </InputLeftElement>
-                    <Input
-                      type="text"
-                      placeholder="İsminizi girin"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                  </InputGroup>
-                </FormControl>
-              )}
-
               <FormControl isRequired>
                 <FormLabel>Email</FormLabel>
                 <InputGroup>
@@ -131,10 +198,11 @@ const LoginPage = () => {
                     <FaEnvelope color="gray.500" />
                   </InputLeftElement>
                   <Input
+                    name="email"
                     type="email"
-                    placeholder="Email adresinizi girin"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={handleInputChange}
+                    placeholder="Email adresinizi girin"
                   />
                 </InputGroup>
               </FormControl>
@@ -146,13 +214,71 @@ const LoginPage = () => {
                     <FaLock color="gray.500" />
                   </InputLeftElement>
                   <Input
-                    type="password"
-                    placeholder="Şifrenizi girin"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    onChange={handleInputChange}
+                    placeholder="Şifrenizi girin"
                   />
+                  <InputRightElement>
+                    <IconButton
+                      icon={showPassword ? <FaEyeSlash /> : <FaEye />}
+                      onClick={() => setShowPassword(!showPassword)}
+                      variant="ghost"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    />
+                  </InputRightElement>
                 </InputGroup>
               </FormControl>
+
+              {!isLogin && (
+                <>
+                  <FormControl isRequired>
+                    <FormLabel>İsim</FormLabel>
+                    <InputGroup>
+                      <InputLeftElement>
+                        <FaUser color="gray.500" />
+                      </InputLeftElement>
+                      <Input
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="İsminizi girin"
+                      />
+                    </InputGroup>
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel>Doğum Tarihi</FormLabel>
+                    <Input
+                      name="birthDate"
+                      type="date"
+                      value={formData.birthDate}
+                      onChange={handleInputChange}
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel>Doğum Saati</FormLabel>
+                    <Input
+                      name="birthTime"
+                      type="time"
+                      value={formData.birthTime}
+                      onChange={handleInputChange}
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel>Doğum Yeri</FormLabel>
+                    <Input
+                      name="birthPlace"
+                      value={formData.birthPlace}
+                      onChange={handleInputChange}
+                      placeholder="Doğum yerinizi girin"
+                    />
+                  </FormControl>
+                </>
+              )}
 
               <Button
                 type="submit"
@@ -171,13 +297,11 @@ const LoginPage = () => {
             <Text>
               {isLogin ? "Hesabınız yok mu?" : "Zaten hesabınız var mı?"}
             </Text>
-            <Button
-              variant="link"
-              color="purple.500"
-              onClick={() => setIsLogin(!isLogin)}
-            >
-              {isLogin ? "Kayıt Ol" : "Giriş Yap"}
-            </Button>
+            <Switch
+              isChecked={!isLogin}
+              onChange={() => setIsLogin(!isLogin)}
+              colorScheme="purple"
+            />
           </HStack>
         </VStack>
       </Box>
