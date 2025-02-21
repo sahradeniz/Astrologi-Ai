@@ -157,10 +157,10 @@ const FriendsList = () => {
   const toast = useToast();
 
   useEffect(() => {
-    // Get current user data
-    const userData = localStorage.getItem('userData');
-    if (userData) {
-      setCurrentUser(JSON.parse(userData));
+    // Get current user data from natalChartData
+    const natalData = localStorage.getItem('natalChartData');
+    if (natalData) {
+      setCurrentUser(JSON.parse(natalData));
     }
   }, []);
 
