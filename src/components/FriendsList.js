@@ -14,6 +14,7 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
+  ModalBody,
   ModalCloseButton,
   Radio,
   RadioGroup,
