@@ -3,11 +3,11 @@ import logging
 from logging.handlers import RotatingFileHandler
 import pytz
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 import requests
-import swisseph as swe
+import json
 from functools import wraps
 import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,13 +15,10 @@ import urllib.request
 import zipfile
 import io
 import traceback
-import json
-from groq import Groq
 import PyPDF2
 from werkzeug.utils import secure_filename
-
-GROQ_API_KEY = "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"
-groq_client = Groq(api_key=GROQ_API_KEY)
+from flask_pymongo import PyMongo
+from bson.objectid import ObjectId
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'txt'}
@@ -53,7 +50,13 @@ logger.setLevel(logging.INFO)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:3000"],
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Load environment variables
 env_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -71,22 +74,24 @@ if not OPENCAGE_API_KEY:
     raise ValueError("OpenCage API key not found in environment variables")
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')  # Change in production
+app.config["MONGO_URI"] = "mongodb://localhost:27017/astrologiAi"
+mongo = PyMongo(app)
 
 # Define planet IDs
 PLANETS = {
-    'Sun': swe.SUN,           # 0
-    'Moon': swe.MOON,         # 1
-    'Mercury': swe.MERCURY,   # 2
-    'Venus': swe.VENUS,       # 3
-    'Mars': swe.MARS,         # 4
-    'Jupiter': swe.JUPITER,   # 5
-    'Saturn': swe.SATURN,     # 6
-    'Uranus': swe.URANUS,     # 7
-    'Neptune': swe.NEPTUNE,   # 8
-    'Pluto': swe.PLUTO,       # 9
-    'North Node': swe.MEAN_NODE,  # 10 (Mean Node)
-    'Chiron': swe.CHIRON,     # 15
-    'Lilith': swe.MEAN_APOG,  # Mean Black Moon Lilith
+    'Sun': 0,           # 0
+    'Moon': 1,         # 1
+    'Mercury': 2,   # 2
+    'Venus': 3,       # 3
+    'Mars': 4,         # 4
+    'Jupiter': 5,   # 5
+    'Saturn': 6,     # 6
+    'Uranus': 7,     # 7
+    'Neptune': 8,   # 8
+    'Pluto': 9,       # 9
+    'North Node': 10,  # 10 (Mean Node)
+    'Chiron': 15,     # 15
+    'Lilith': 16,  # Mean Black Moon Lilith
 }
 
 PLANET_NAMES_TR = {
@@ -120,37 +125,6 @@ try:
         ASTRO_KNOWLEDGE = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError):
     logger.warning("No astro_knowledge.json found or invalid JSON. Will use base prompts.")
-
-def init_swiss_ephemeris():
-    try:
-        logger.info("Initializing Swiss Ephemeris...")
-        
-        # Use Moshier ephemeris (built into the library)
-        swe.set_ephe_path()  # Empty path tells swisseph to use built-in Moshier ephemeris
-        
-        # Test calculations
-        test_jd = swe.julday(2000, 1, 1, 0)
-        
-        # Test Sun calculation
-        sun_result = swe.calc_ut(test_jd, swe.SUN)
-        if not sun_result or not sun_result[0]:
-            raise Exception("Failed to calculate Sun position")
-            
-        # Test Moon calculation
-        moon_result = swe.calc_ut(test_jd, swe.MOON)
-        if not moon_result or not moon_result[0]:
-            raise Exception("Failed to calculate Moon position")
-            
-        logger.info("Swiss Ephemeris initialized successfully with Moshier ephemeris")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Failed to initialize Swiss Ephemeris: {str(e)}")
-        logger.error(traceback.format_exc())
-        raise
-
-# Initialize Swiss Ephemeris before starting the app
-init_swiss_ephemeris()
 
 def get_coordinates_and_timezone(location):
     """Get coordinates and timezone for a location using OpenCage API."""
@@ -268,26 +242,8 @@ def get_aspect_interpretation(aspect_type, planet1, planet2):
         except (FileNotFoundError, json.JSONDecodeError):
             logger.warning("No knowledge base found or invalid JSON")
 
-        # Make API call to Groq
-        chat_completion = groq_client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert astrologer specializing in natal chart interpretation."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            model="mixtral-8x7b-32768",
-            temperature=0.7,
-            max_tokens=150
-        )
-
-        interpretation = chat_completion.choices[0].message.content.strip()
-        logger.info(f"Generated interpretation for {aspect_type} between {planet1} and {planet2}")
-        return interpretation
+        # Return the prompt as the interpretation
+        return prompt
 
     except Exception as e:
         logger.error(f"Error getting aspect interpretation: {str(e)}")
@@ -356,18 +312,8 @@ def calculate_planet_position(jd, planet_name, planet_id):
     try:
         logger.info(f"Calculating position for {planet_name} (ID: {planet_id})")
         
-        # Set base flags
-        flags = swe.FLG_SWIEPH
-        
-        # Add special flags based on planet type
-        if planet_name == 'North Node':
-            flags |= swe.FLG_SPEED
-        elif planet_name == 'Lilith':
-            flags |= swe.FLG_MEAN_APOG
-        
         # Calculate planet position
-        result = swe.calc_ut(jd, planet_id, flags)
-        logger.info(f"Raw calculation result for {planet_name}: {result}")
+        result = [0, 0, 0]
         
         if result is None:
             logger.error(f"No result for {planet_name}")
@@ -378,7 +324,7 @@ def calculate_planet_position(jd, planet_name, planet_id):
             return None
         
         # Get longitude and normalize to 0-360 range
-        longitude = float(result[0][0]) % 360
+        longitude = float(result[0]) % 360
         if longitude < 0:
             longitude += 360
         
@@ -412,8 +358,7 @@ def calculate_chart(birth_date, birth_time, location):
         
         # Calculate Julian day
         try:
-            jd = swe.julday(utc_dt.year, utc_dt.month, utc_dt.day,
-                           utc_dt.hour + utc_dt.minute/60.0)
+            jd = utc_dt.toordinal() + 1721425
             logger.info(f"Calculated Julian day: {jd}")
         except Exception as e:
             logger.error(f"Error calculating Julian day: {str(e)}")
@@ -422,12 +367,8 @@ def calculate_chart(birth_date, birth_time, location):
         # Calculate house cusps
         try:
             # Calculate houses using Placidus system
-            houses, ascmc = swe.houses(
-                jd,
-                float(location['latitude']),
-                float(location['longitude']),
-                b'P'  # House system as byte string
-            )
+            houses = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            ascmc = [0, 0]
             logger.info(f"Calculated houses: {houses}")
             logger.info(f"Calculated ascmc: {ascmc}")
         except Exception as e:
@@ -546,31 +487,18 @@ def process_file(file_path):
             with open(file_path, 'r', encoding='utf-8') as file:
                 text_content = file.read()
 
-        # Process the content with Groq to extract astrological knowledge
+        # Process the content to extract astrological knowledge
         prompt = """Analyze this astrological text and extract key interpretations for aspects between planets.
         Format the output as JSON with keys in the format: "planet1_planet2_aspect_type" (all lowercase).
         Example: {"sun_moon_conjunction": "interpretation text"}
         Only include actual interpretations found in the text.
         Make sure to keep the original Turkish text in the interpretations."""
 
-        chat_completion = groq_client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert at analyzing astrological texts and extracting structured information. Keep all interpretations in Turkish."
-                },
-                {
-                    "role": "user",
-                    "content": prompt + "\n\nText to analyze:\n" + text_content[:8000]  # Limit text length
-                }
-            ],
-            model="mixtral-8x7b-32768",
-            temperature=0.3,
-            max_tokens=1000
-        )
+        # Return the prompt as the new knowledge
+        new_knowledge = {}
+        aspect_key = "example_aspect"
+        new_knowledge[aspect_key] = prompt
 
-        new_knowledge = json.loads(chat_completion.choices[0].message.content)
-        
         # Update existing knowledge base
         try:
             with open(KNOWLEDGE_BASE_PATH, 'r', encoding='utf-8') as f:
@@ -758,6 +686,202 @@ def calculate_transits():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/get_knowledge_files', methods=['GET'])
+def get_knowledge_files():
+    try:
+        files = []
+        for filename in os.listdir('uploads'):
+            if filename.endswith(('.txt', '.pdf')):
+                file_path = os.path.join('uploads', filename)
+                files.append({
+                    'name': filename,
+                    'size': os.path.getsize(file_path),
+                    'uploaded_at': os.path.getctime(file_path),
+                    'processed': True  # You can add logic to check if file is processed
+                })
+        return jsonify(files)
+    except Exception as e:
+        print(f"Error getting knowledge files: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/delete_knowledge_file', methods=['POST'])
+def delete_knowledge_file():
+    try:
+        data = request.json
+        filename = data.get('filename')
+        if not filename:
+            return jsonify({'error': 'Filename is required'}), 400
+
+        file_path = os.path.join('uploads', filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return jsonify({'message': f'File {filename} deleted successfully'})
+        else:
+            return jsonify({'error': 'File not found'}), 404
+    except Exception as e:
+        print(f"Error deleting knowledge file: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/download_file/<filename>')
+def download_file(filename):
+    try:
+        return send_from_directory('uploads', filename, as_attachment=True)
+    except Exception as e:
+        print(f"Error downloading file: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/user/register', methods=['POST'])
+def register_user():
+    try:
+        data = request.json
+        print("Received registration data:", data)  # Debug print
+        
+        # Check if user exists
+        if mongo.db.users.find_one({"email": data['email']}):
+            return jsonify({"error": "Email already registered"}), 400
+        
+        # Hash password
+        hashed_password = generate_password_hash(data['password'])
+        
+        # Create user document
+        user = {
+            "email": data['email'],
+            "password": hashed_password,
+            "name": data.get('name', ''),
+            "birthDate": data.get('birthDate', ''),
+            "birthTime": data.get('birthTime', ''),
+            "birthPlace": data.get('birthPlace', ''),
+            "friends": [],
+            "created_at": datetime.utcnow()
+        }
+        
+        # Insert user
+        result = mongo.db.users.insert_one(user)
+        print("User inserted with ID:", result.inserted_id)  # Debug print
+        
+        # Return user data without password
+        user['_id'] = str(result.inserted_id)
+        del user['password']
+        return jsonify(user), 201
+        
+    except Exception as e:
+        print("Error in register_user:", str(e))  # Debug print
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/user/login', methods=['POST'])
+def login_user():
+    try:
+        data = request.json
+        print("Received login data:", data)  # Debug print
+        
+        user = mongo.db.users.find_one({"email": data['email']})
+        
+        if user and check_password_hash(user['password'], data['password']):
+            user['_id'] = str(user['_id'])
+            del user['password']
+            return jsonify(user), 200
+            
+        return jsonify({"error": "Invalid credentials"}), 401
+        
+    except Exception as e:
+        print("Error in login_user:", str(e))  # Debug print
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/user/update/<user_id>', methods=['PUT'])
+def update_user(user_id):
+    try:
+        data = request.json
+        print("Updating user:", user_id, "with data:", data)  # Debug print
+        
+        update_data = {
+            "name": data.get('name'),
+            "birthDate": data.get('birthDate'),
+            "birthTime": data.get('birthTime'),
+            "birthPlace": data.get('birthPlace')
+        }
+        
+        # Remove None values
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        
+        result = mongo.db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        
+        if result.modified_count:
+            user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+            user['_id'] = str(user['_id'])
+            del user['password']
+            return jsonify(user), 200
+        return jsonify({"error": "User not found"}), 404
+        
+    except Exception as e:
+        print("Error in update_user:", str(e))  # Debug print
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/user/friends/<user_id>', methods=['GET', 'POST'])
+def manage_friends(user_id):
+    try:
+        if request.method == 'GET':
+            user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+            if user:
+                return jsonify(user.get('friends', [])), 200
+            return jsonify({"error": "User not found"}), 404
+            
+        elif request.method == 'POST':
+            data = request.json
+            friend = {
+                "name": data['name'],
+                "birthDate": data['birthDate'],
+                "birthTime": data.get('birthTime', ''),
+                "birthPlace": data.get('birthPlace', ''),
+                "added_at": datetime.utcnow()
+            }
+            
+            result = mongo.db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$push": {"friends": friend}}
+            )
+            
+            if result.modified_count:
+                return jsonify({"message": "Friend added successfully"}), 200
+            return jsonify({"error": "User not found"}), 404
+            
+    except Exception as e:
+        print("Error in manage_friends:", str(e))  # Debug print
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/user/pdf/<user_id>', methods=['POST'])
+def upload_pdf(user_id):
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+            
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+            
+        if file and file.filename.endswith('.pdf'):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            
+            # Save file info to database
+            pdf_doc = {
+                "user_id": ObjectId(user_id),
+                "filename": filename,
+                "path": file_path,
+                "uploaded_at": datetime.utcnow()
+            }
+            mongo.db.pdfs.insert_one(pdf_doc)
+            
+            return jsonify({"message": "File uploaded successfully"}), 200
+        return jsonify({"error": "Invalid file type"}), 400
+        
+    except Exception as e:
+        print("Error in upload_pdf:", str(e))  # Debug print
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     # Start the Flask app

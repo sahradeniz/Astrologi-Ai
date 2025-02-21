@@ -10424,3 +10424,67 @@ AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
 2025-02-21 12:51:15,620 - groq._base_client - INFO - Retrying request to /openai/v1/chat/completions in 30.000000 seconds
 2025-02-21 12:51:47,321 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2025-02-21 12:51:47,326 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:51:47] "POST /upload_file HTTP/1.1" 200 -
+2025-02-21 13:09:00,245 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 13:09:00,255 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:09:00] "POST /upload_file HTTP/1.1" 200 -
+2025-02-21 13:09:16,167 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 13:09:16,186 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:09:16] "POST /upload_file HTTP/1.1" 200 -
+2025-02-21 13:16:21,536 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 13:16:22,489 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 13:16:22,490 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 13:16:22,490 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 13:16:22,491 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 13:16:22,492 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 13:16:22,533 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 13:16:22,551 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 13:19:16,042 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:19:16] "[33mOPTIONS /calculate_synastry HTTP/1.1[0m" 404 -
+2025-02-21 13:20:11,553 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:20:11] "[33mOPTIONS /calculate_synastry HTTP/1.1[0m" 404 -
+2025-02-21 13:22:51,511 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 13:22:51,540 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:22:51] "POST /upload_file HTTP/1.1" 200 -
+2025-02-21 13:26:06,093 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 13:39:53,387 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 13:39:53,388 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 13:39:53,388 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 13:39:53,396 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 13:39:53,397 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 13:39:53,463 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 13:39:53,463 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 13:39:53,464 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 13:39:54,057 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 13:39:54,058 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 13:39:54,058 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 13:39:54,067 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 13:39:54,067 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 13:39:54,098 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 13:39:54,122 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 13:40:08,030 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 13:40:08,323 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 13:40:09,551 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 13:40:09,552 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 13:40:09,552 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 13:40:09,559 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 13:40:09,559 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 13:40:09,608 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 13:40:09,639 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 13:41:56,700 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:41:56] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 13:41:56,740 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:41:56] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -
+2025-02-21 13:42:44,204 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 13:42:44,768 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 13:43:47,963 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 13:43:47,964 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 13:43:47,964 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 13:43:48,223 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5003
+ * Running on http://192.168.1.167:5003
+2025-02-21 13:43:48,224 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-21 13:43:48,225 - werkzeug - INFO -  * Restarting with stat
+2025-02-21 13:43:49,036 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 13:43:49,037 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 13:43:49,037 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 13:43:49,085 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 13:43:49,119 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 13:45:18,713 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:45:18] "OPTIONS /api/user/register HTTP/1.1" 200 -
+2025-02-21 13:45:18,765 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 13:45:18] "[35m[1mPOST /api/user/register HTTP/1.1[0m" 500 -

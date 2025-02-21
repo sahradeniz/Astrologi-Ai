@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import Group1 from "./assets/Group1.png";
 import Group2 from "./assets/group2.png";
@@ -14,7 +14,15 @@ import AdminPage from './pages/AdminPage';
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import TabBar from "./components/TabBar";
+import SynastryForm from './components/SynastryForm';
+import SynastryResultPage from './pages/SynastryResultPage';
+import LoginPage from './pages/LoginPage';
 import "./App.css";
+
+const PrivateRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem('userId');
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
 
 const App = () => {
   const [result, setResult] = useState(null);
@@ -30,23 +38,79 @@ const App = () => {
             <div className="content">
               <img src={Chart} alt="Astrology Chart" className="chart" />
               <Routes>
-                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route 
+                  path="/" 
+                  element={
+                    <PrivateRoute>
+                      <HomePage />
+                    </PrivateRoute>
+                  } 
+                />
                 <Route 
                   path="/input" 
-                  element={<InputForm setResult={setResult} />} 
+                  element={
+                    <PrivateRoute>
+                      <InputForm setResult={setResult} />
+                    </PrivateRoute>
+                  } 
                 />
                 <Route 
                   path="/character" 
-                  element={<CharacterPage initialData={result} />} 
+                  element={
+                    <PrivateRoute>
+                      <CharacterPage initialData={result} />
+                    </PrivateRoute>
+                  } 
                 />
                 <Route 
                   path="/transit" 
-                  element={<TransitPage initialData={result} />} 
+                  element={
+                    <PrivateRoute>
+                      <TransitPage initialData={result} />
+                    </PrivateRoute>
+                  } 
                 />
-                <Route path="/synastry" element={<SynastryPage />} />
-                <Route path="/life-purpose" element={<LifePurposePage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/admin" element={<AdminPage />} />
+                <Route 
+                  path="/synastry" 
+                  element={
+                    <PrivateRoute>
+                      <SynastryForm />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/synastry-result" 
+                  element={
+                    <PrivateRoute>
+                      <SynastryResultPage />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/life-purpose" 
+                  element={
+                    <PrivateRoute>
+                      <LifePurposePage />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <PrivateRoute>
+                      <ProfilePage />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <PrivateRoute>
+                      <AdminPage />
+                    </PrivateRoute>
+                  } 
+                />
               </Routes>
             </div>
           </div>
