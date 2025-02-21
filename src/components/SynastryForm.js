@@ -30,6 +30,8 @@ const SynastryForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+  const bgColor = useColorModeValue('white', 'gray.700');
+  const bgLight = useColorModeValue('gray.50', 'gray.600');
 
   useEffect(() => {
     // Get logged-in user data
@@ -118,11 +120,11 @@ const SynastryForm = () => {
   return (
     <Container maxW="container.md" py={8}>
       <VStack spacing={6} align="stretch">
-        <Box p={6} borderRadius="lg" bg={useColorModeValue('white', 'gray.700')} boxShadow="base">
+        <Box p={6} borderRadius="lg" bg={bgColor} boxShadow="base">
           <VStack spacing={4} align="stretch">
             <Heading size="md" mb={4}>Uyum Analizi</Heading>
 
-            <Box borderRadius="md" p={4} bg={useColorModeValue('gray.50', 'gray.600')}>
+            <Box borderRadius="md" p={4} bg={bgLight}>
               <HStack spacing={4}>
                 <Avatar name={loggedInUser.name} size="md" />
                 <VStack align="start" spacing={1}>
@@ -151,7 +153,7 @@ const SynastryForm = () => {
             </FormControl>
 
             {selectedFriend && (
-              <Box borderRadius="md" p={4} bg={useColorModeValue('gray.50', 'gray.600')}>
+              <Box borderRadius="md" p={4} bg={bgLight}>
                 <HStack spacing={4}>
                   <Avatar name={selectedFriend.name} size="md" />
                   <VStack align="start" spacing={1}>
