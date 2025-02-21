@@ -17,12 +17,13 @@ import {
   InputLeftElement,
   Icon,
 } from "@chakra-ui/react";
-import { FaCalendar, FaClock, FaMapMarkerAlt } from "react-icons/fa";
+import { FaCalendar, FaClock, FaMapMarkerAlt, FaUser } from "react-icons/fa";
 
 const API_URL = 'http://localhost:5003';
 
 const InputForm = ({ setResult }) => {
   const [formData, setFormData] = useState({
+    name: "",
     birthDate: "",
     birthTime: "",
     birthPlace: "",
@@ -38,6 +39,7 @@ const InputForm = ({ setResult }) => {
 
   const validateForm = () => {
     const newErrors = {};
+    if (!formData.name) newErrors.name = "İsim gerekli";
     if (!formData.birthDate) newErrors.birthDate = "Doğum tarihi gerekli";
     if (!formData.birthTime) newErrors.birthTime = "Doğum saati gerekli";
     if (!formData.birthPlace) newErrors.birthPlace = "Doğum yeri gerekli";
@@ -64,7 +66,31 @@ const InputForm = ({ setResult }) => {
       }
 
       const data = await response.json();
-      localStorage.setItem("natalChartData", JSON.stringify(data));
+      
+      // Save to natal chart data
+      localStorage.setItem("natalChartData", JSON.stringify({ ...data, ...formData }));
+      
+      // Add to friends list if not exists
+      const friends = JSON.parse(localStorage.getItem('friends') || '[]');
+      const existingFriend = friends.find(
+        friend => 
+          friend.birthDate === formData.birthDate && 
+          friend.birthTime === formData.birthTime &&
+          friend.birthPlace === formData.birthPlace
+      );
+      
+      if (!existingFriend) {
+        friends.push(formData);
+        localStorage.setItem('friends', JSON.stringify(friends));
+        
+        toast({
+          title: "Kişi kaydedildi",
+          description: "Kişi listenize eklendi",
+          status: "success",
+          duration: 3000,
+        });
+      }
+      
       setResult(data);
       navigate("/character");
     } catch (error) {
@@ -103,6 +129,25 @@ const InputForm = ({ setResult }) => {
 
           <form onSubmit={handleSubmit}>
             <VStack spacing={4}>
+              <FormControl isInvalid={errors.name}>
+                <FormLabel>İsim</FormLabel>
+                <InputGroup>
+                  <InputLeftElement>
+                    <Icon as={FaUser} color="gray.500" />
+                  </InputLeftElement>
+                  <Input
+                    type="text"
+                    placeholder="İsminizi girin"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    pl={10}
+                  />
+                </InputGroup>
+                <FormErrorMessage>{errors.name}</FormErrorMessage>
+              </FormControl>
+
               <FormControl isInvalid={errors.birthDate}>
                 <FormLabel>Doğum Tarihi</FormLabel>
                 <InputGroup>
