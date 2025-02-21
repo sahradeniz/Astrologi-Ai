@@ -58,7 +58,9 @@ load_dotenv()
 app = Flask(__name__)
 
 try:
-    # MongoDB Configuration
+    from pymongo import MongoClient
+    
+    # Get MongoDB URI from environment
     MONGO_URI = os.getenv("MONGO_URI")
     if not MONGO_URI:
         raise ValueError("MONGO_URI environment variable is not set")
@@ -71,17 +73,14 @@ try:
                         tlsAllowInvalidCertificates=True,
                         serverSelectionTimeoutMS=5000)
     
-    # Test connection
+    # Test connection and get database
     client.admin.command('ping')
+    db = client.get_database('astrologiAi')
     logger.info("Successfully connected to MongoDB")
-    
-    # Configure Flask-PyMongo
-    app.config["MONGO_URI"] = MONGO_URI
-    mongo = PyMongo(app)
     
 except Exception as e:
     logger.error(f"Failed to connect to MongoDB: {str(e)}")
-    mongo = None
+    raise  # Re-raise the exception to prevent the app from starting with broken DB
 
 # Enable CORS
 CORS(app, resources={
@@ -765,7 +764,8 @@ def register_user():
         print("Received registration data:", data)  # Debug print
         
         # Check if user exists
-        if mongo.db.users.find_one({"email": data['email']}):
+        existing_user = db.users.find_one({"email": data['email']})
+        if existing_user:
             return jsonify({"error": "Email already registered"}), 400
         
         # Hash password
@@ -779,12 +779,11 @@ def register_user():
             "birthDate": data.get('birthDate', ''),
             "birthTime": data.get('birthTime', ''),
             "birthPlace": data.get('birthPlace', ''),
-            "friends": [],
             "created_at": datetime.utcnow()
         }
         
         # Insert user
-        result = mongo.db.users.insert_one(user)
+        result = db.users.insert_one(user)
         print("User inserted with ID:", result.inserted_id)  # Debug print
         
         # Return user data without password
@@ -802,7 +801,7 @@ def login_user():
         data = request.json
         print("Received login data:", data)  # Debug print
         
-        user = mongo.db.users.find_one({"email": data['email']})
+        user = db.users.find_one({"email": data['email']})
         
         if user and check_password_hash(user['password'], data['password']):
             user['_id'] = str(user['_id'])
@@ -831,13 +830,13 @@ def update_user(user_id):
         # Remove None values
         update_data = {k: v for k, v in update_data.items() if v is not None}
         
-        result = mongo.db.users.update_one(
+        result = db.users.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": update_data}
         )
         
         if result.modified_count:
-            user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+            user = db.users.find_one({"_id": ObjectId(user_id)})
             user['_id'] = str(user['_id'])
             del user['password']
             return jsonify(user), 200
@@ -851,7 +850,7 @@ def update_user(user_id):
 def manage_friends(user_id):
     try:
         if request.method == 'GET':
-            user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+            user = db.users.find_one({"_id": ObjectId(user_id)})
             if user:
                 return jsonify(user.get('friends', [])), 200
             return jsonify({"error": "User not found"}), 404
@@ -866,7 +865,7 @@ def manage_friends(user_id):
                 "added_at": datetime.utcnow()
             }
             
-            result = mongo.db.users.update_one(
+            result = db.users.update_one(
                 {"_id": ObjectId(user_id)},
                 {"$push": {"friends": friend}}
             )
@@ -901,7 +900,7 @@ def upload_pdf(user_id):
                 "path": file_path,
                 "uploaded_at": datetime.utcnow()
             }
-            mongo.db.pdfs.insert_one(pdf_doc)
+            db.pdfs.insert_one(pdf_doc)
             
             return jsonify({"message": "File uploaded successfully"}), 200
         return jsonify({"error": "Invalid file type"}), 400
@@ -916,7 +915,7 @@ def health_check():
     status = {
         'status': 'healthy',
         'timestamp': datetime.utcnow().isoformat(),
-        'mongodb_connected': mongo is not None
+        'mongodb_connected': db is not None
     }
     return jsonify(status)
 
