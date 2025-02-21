@@ -9,6 +9,7 @@ import {
   Alert,
   AlertTitle,
   AlertDescription,
+  useToast
 } from "@chakra-ui/react";
 
 const InputForm = ({ setResult }) => {
@@ -18,9 +19,10 @@ const InputForm = ({ setResult }) => {
     birthPlace: "",
   });
 
-  const [errorMessage, setErrorMessage] = useState("");
+  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,82 +30,64 @@ const InputForm = ({ setResult }) => {
       ...prevData,
       [name]: value,
     }));
-    setErrorMessage(""); // Clear error when user starts typing
+    setError(null); // Clear error when user starts typing
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setIsLoading(true);
-    setErrorMessage("");
-
-    if (!formData.birthDate || !formData.birthTime || !formData.birthPlace) {
-      setErrorMessage("Lütfen tüm alanları doldurun.");
-      setIsLoading(false);
-      return;
-    }
-
-    const body = {
-      birth_date: `${formData.birthDate} ${formData.birthTime}:00`,
-      location: formData.birthPlace,
-    };
-
-    console.log("Sending request with body:", body);
+    setError(null);
 
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
-      console.log('Using API URL:', API_URL);
-      
-      const response = await fetch(`${API_URL}/api/calculate-natal`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify(body),
+      console.log('Submitting form with data:', {
+        birthDate: formData.birthDate,
+        birthTime: formData.birthTime,
+        location: formData.birthPlace
       });
 
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "API error: Response not ok.");
-      }
+      const response = await fetch('http://localhost:5003/calculate_natal_chart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          birthDate: formData.birthDate,
+          birthTime: formData.birthTime,
+          location: formData.birthPlace
+        }),
+      });
 
       const data = await response.json();
-      console.log("Raw API Response:", JSON.stringify(data, null, 2));
-      
-      // Check if data is an object with the expected properties
-      if (!data || typeof data !== 'object') {
-        console.error("Invalid data format - not an object:", data);
-        throw new Error("Invalid data format received from API");
+      console.log('Received response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to calculate natal chart');
       }
 
-      // Extract the relevant data, handling both English and Turkish keys
-      const formattedResult = {
-        planet_positions: data.planet_positions || data.planets || data.gezegenler || [],
-        aspects: data.aspects || data.açılar || {},
-        house_positions: data.houses || data.house_positions || data.evler || [],
-      };
-
-      console.log("Formatted Result:", JSON.stringify(formattedResult, null, 2));
-
-      // Validate the formatted data
-      if (!formattedResult.planet_positions.length) {
-        console.error("Missing planet positions in API response");
-        throw new Error("Missing planet positions in API response");
+      if (!data || !data.planet_positions) {
+        throw new Error('Invalid response data: missing planet positions');
       }
 
-      setResult(formattedResult);
-      navigate("/results");
+      // Save to localStorage
+      localStorage.setItem('natalChart', JSON.stringify(data));
+      console.log('Saved to localStorage:', data);
+
+      // Set result in parent component
+      setResult(data);
+
+      // Navigate to character page with data
+      navigate('/character', { state: { result: data } });
+
     } catch (error) {
-      console.error("Error details:", error);
-      setErrorMessage(
-        error.message === "Invalid data format received from API"
-          ? "API yanıtı beklenen formatta değil. Lütfen tekrar deneyin."
-          : error.message === "Missing planet positions in API response"
-          ? "Gezegen pozisyonları alınamadı. Lütfen tekrar deneyin."
-          : error.message || "Bir hata oluştu. Lütfen tekrar deneyin."
-      );
+      console.error('Error in form submission:', error);
+      setError(error.message || 'An error occurred while calculating your natal chart');
+      toast({
+        title: "Error",
+        description: error.message || 'An error occurred while calculating your natal chart',
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -115,10 +99,10 @@ const InputForm = ({ setResult }) => {
         Doğum Haritası Hesaplama
       </Text>
 
-      {errorMessage && (
+      {error && (
         <Alert status="error" mb={6} borderRadius="md">
-          <AlertTitle>Hata!</AlertTitle>
-          <AlertDescription>{errorMessage}</AlertDescription>
+          <AlertTitle mr={2}>Hata!</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
