@@ -7,10 +7,16 @@ import {
   VStack,
   Text,
   Alert,
+  AlertIcon,
   AlertTitle,
   AlertDescription,
-  useToast
+  useToast,
+  FormControl,
+  FormLabel,
+  FormErrorMessage
 } from "@chakra-ui/react";
+
+const API_URL = 'http://localhost:5003';
 
 const InputForm = ({ setResult }) => {
   const [formData, setFormData] = useState({
@@ -33,8 +39,29 @@ const InputForm = ({ setResult }) => {
     setError(null); // Clear error when user starts typing
   };
 
+  const validateForm = () => {
+    if (!formData.birthDate) {
+      setError('Birth date is required');
+      return false;
+    }
+    if (!formData.birthTime) {
+      setError('Birth time is required');
+      return false;
+    }
+    if (!formData.birthPlace) {
+      setError('Birth place is required');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -45,7 +72,7 @@ const InputForm = ({ setResult }) => {
         location: formData.birthPlace
       });
 
-      const response = await fetch('http://localhost:5003/calculate_natal_chart', {
+      const response = await fetch(`${API_URL}/calculate_natal_chart`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,12 +84,13 @@ const InputForm = ({ setResult }) => {
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Server error: ${response.status}`);
+      }
+
       const data = await response.json();
       console.log('Received response:', data);
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to calculate natal chart');
-      }
 
       if (!data || !data.planet_positions) {
         throw new Error('Invalid response data: missing planet positions');
@@ -74,6 +102,15 @@ const InputForm = ({ setResult }) => {
 
       // Set result in parent component
       setResult(data);
+
+      // Show success message
+      toast({
+        title: "Success",
+        description: "Your natal chart has been calculated!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
 
       // Navigate to character page with data
       navigate('/character', { state: { result: data } });
@@ -101,61 +138,56 @@ const InputForm = ({ setResult }) => {
 
       {error && (
         <Alert status="error" mb={6} borderRadius="md">
-          <AlertTitle mr={2}>Hata!</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertIcon />
+          <Box>
+            <AlertTitle mr={2}>Hata!</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Box>
         </Alert>
       )}
 
       <form onSubmit={handleSubmit}>
-        <VStack spacing={6}>
-          <Box w="100%">
-            <Text fontWeight="bold" mb={2}>Doğum Tarihi</Text>
+        <VStack spacing={4}>
+          <FormControl isRequired isInvalid={error && !formData.birthDate}>
+            <FormLabel>Doğum Tarihi</FormLabel>
             <Input
-              id="birthDate"
               type="date"
               name="birthDate"
               value={formData.birthDate}
               onChange={handleChange}
-              bg="gray.50"
-              focusBorderColor="blue.400"
-              size="lg"
+              placeholder="YYYY-MM-DD"
             />
-          </Box>
+            <FormErrorMessage>Birth date is required</FormErrorMessage>
+          </FormControl>
 
-          <Box w="100%">
-            <Text fontWeight="bold" mb={2}>Doğum Saati</Text>
+          <FormControl isRequired isInvalid={error && !formData.birthTime}>
+            <FormLabel>Doğum Saati</FormLabel>
             <Input
-              id="birthTime"
               type="time"
               name="birthTime"
               value={formData.birthTime}
               onChange={handleChange}
-              bg="gray.50"
-              focusBorderColor="blue.400"
-              size="lg"
+              placeholder="HH:MM"
             />
-          </Box>
+            <FormErrorMessage>Birth time is required</FormErrorMessage>
+          </FormControl>
 
-          <Box w="100%">
-            <Text fontWeight="bold" mb={2}>Doğum Yeri</Text>
+          <FormControl isRequired isInvalid={error && !formData.birthPlace}>
+            <FormLabel>Doğum Yeri</FormLabel>
             <Input
-              id="birthPlace"
               type="text"
               name="birthPlace"
               value={formData.birthPlace}
               onChange={handleChange}
-              bg="gray.50"
-              focusBorderColor="blue.400"
-              size="lg"
               placeholder="Şehir, Ülke"
             />
-          </Box>
+            <FormErrorMessage>Birth place is required</FormErrorMessage>
+          </FormControl>
 
           <Button
             type="submit"
-            colorScheme="blue"
-            size="lg"
-            w="full"
+            colorScheme="purple"
+            width="100%"
             isLoading={isLoading}
             loadingText="Hesaplanıyor..."
           >

@@ -85,37 +85,55 @@ const InputForm = () => {
 
       console.log('Submitting formatted data:', formattedData);
 
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5003';
       console.log('Using API URL:', API_URL);
+      const endpoint = `${API_URL}/api/calculate-birth-chart`;
+      console.log('Full endpoint URL:', endpoint);
       
       try {
-        const response = await fetch(`${API_URL}/api/calculate-birth-chart`, {
+        console.log('Making API request with data:', formattedData);
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
           body: JSON.stringify(formattedData),
-          mode: 'cors',
-          credentials: 'same-origin'
+          mode: 'cors'
         });
 
         console.log('Response status:', response.status);
         console.log('Response headers:', Object.fromEntries([...response.headers]));
         
-        const data = await response.json();
-        console.log('Response data:', data);
-
-        if (!response.ok) {
-          throw new Error(data.error || 'API request failed');
+        const responseText = await response.text();
+        console.log('Raw response text:', responseText);
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          console.log('Parsed response data:', data);
+        } catch (parseError) {
+          console.error('Failed to parse response as JSON:', parseError);
+          throw new Error('Invalid JSON response from server');
         }
 
-        if (!data.planet_positions) {
-          console.error('Invalid API response:', data);
-          throw new Error('Missing planet positions in API response');
+        if (!response.ok) {
+          console.error('API error response:', data);
+          throw new Error(data.details || data.error || 'API request failed');
+        }
+
+        if (!data || typeof data !== 'object') {
+          console.error('Invalid API response format:', data);
+          throw new Error('Invalid API response format');
+        }
+
+        if (!data.planet_positions || typeof data.planet_positions !== 'object') {
+          console.error('Missing or invalid planet positions in response:', data);
+          throw new Error('Missing or invalid planet positions in API response');
         }
 
         // Store the chart data in localStorage
+        console.log('Storing chart data in localStorage:', data);
         localStorage.setItem('natalChart', JSON.stringify(data));
 
         // Navigate to character page
@@ -130,6 +148,7 @@ const InputForm = () => {
         });
       } catch (error) {
         console.error('API call error:', error);
+        console.error('Error stack:', error.stack);
         toast({
           title: 'Hata',
           description: error.message || 'Bir hata oluştu',

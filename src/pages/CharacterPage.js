@@ -95,12 +95,19 @@ const AspectCard = ({ planet1, planet2, aspects }) => {
   return (
     <Box p={4} borderWidth="1px" borderRadius="lg" bg="white" shadow="sm">
       <Text fontWeight="bold" mb={2}>
-        {aspects[0]?.planet1_tr || planet1} - {aspects[0]?.planet2_tr || planet2}
+        {planet1} - {planet2}
       </Text>
       {aspects.map((aspect, index) => (
-        <Text key={index} color="gray.600">
-          {aspect.type_tr || aspect.type} ({aspect.angle.toFixed(1)}°)
-        </Text>
+        <Box key={index} mt={2}>
+          <Text>
+            {aspect.type} ({Math.round(aspect.angle)}°)
+          </Text>
+          {aspect.interpretation && (
+            <Text fontSize="sm" color="gray.600" mt={1}>
+              {aspect.interpretation}
+            </Text>
+          )}
+        </Box>
       ))}
     </Box>
   );
