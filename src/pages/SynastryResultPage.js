@@ -13,8 +13,10 @@ import {
   Progress,
   Divider,
   Badge,
+  Button,
 } from '@chakra-ui/react';
 import { FaHeart, FaSun, FaMoon, FaArrowRight } from 'react-icons/fa';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const CompatibilityScore = ({ score, label }) => {
   const getScoreColor = (score) => {
@@ -75,17 +77,22 @@ const AspectCard = ({ aspect }) => {
 };
 
 const SynastryResultPage = () => {
-  const [synastryData, setSynastryData] = React.useState(() => {
-    return JSON.parse(localStorage.getItem('synastryData') || '{}');
-  });
+  const location = useLocation();
+  const navigate = useNavigate();
+  const synastryData = location.state?.result;
 
   const bgColor = useColorModeValue('gray.50', 'gray.900');
   const cardBg = useColorModeValue('white', 'gray.700');
 
-  if (!synastryData || Object.keys(synastryData).length === 0) {
+  if (!synastryData) {
     return (
       <Container maxW="container.xl" py={10}>
-        <Text>Uyum analizi verisi bulunamadı.</Text>
+        <VStack spacing={4}>
+          <Text>Uyum analizi verisi bulunamadı.</Text>
+          <Button colorScheme="purple" onClick={() => navigate('/synastry')}>
+            Yeni Analiz Yap
+          </Button>
+        </VStack>
       </Container>
     );
   }
@@ -114,14 +121,20 @@ const SynastryResultPage = () => {
             shadow="md"
             width="full"
           >
-            <Avatar size="lg" name={synastryData.person1.name} />
+            <VStack>
+              <Avatar size="lg" name={synastryData.person1?.name || 'Kişi 1'} />
+              <Text fontWeight="bold">{synastryData.person1?.name || 'Kişi 1'}</Text>
+            </VStack>
             <VStack align="center" flex={1}>
               <Icon as={FaHeart} color="red.500" />
               <Text fontSize="lg" fontWeight="bold">
                 {Math.round(synastryData.overallCompatibility)}% Uyum
               </Text>
             </VStack>
-            <Avatar size="lg" name={synastryData.person2.name} />
+            <VStack>
+              <Avatar size="lg" name={synastryData.person2?.name || 'Kişi 2'} />
+              <Text fontWeight="bold">{synastryData.person2?.name || 'Kişi 2'}</Text>
+            </VStack>
           </HStack>
 
           {/* Compatibility Scores */}
@@ -190,6 +203,16 @@ const SynastryResultPage = () => {
               <Text>{synastryData.generalInterpretation}</Text>
             </VStack>
           </Box>
+
+          {/* New Analysis Button */}
+          <Button
+            colorScheme="purple"
+            size="lg"
+            onClick={() => navigate('/synastry')}
+            leftIcon={<FaHeart />}
+          >
+            Yeni Analiz Yap
+          </Button>
         </VStack>
       </Container>
     </Box>
