@@ -24,7 +24,7 @@ GROQ_API_KEY = "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"
 groq_client = Groq(api_key=GROQ_API_KEY)
 
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'pdf'}
+ALLOWED_EXTENSIONS = {'pdf', 'txt'}
 
 REQUIRED_DIRS = ['logs', 'uploads', 'ephe']
 for directory in REQUIRED_DIRS:
@@ -531,28 +531,33 @@ def token_required(f):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def process_pdf(file_path):
-    """Extract text from PDF and update knowledge base"""
+def process_file(file_path):
+    """Extract text from PDF or TXT file and update knowledge base"""
     try:
-        with open(file_path, 'rb') as file:
-            pdf_reader = PyPDF2.PdfReader(file)
-            text_content = ""
-            
-            # Extract text from all pages
-            for page in pdf_reader.pages:
-                text_content += page.extract_text()
+        text_content = ""
+        file_extension = file_path.split('.')[-1].lower()
+
+        if file_extension == 'pdf':
+            with open(file_path, 'rb') as file:
+                pdf_reader = PyPDF2.PdfReader(file)
+                for page in pdf_reader.pages:
+                    text_content += page.extract_text()
+        elif file_extension == 'txt':
+            with open(file_path, 'r', encoding='utf-8') as file:
+                text_content = file.read()
 
         # Process the content with Groq to extract astrological knowledge
         prompt = """Analyze this astrological text and extract key interpretations for aspects between planets.
         Format the output as JSON with keys in the format: "planet1_planet2_aspect_type" (all lowercase).
         Example: {"sun_moon_conjunction": "interpretation text"}
-        Only include actual interpretations found in the text."""
+        Only include actual interpretations found in the text.
+        Make sure to keep the original Turkish text in the interpretations."""
 
         chat_completion = groq_client.chat.completions.create(
             messages=[
                 {
                     "role": "system",
-                    "content": "You are an expert at analyzing astrological texts and extracting structured information."
+                    "content": "You are an expert at analyzing astrological texts and extracting structured information. Keep all interpretations in Turkish."
                 },
                 {
                     "role": "user",
@@ -583,8 +588,41 @@ def process_pdf(file_path):
         return len(new_knowledge)
 
     except Exception as e:
-        logger.error(f"Error processing PDF: {str(e)}")
+        logger.error(f"Error processing file: {str(e)}")
         raise
+
+@app.route('/upload_file', methods=['POST'])
+def upload_file():
+    """Endpoint to handle file uploads for training"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'Dosya yüklenmedi'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'Dosya seçilmedi'}), 400
+
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Geçersiz dosya türü. Sadece PDF ve TXT dosyaları kabul edilir'}), 400
+
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(file_path)
+
+        # Process the file and update knowledge base
+        num_interpretations = process_file(file_path)
+
+        # Clean up
+        os.remove(file_path)
+
+        return jsonify({
+            'message': f'Dosya başarıyla işlendi ve {num_interpretations} yorum eklendi',
+            'status': 'success'
+        })
+
+    except Exception as e:
+        logger.error(f"Error in upload_file: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/calculate_natal_chart', methods=['POST'])
 def calculate_natal_chart():
@@ -719,39 +757,6 @@ def calculate_transits():
         })
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/upload_pdf', methods=['POST'])
-def upload_pdf():
-    """Endpoint to handle PDF uploads for training"""
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file provided'}), 400
-
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-
-        if not allowed_file(file.filename):
-            return jsonify({'error': 'Invalid file type. Only PDF files are allowed'}), 400
-
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(file_path)
-
-        # Process the PDF and update knowledge base
-        num_interpretations = process_pdf(file_path)
-
-        # Clean up
-        os.remove(file_path)
-
-        return jsonify({
-            'message': f'Successfully processed PDF and extracted {num_interpretations} interpretations',
-            'status': 'success'
-        })
-
-    except Exception as e:
-        logger.error(f"Error in upload_pdf: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

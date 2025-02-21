@@ -10389,3 +10389,38 @@ AttributeError: module 'swisseph' has no attribute 'FLG_MEAN_APOG'
 }
 
 2025-02-21 12:36:42,647 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:36:42] "POST /calculate_natal_chart HTTP/1.1" 200 -
+2025-02-21 12:45:04,452 - werkzeug - INFO -  * Detected change in '/Users/ofis/Astrologi-Ai/app.py', reloading
+2025-02-21 12:45:06,151 - __main__ - INFO - Loading environment variables from: /Users/ofis/Astrologi-Ai/.env
+2025-02-21 12:45:06,153 - __main__ - INFO - OpenCage API Key: 242313ae99454edbb5a7b4eaa5a09d2b
+2025-02-21 12:45:06,153 - __main__ - INFO - Astrology API Key: HJ860PA-9HD4EZQ-NFDS992-QB5584S
+2025-02-21 12:45:06,154 - __main__ - WARNING - No astro_knowledge.json found or invalid JSON. Will use base prompts.
+2025-02-21 12:45:06,154 - __main__ - INFO - Initializing Swiss Ephemeris...
+2025-02-21 12:45:06,155 - __main__ - INFO - Swiss Ephemeris initialized successfully with Moshier ephemeris
+2025-02-21 12:45:06,202 - werkzeug - WARNING -  * Debugger is active!
+2025-02-21 12:45:06,231 - werkzeug - INFO -  * Debugger PIN: 303-984-621
+2025-02-21 12:49:57,787 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 413 Payload Too Large"
+2025-02-21 12:49:57,789 - __main__ - ERROR - Error processing file: Error code: 413 - {'error': {'message': 'Request too large for model `mixtral-8x7b-32768` in organization `org_01jkz7m2j6ff4rhftf394kgp0v` service tier `on_demand` on tokens per minute (TPM): Limit 5000, Requested 5468, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+2025-02-21 12:49:57,790 - __main__ - ERROR - Error in upload_file: Error code: 413 - {'error': {'message': 'Request too large for model `mixtral-8x7b-32768` in organization `org_01jkz7m2j6ff4rhftf394kgp0v` service tier `on_demand` on tokens per minute (TPM): Limit 5000, Requested 5468, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+2025-02-21 12:49:57,792 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:49:57] "[35m[1mPOST /upload_file HTTP/1.1[0m" 500 -
+2025-02-21 12:50:00,108 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 413 Payload Too Large"
+2025-02-21 12:50:00,108 - __main__ - ERROR - Error processing file: Error code: 413 - {'error': {'message': 'Request too large for model `mixtral-8x7b-32768` in organization `org_01jkz7m2j6ff4rhftf394kgp0v` service tier `on_demand` on tokens per minute (TPM): Limit 5000, Requested 5468, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+2025-02-21 12:50:00,108 - __main__ - ERROR - Error in upload_file: Error code: 413 - {'error': {'message': 'Request too large for model `mixtral-8x7b-32768` in organization `org_01jkz7m2j6ff4rhftf394kgp0v` service tier `on_demand` on tokens per minute (TPM): Limit 5000, Requested 5468, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+2025-02-21 12:50:00,109 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:50:00] "[35m[1mPOST /upload_file HTTP/1.1[0m" 500 -
+2025-02-21 12:50:08,689 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 413 Payload Too Large"
+2025-02-21 12:50:08,691 - __main__ - ERROR - Error processing file: Error code: 413 - {'error': {'message': 'Request too large for model `mixtral-8x7b-32768` in organization `org_01jkz7m2j6ff4rhftf394kgp0v` service tier `on_demand` on tokens per minute (TPM): Limit 5000, Requested 5468, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+2025-02-21 12:50:08,691 - __main__ - ERROR - Error in upload_file: Error code: 413 - {'error': {'message': 'Request too large for model `mixtral-8x7b-32768` in organization `org_01jkz7m2j6ff4rhftf394kgp0v` service tier `on_demand` on tokens per minute (TPM): Limit 5000, Requested 5468, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+2025-02-21 12:50:08,692 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:50:08] "[35m[1mPOST /upload_file HTTP/1.1[0m" 500 -
+2025-02-21 12:50:22,447 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:50:22,472 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:50:22] "POST /upload_file HTTP/1.1" 200 -
+2025-02-21 12:50:44,566 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:50:44,572 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:50:44] "POST /upload_file HTTP/1.1" 200 -
+2025-02-21 12:50:53,231 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-02-21 12:50:53,232 - groq._base_client - INFO - Retrying request to /openai/v1/chat/completions in 18.000000 seconds
+2025-02-21 12:51:13,573 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:51:13,578 - __main__ - ERROR - Error processing file: Unterminated string starting at: line 7 column 63 (char 1884)
+2025-02-21 12:51:13,578 - __main__ - ERROR - Error in upload_file: Unterminated string starting at: line 7 column 63 (char 1884)
+2025-02-21 12:51:13,580 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:51:13] "[35m[1mPOST /upload_file HTTP/1.1[0m" 500 -
+2025-02-21 12:51:15,619 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-02-21 12:51:15,620 - groq._base_client - INFO - Retrying request to /openai/v1/chat/completions in 30.000000 seconds
+2025-02-21 12:51:47,321 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-21 12:51:47,326 - werkzeug - INFO - 127.0.0.1 - - [21/Feb/2025 12:51:47] "POST /upload_file HTTP/1.1" 200 -

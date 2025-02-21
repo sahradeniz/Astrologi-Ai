@@ -108,6 +108,7 @@ const PlanetCard = ({ data }) => {
 const AspectCard = ({ aspect, interpretation }) => {
   const bgColor = useColorModeValue("white", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.600");
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <Card
@@ -129,7 +130,36 @@ const AspectCard = ({ aspect, interpretation }) => {
         </HStack>
       </CardHeader>
       <CardBody pt={2}>
-        <Text fontSize="sm">{interpretation || "Yorum yükleniyor..."}</Text>
+        <Box
+          fontSize="sm"
+          position="relative"
+          maxH={isExpanded ? "none" : "100px"}
+          overflow="hidden"
+          cursor="pointer"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <Text>{interpretation || "Yorum yükleniyor..."}</Text>
+          {!isExpanded && (
+            <Box
+              position="absolute"
+              bottom="0"
+              left="0"
+              right="0"
+              height="40px"
+              background="linear-gradient(transparent, white)"
+              pointerEvents="none"
+            />
+          )}
+        </Box>
+        <Button
+          size="sm"
+          variant="ghost"
+          width="100%"
+          mt={2}
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {isExpanded ? "Daha az göster" : "Devamını oku"}
+        </Button>
       </CardBody>
     </Card>
   );
@@ -279,7 +309,7 @@ const CharacterPage = ({ initialData }) => {
             <Heading size="lg" mb={6} color={textColor}>
               Açı Yorumları
             </Heading>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
               {chartData.aspects && Object.keys(chartData.aspects).length > 0 && (
                 Object.entries(chartData.aspects).map(([planet1, aspects]) =>
                   Object.entries(aspects).map(([planet2, aspectList]) => (
