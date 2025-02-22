@@ -66,279 +66,110 @@ const FeatureCard = ({ icon: Icon, title, description, onClick }) => {
 const HomePage = () => {
   const bgColor = useColorModeValue('gray.50', 'gray.900');
   const textColor = useColorModeValue('gray.800', 'gray.100');
-  const [showSynastryForm, setShowSynastryForm] = useState(false);
-  const [selectedFriend, setSelectedFriend] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [synastryResult, setSynastryResult] = useState(null);
   const navigate = useNavigate();
   const toast = useToast();
 
-  const handleSynastrySubmit = async (event) => {
-    event.preventDefault();
-    setIsLoading(true);
-    setError(null);
+  const handleSynastryClick = () => {
+    const userId = localStorage.getItem('userId');
+    const birthDate = localStorage.getItem('birthDate');
+    const birthTime = localStorage.getItem('birthTime');
+    const birthPlace = localStorage.getItem('birthPlace');
 
-    try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        throw new Error('Lütfen giriş yapın');
-      }
-
-      console.log('Fetching user data for synastry...');
-      const response = await fetch(`${API_URL}/api/user/${userId}`);
-      const userData = await response.json();
-
-      console.log('User data response:', userData);
-
-      if (!response.ok) {
-        throw new Error(userData.error || 'Kullanıcı bilgileri alınamadı');
-      }
-
-      // Check if user has birth data
-      if (!userData.birthDate || !userData.birthTime || !userData.birthPlace) {
-        throw new Error('Lütfen profil ayarlarından kendi doğum bilgilerinizi ekleyin');
-      }
-
-      // Check partner data
-      if (!selectedFriend) {
-        throw new Error('Lütfen bir arkadaş seçin');
-      }
-
-      console.log('Selected friend:', selectedFriend);
-
-      // Get friend's data
-      const friendResponse = await fetch(`${API_URL}/api/user/${selectedFriend._id}`);
-      const friendData = await friendResponse.json();
-
-      if (!friendResponse.ok) {
-        throw new Error('Arkadaş bilgileri alınamadı');
-      }
-
-      // Check friend's birth data
-      if (!friendData.birthDate || !friendData.birthTime || !friendData.birthPlace) {
-        throw new Error('Seçilen arkadaşın doğum bilgileri eksik');
-      }
-
-      console.log('Sending synastry request with:', {
-        person1: userData,
-        person2: friendData
-      });
-
-      const synastryResponse = await fetch(`${API_URL}/api/calculate-synastry`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          person1: {
-            name: userData.name,
-            birthDate: userData.birthDate,
-            birthTime: userData.birthTime,
-            birthPlace: userData.birthPlace
-          },
-          person2: {
-            name: friendData.name,
-            birthDate: friendData.birthDate,
-            birthTime: friendData.birthTime,
-            birthPlace: friendData.birthPlace
-          }
-        }),
-      });
-
-      const synastryData = await synastryResponse.json();
-      console.log('Synastry response:', synastryData);
-
-      if (!synastryResponse.ok) {
-        throw new Error(synastryData.error || 'Uyum analizi hesaplaması başarısız oldu');
-      }
-
-      setSynastryResult(synastryData);
-      
+    if (!userId) {
       toast({
-        title: 'Başarılı',
-        description: 'Uyum analizi hesaplandı',
-        status: 'success',
+        title: "Giriş Yapın",
+        description: "Uyum analizi için lütfen giriş yapın",
+        status: "warning",
         duration: 3000,
         isClosable: true,
       });
-
-      // Navigate to results page
-      navigate('/synastry-results', { 
-        state: { 
-          result: synastryData,
-          person1: userData,
-          person2: friendData
-        } 
-      });
-
-    } catch (err) {
-      console.error('Error:', err);
-      setError(err.message);
-      toast({
-        title: 'Hata',
-        description: err.message,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
+      navigate('/login');
+      return;
     }
+
+    if (!birthDate || !birthTime || !birthPlace) {
+      toast({
+        title: "Eksik Bilgi",
+        description: "Lütfen profil sayfanızdan doğum bilgilerinizi ekleyin",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      navigate('/profile');
+      return;
+    }
+
+    navigate('/synastry/form');
   };
 
+  const features = [
+    {
+      icon: FaRobot,
+      title: "Astroloji AI Sohbet",
+      description: "Yapay zeka destekli astroloji danışmanınız ile sohbet edin",
+      onClick: () => navigate('/chat')
+    },
+    {
+      icon: FaStar,
+      title: "Doğum Haritası Analizi",
+      description: "Detaylı doğum haritanızı görüntüleyin ve yorumlayın",
+      onClick: () => navigate('/character')
+    },
+    {
+      icon: FaHeart,
+      title: "İlişki Uyumu (Synastry)",
+      description: "İki kişi arasındaki astrolojik uyumu analiz edin",
+      onClick: handleSynastryClick
+    },
+    {
+      icon: FaMoon,
+      title: "Transit Analizi",
+      description: "Güncel gezegen konumlarının etkilerini öğrenin",
+      onClick: () => navigate('/transit')
+    }
+  ];
+
   return (
-    <Box minH="100vh" bg={bgColor}>
-      <Container maxW="container.xl" py={8}>
-        <VStack spacing={8} align="stretch">
-          <HStack justify="space-between" align="center">
-            <VStack align="start" spacing={1}>
-              <Text fontSize="lg" color={textColor}>
-                Hoş geldin
-              </Text>
-              <Heading size="xl" color={textColor}>
-                {localStorage.getItem('name') || 'Astroloji Keşfi'}
-              </Heading>
-            </VStack>
-            <Avatar
-              size="md"
-              name={localStorage.getItem('name')}
-              src={DEFAULT_AVATAR}
-            />
-          </HStack>
-
-          {/* Synastry Analysis Section */}
-          <Box
-            w="full"
-            p={8}
-            bg="purple.500"
-            borderRadius="2xl"
-            color="white"
-            position="relative"
-            overflow="hidden"
+    <Container maxW="container.xl" py={8}>
+      <VStack spacing={8} align="stretch">
+        <Box textAlign="center" mb={8}>
+          <Heading 
+            as="h1" 
+            size="xl" 
+            mb={4}
+            bgGradient="linear(to-r, purple.400, pink.400)"
+            bgClip="text"
           >
-            {!showSynastryForm ? (
-              <VStack align="start" spacing={4}>
-                <HStack>
-                  <Icon as={FaHeart} boxSize={8} />
-                  <Heading size="lg">Uyum Analizi</Heading>
-                </HStack>
-                <Text fontSize="lg">
-                  Astrolojik uyumunuzu öğrenmek için partner bilgilerini girin
-                </Text>
-                <Button
-                  colorScheme="whiteAlpha"
-                  size="lg"
-                  rightIcon={<FaArrowRight />}
-                  onClick={() => setShowSynastryForm(true)}
-                >
-                  Hemen Başla
-                </Button>
-              </VStack>
-            ) : (
-              <VStack spacing={6} align="stretch">
-                <HStack justify="space-between">
-                  <Heading size="lg">Partner Bilgileri</Heading>
-                  <IconButton
-                    icon={<FaArrowLeft />}
-                    variant="ghost"
-                    colorScheme="whiteAlpha"
-                    onClick={() => setShowSynastryForm(false)}
-                    aria-label="Back"
-                  />
-                </HStack>
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                  {/* Current User Info */}
-                  <Box
-                    p={4}
-                    bg="whiteAlpha.200"
-                    borderRadius="lg"
-                    backdropFilter="blur(10px)"
-                  >
-                    <VStack align="start" spacing={1}>
-                      <Text fontSize="sm" color="whiteAlpha.700">
-                        Sizin Bilgileriniz
-                      </Text>
-                      <HStack spacing={4}>
-                        <Avatar 
-                          size="md" 
-                          name={localStorage.getItem('name')} 
-                          src={DEFAULT_AVATAR}
-                        />
-                        <Box>
-                          <Text fontWeight="bold">
-                            {localStorage.getItem('name') || 'Siz'}
-                          </Text>
-                          <Text fontSize="sm" color="whiteAlpha.700">
-                            {localStorage.getItem('birthDate') || 'Doğum tarihiniz'}
-                          </Text>
-                        </Box>
-                      </HStack>
-                    </VStack>
-                  </Box>
+            Astrologi AI
+          </Heading>
+          <Text fontSize="lg" color={textColor}>
+            Yapay zeka destekli modern astroloji platformu
+          </Text>
+        </Box>
 
-                  {/* Partner Form */}
-                  <Box
-                    p={4}
-                    bg="whiteAlpha.200"
-                    borderRadius="lg"
-                    backdropFilter="blur(10px)"
-                  >
-                    <VStack spacing={4}>
-                      <FormControl isRequired>
-                        <FormLabel color="whiteAlpha.900">Partner İsmi</FormLabel>
-                        <Input
-                          variant="filled"
-                          bg="whiteAlpha.300"
-                          _hover={{ bg: 'whiteAlpha.400' }}
-                          _focus={{ bg: 'whiteAlpha.500' }}
-                          placeholder="İsim girin"
-                          value={selectedFriend ? selectedFriend.name : ''}
-                          onChange={(e) => setSelectedFriend({ name: e.target.value })}
-                        />
-                      </FormControl>
-                      <Button
-                        colorScheme="whiteAlpha"
-                        width="full"
-                        rightIcon={<FaHeart />}
-                        onClick={handleSynastrySubmit}
-                        isLoading={isLoading}
-                      >
-                        Uyumu Hesapla
-                      </Button>
-                    </VStack>
-                  </Box>
-                </SimpleGrid>
-              </VStack>
-            )}
-          </Box>
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+          {features.map((feature, index) => (
+            <MotionBox
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <FeatureCard {...feature} />
+            </MotionBox>
+          ))}
+        </SimpleGrid>
 
-          {/* Features Grid */}
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} w="full">
-            <FeatureCard
-              icon={FaStar}
-              title="Natal Harita"
-              description="Doğum haritanızı hesaplayın ve detaylı yorumları keşfedin."
-            />
-            <FeatureCard
-              icon={FaMoon}
-              title="Ay Fazları"
-              description="Ay'ın günlük pozisyonları ve bunların etkileri hakkında bilgi edinin."
-            />
-            <FeatureCard
-              icon={FaSun}
-              title="Gezegen Transitler"
-              description="Gezegenlerin geçişlerini ve hayatınıza etkileri hakkında bilgi edinin."
-            />
-            <FeatureCard
-              icon={FaHeart}
-              title="Uyum Analizi"
-              description="İlişki ve uyum analizleri ile astrolojik uyumunuzu keşfedin."
-            />
+        <Box mt={12}>
+          <Heading size="lg" mb={6} textAlign="center">
+            Son Analizleriniz
+          </Heading>
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+            {/* Recent analyses will be mapped here */}
           </SimpleGrid>
-        </VStack>
-      </Container>
-    </Box>
+        </Box>
+      </VStack>
+    </Container>
   );
 };
 

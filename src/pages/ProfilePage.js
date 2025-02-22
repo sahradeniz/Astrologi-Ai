@@ -3,182 +3,93 @@ import {
   Box,
   Container,
   VStack,
+  HStack,
   Heading,
   Text,
-  Image,
-  HStack,
-  Icon,
-  Button,
   SimpleGrid,
+  Button,
+  Avatar,
   useColorModeValue,
-  Badge,
-  useDisclosure,
-  IconButton,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Card,
+  CardBody,
   FormControl,
   FormLabel,
   Input,
   useToast,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Avatar,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
+  IconButton,
+  Divider,
+  useColorMode,
+  Switch,
 } from '@chakra-ui/react';
-import { FaStar, FaCrown, FaRegBookmark, FaChevronRight, FaUserPlus, FaCog, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { FaUserPlus, FaHeart, FaUserMinus } from 'react-icons/fa';
+import { SunIcon, MoonIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
-import FriendsList from '../components/FriendsList';
-import AddFriendForm from '../components/AddFriendForm';
-import { API_URL, DEFAULT_AVATAR } from '../config';
 
-const ProfileCard = ({ title, value, icon, color }) => {
-  const bgColor = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-
-  return (
-    <Box
-      p={4}
-      bg={bgColor}
-      borderWidth="1px"
-      borderColor={borderColor}
-      borderRadius="xl"
-      shadow="sm"
-    >
-      <HStack spacing={4}>
-        <Icon as={icon} boxSize={6} color={color} />
-        <VStack align="start" spacing={0}>
-          <Text fontSize="sm" color="gray.500">
-            {title}
-          </Text>
-          <Text fontSize="lg" fontWeight="bold">
-            {value}
-          </Text>
-        </VStack>
-      </HStack>
-    </Box>
-  );
-};
-
-const SessionCard = ({ number, title, description, duration, image }) => {
-  const bgColor = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-
-  return (
-    <Box
-      p={6}
-      bg={bgColor}
-      borderWidth="1px"
-      borderColor={borderColor}
-      borderRadius="2xl"
-      overflow="hidden"
-      position="relative"
-    >
-      <Image
-        src={image || 'https://via.placeholder.com/400x200'}
-        alt={title}
-        borderRadius="xl"
-        mb={4}
-        w="full"
-        h="200px"
-        objectFit="cover"
-      />
-      
-      <Badge colorScheme="purple" mb={2}>
-        #{number}
-      </Badge>
-      
-      <Heading size="md" mb={2}>
-        {title}
-      </Heading>
-      
-      <Text color="gray.600" noOfLines={2} mb={4}>
-        {description}
-      </Text>
-      
-      <HStack justify="space-between" align="center">
-        <VStack align="start" spacing={0}>
-          <Text fontSize="sm" color="gray.500">
-            Süre
-          </Text>
-          <Text fontWeight="bold">{duration}</Text>
-        </VStack>
-        
-        <Button
-          rightIcon={<FaChevronRight />}
-          colorScheme="purple"
-          variant="ghost"
-          size="sm"
-        >
-          Detaylar
-        </Button>
-      </HStack>
-    </Box>
-  );
-};
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5003';
 
 const ProfilePage = () => {
-  const navigate = useNavigate();
-  const toast = useToast();
-  
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
-  const { isOpen: isAddFriendOpen, onOpen: onAddFriendOpen, onClose: onAddFriendClose } = useDisclosure();
-  const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onClose: onSettingsClose } = useDisclosure();
-  const [userData, setUserData] = useState({
+  const [userData, setUserData] = useState(null);
+  const [friends, setFriends] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
     name: '',
     birthDate: '',
     birthTime: '',
-    birthPlace: ''
+    birthPlace: '',
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [avatarError, setAvatarError] = useState(false);
+
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { colorMode, toggleColorMode } = useColorMode();
+  const bgColor = useColorModeValue('white', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   useEffect(() => {
     fetchUserData();
+    fetchFriends();
   }, []);
 
   const fetchUserData = async () => {
     try {
       const userId = localStorage.getItem('userId');
-      if (!userId) {
-        throw new Error('Kullanıcı girişi yapılmamış');
+      const token = localStorage.getItem('token');
+
+      if (!userId || !token) {
+        navigate('/login');
+        return;
       }
 
-      console.log('Fetching user data for:', userId);
-      const response = await fetch(`${API_URL}/api/user/${userId}`);
-      const data = await response.json();
-
-      console.log('User data response:', data);
+      const response = await fetch(`${API_URL}/api/user/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error(data.error || 'Kullanıcı bilgileri alınamadı');
+        if (response.status === 401) {
+          navigate('/login');
+          return;
+        }
+        throw new Error('Kullanıcı bilgileri alınamadı');
       }
 
-      setUserData({
+      const data = await response.json();
+      setUserData(data);
+      setFormData({
         name: data.name || '',
         birthDate: data.birthDate || '',
         birthTime: data.birthTime || '',
-        birthPlace: data.birthPlace || ''
+        birthPlace: data.birthPlace || '',
       });
-
-      // Update localStorage
-      localStorage.setItem('name', data.name || '');
-      localStorage.setItem('birthDate', data.birthDate || '');
-      localStorage.setItem('birthTime', data.birthTime || '');
-      localStorage.setItem('birthPlace', data.birthPlace || '');
-
     } catch (error) {
       console.error('Error fetching user data:', error);
-      setError(error.message);
       toast({
         title: 'Hata',
         description: error.message,
@@ -186,48 +97,92 @@ const ProfilePage = () => {
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setIsLoading(false);
+    }
+  };
+
+  const fetchFriends = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+
+      if (!userId || !token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/friends/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Arkadaşlar listesi alınamadı');
+      }
+
+      const data = await response.json();
+      setFriends(data.friends || []);
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+      toast({
+        title: 'Hata',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setUserData(prev => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  const handleSubmit = async () => {
     try {
+      setIsLoading(true);
       const userId = localStorage.getItem('userId');
-      if (!userId) {
-        throw new Error('Kullanıcı girişi yapılmamış');
+      const token = localStorage.getItem('token');
+
+      if (!userId || !token) {
+        toast({
+          title: "Oturum Hatası",
+          description: "Lütfen tekrar giriş yapın",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        navigate('/login');
+        return;
       }
 
       const response = await fetch(`${API_URL}/api/user/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify({
+          name: formData.name,
+          birth_data: {
+            birthDate: formData.birthDate,
+            birthTime: formData.birthTime,
+            birthPlace: formData.birthPlace,
+          },
+        }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Profil güncellenemedi');
+        throw new Error('Profil güncellenemedi');
       }
 
-      // Update localStorage
-      localStorage.setItem('name', userData.name);
-      localStorage.setItem('birthDate', userData.birthDate);
-      localStorage.setItem('birthTime', userData.birthTime);
-      localStorage.setItem('birthPlace', userData.birthPlace);
+      const data = await response.json();
+      setUserData(data);
+      setIsEditing(false);
 
       toast({
         title: 'Başarılı',
@@ -237,6 +192,8 @@ const ProfilePage = () => {
         isClosable: true,
       });
 
+      // Refresh user data
+      await fetchUserData();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -251,28 +208,130 @@ const ProfilePage = () => {
     }
   };
 
-  const handleLogout = () => {
-    // Clear all user-related data
-    localStorage.removeItem('natalChartData');
-    localStorage.removeItem('friends');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('selectedPerson1');
-    localStorage.removeItem('selectedPerson2');
-    
-    toast({
-      title: "Çıkış yapıldı",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    
-    navigate('/login');
+  const handleAddFriend = () => {
+    navigate('/friends/add');
   };
 
-  const handleEditProfile = () => {
-    navigate('/profile/edit');
+  const startSynastryAnalysis = (friendId) => {
+    const userId = localStorage.getItem('userId');
+    if (userId && friendId) {
+      navigate(`/synastry?person1=${userId}&person2=${friendId}`);
+    }
+  };
+
+  const handleRemoveFriend = async (friendId) => {
+    try {
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(`${API_URL}/api/friends/${userId}/${friendId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Arkadaş silinemedi');
+      }
+
+      // Refresh friends list
+      await fetchFriends();
+
+      toast({
+        title: 'Başarılı',
+        description: 'Arkadaş silindi',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      toast({
+        title: 'Hata',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleImageError = () => {
+    setAvatarError(true);
+  };
+
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase();
+  };
+
+  const renderFriendsList = () => {
+    if (friends.length === 0) {
+      return (
+        <Text color="gray.500" p={4}>
+          Henüz arkadaş eklenmemiş
+        </Text>
+      );
+    }
+
+    return (
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4} w="100%">
+        {friends.map((friend) => (
+          <Card key={friend._id} bg={bgColor} shadow="md">
+            <CardBody>
+              <VStack spacing={3} align="start">
+                <HStack justify="space-between" w="100%" align="center">
+                  <Avatar
+                    name={friend.name}
+                    size="sm"
+                    bg={avatarError ? "purple.500" : undefined}
+                    onError={handleImageError}
+                  >
+                    {getInitials(friend.name)}
+                  </Avatar>
+                  <Text fontWeight="bold" isTruncated maxW="70%">
+                    {friend.name}
+                  </Text>
+                </HStack>
+                <VStack spacing={1} align="start" w="100%">
+                  <Text fontSize="sm" color="gray.600">
+                    <Text as="span" fontWeight="medium">Doğum:</Text> {friend.birthDate}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    <Text as="span" fontWeight="medium">Saat:</Text> {friend.birthTime}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600" isTruncated>
+                    <Text as="span" fontWeight="medium">Yer:</Text> {friend.birthPlace}
+                  </Text>
+                </VStack>
+                <HStack spacing={2} w="100%" justify="flex-end">
+                  <Button
+                    leftIcon={<FaHeart />}
+                    colorScheme="purple"
+                    size="sm"
+                    onClick={() => startSynastryAnalysis(friend._id)}
+                  >
+                    Uyum Analizi
+                  </Button>
+                  <IconButton
+                    icon={<FaUserMinus />}
+                    colorScheme="red"
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Arkadaşı Sil"
+                    onClick={() => handleRemoveFriend(friend._id)}
+                  />
+                </HStack>
+              </VStack>
+            </CardBody>
+          </Card>
+        ))}
+      </SimpleGrid>
+    );
   };
 
   if (isLoading) {
@@ -284,193 +343,155 @@ const ProfilePage = () => {
   }
 
   return (
-    <Box bg={bgColor} minH="100vh" pt={8} pb={20}>
-      <Container maxW="container.xl">
-        <VStack spacing={8}>
-          {/* Profile Header */}
-          <VStack spacing={4} align="center" w="full">
-            <HStack w="full" justify="flex-end">
-              <Menu>
-                <MenuButton
-                  as={Button}
-                  variant="ghost"
-                  rightIcon={<Icon as={FaCog} />}
-                >
-                  Ayarlar
-                </MenuButton>
-                <MenuList>
-                  <MenuItem 
-                    icon={<Icon as={FaUser} />}
-                    onClick={handleEditProfile}
+    <Container maxW="container.lg" py={8}>
+      <VStack spacing={6} align="stretch">
+        {/* Header with user info */}
+        <HStack justify="space-between" align="center">
+          <VStack align="start" spacing={1}>
+            <Heading size="lg">{userData?.name || 'Kullanıcı'}</Heading>
+            <Text color="gray.500">{userData?.email}</Text>
+          </VStack>
+          <Avatar
+            size="xl"
+            name={userData?.name}
+            src={userData?.avatar || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'}
+          />
+        </HStack>
+
+        <Tabs variant="enclosed" colorScheme="purple">
+          <TabList>
+            <Tab>Profil Bilgileri</Tab>
+            <Tab>Arkadaşlarım</Tab>
+          </TabList>
+
+          <TabPanels>
+            <TabPanel>
+              <Card bg={bgColor}>
+                <CardBody>
+                  <VStack spacing={6} align="stretch">
+                    <HStack justify="space-between">
+                      <Heading size="md">Kişisel Bilgiler</Heading>
+                      <Button
+                        colorScheme="purple"
+                        onClick={() => setIsEditing(!isEditing)}
+                      >
+                        {isEditing ? 'İptal' : 'Düzenle'}
+                      </Button>
+                    </HStack>
+
+                    {isEditing ? (
+                      <VStack spacing={4}>
+                        <FormControl>
+                          <FormLabel>İsim</FormLabel>
+                          <Input
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                          />
+                        </FormControl>
+
+                        <FormControl>
+                          <FormLabel>Doğum Tarihi</FormLabel>
+                          <Input
+                            name="birthDate"
+                            type="date"
+                            value={formData.birthDate}
+                            onChange={handleInputChange}
+                          />
+                        </FormControl>
+
+                        <FormControl>
+                          <FormLabel>Doğum Saati</FormLabel>
+                          <Input
+                            name="birthTime"
+                            type="time"
+                            value={formData.birthTime}
+                            onChange={handleInputChange}
+                          />
+                        </FormControl>
+
+                        <FormControl>
+                          <FormLabel>Doğum Yeri</FormLabel>
+                          <Input
+                            name="birthPlace"
+                            value={formData.birthPlace}
+                            onChange={handleInputChange}
+                            placeholder="Şehir, Ülke"
+                          />
+                        </FormControl>
+
+                        <Button
+                          colorScheme="purple"
+                          onClick={handleSubmit}
+                          isLoading={isLoading}
+                          width="full"
+                        >
+                          Kaydet
+                        </Button>
+                      </VStack>
+                    ) : (
+                      <SimpleGrid columns={2} spacing={4}>
+                        <Box>
+                          <Text fontWeight="bold">İsim</Text>
+                          <Text>{userData?.name || '-'}</Text>
+                        </Box>
+                        <Box>
+                          <Text fontWeight="bold">Email</Text>
+                          <Text>{userData?.email || '-'}</Text>
+                        </Box>
+                        <Box>
+                          <Text fontWeight="bold">Doğum Tarihi</Text>
+                          <Text>{userData?.birthDate || '-'}</Text>
+                        </Box>
+                        <Box>
+                          <Text fontWeight="bold">Doğum Saati</Text>
+                          <Text>{userData?.birthTime || '-'}</Text>
+                        </Box>
+                        <Box>
+                          <Text fontWeight="bold">Doğum Yeri</Text>
+                          <Text>{userData?.birthPlace || '-'}</Text>
+                        </Box>
+                      </SimpleGrid>
+                    )}
+                  </VStack>
+                </CardBody>
+              </Card>
+            </TabPanel>
+
+            <TabPanel>
+              {renderFriendsList()}
+              {friends.length === 0 && (
+                <Box textAlign="center" p={6}>
+                  <Button
+                    leftIcon={<FaUserPlus />}
+                    colorScheme="purple"
+                    variant="outline"
+                    mt={4}
+                    onClick={handleAddFriend}
                   >
-                    Profili Düzenle
-                  </MenuItem>
-                  <MenuItem 
-                    icon={<Icon as={FaSignOutAlt} />}
-                    color="red.500"
-                    onClick={handleLogout}
-                  >
-                    Çıkış Yap
-                  </MenuItem>
-                </MenuList>
-              </Menu>
-            </HStack>
-            <Avatar
-              size="xl"
-              name={userData.name}
-              src={DEFAULT_AVATAR}
+                    Arkadaş Ekle
+                  </Button>
+                </Box>
+              )}
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+        <FormControl display="flex" alignItems="center" justifyContent="space-between">
+          <FormLabel htmlFor="color-mode" mb="0">
+            Tema Rengi
+          </FormLabel>
+          <HStack>
+            <SunIcon />
+            <Switch
+              id="color-mode"
+              isChecked={colorMode === 'dark'}
+              onChange={toggleColorMode}
             />
-            <VStack spacing={1}>
-              <Heading size="lg">{userData.name}</Heading>
-              <Text color="gray.500">@{userData.name.toLowerCase().replace(/\s/g, '_')}</Text>
-            </VStack>
-            <HStack>
-              <Badge colorScheme="purple" px={3} py={1} borderRadius="full">
-                {userData.birthPlace}
-              </Badge>
-              <Badge colorScheme="blue" px={3} py={1} borderRadius="full">
-                {userData.birthDate}
-              </Badge>
-            </HStack>
-          </VStack>
-
-          {/* Stats Grid */}
-          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} w="full">
-            <ProfileCard
-              title="Yorumlar"
-              value="294"
-              icon={FaStar}
-              color="yellow.500"
-            />
-            <ProfileCard
-              title="Premium"
-              value="Aktif"
-              icon={FaCrown}
-              color="purple.500"
-            />
-            <ProfileCard
-              title="Kaydedilenler"
-              value="45"
-              icon={FaRegBookmark}
-              color="blue.500"
-            />
-            <ProfileCard
-              title="Seviye"
-              value="İleri"
-              icon={FaStar}
-              color="green.500"
-            />
-          </SimpleGrid>
-
-          {/* Recent Sessions */}
-          <VStack align="start" w="full" spacing={4}>
-            <Heading size="md">Son Oturumlar</Heading>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} w="full">
-              <SessionCard
-                number="294"
-                title="Astroloji Temelleri"
-                description="Temel astroloji kavramları ve gezegen yorumlamaları hakkında kapsamlı bir eğitim."
-                duration="2.5 Saat"
-                image="/path/to/image.jpg"
-              />
-              <SessionCard
-                number="293"
-                title="Ay Düğümleri"
-                description="Kuzey ve Güney ay düğümlerinin hayatınızdaki karmanız üzerindeki etkisi."
-                duration="1.5 Saat"
-                image="/path/to/image.jpg"
-              />
-            </SimpleGrid>
-          </VStack>
-
-          {/* Friends List */}
-          <VStack align="start" w="full" spacing={4}>
-            <HStack justify="space-between" w="full">
-              <Heading size="md">Arkadaşlarım</Heading>
-              <Button
-                leftIcon={<FaUserPlus />}
-                colorScheme="purple"
-                variant="ghost"
-                size="sm"
-                onClick={onAddFriendOpen}
-              >
-                Arkadaş Ekle
-              </Button>
-            </HStack>
-            <Box w="full">
-              <FriendsList />
-            </Box>
-          </VStack>
-        </VStack>
-      </Container>
-
-      {/* Settings Modal */}
-      <Modal isOpen={isSettingsOpen} onClose={onSettingsClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Profil Ayarları</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>İsim</FormLabel>
-                <Input
-                  value={userData.name}
-                  onChange={handleInputChange}
-                  placeholder="Adınız"
-                />
-              </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Doğum Tarihi</FormLabel>
-                <Input
-                  type="date"
-                  value={userData.birthDate}
-                  onChange={handleInputChange}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Doğum Saati</FormLabel>
-                <Input
-                  type="time"
-                  value={userData.birthTime}
-                  onChange={handleInputChange}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Doğum Yeri</FormLabel>
-                <Input
-                  value={userData.birthPlace}
-                  onChange={handleInputChange}
-                  placeholder="Şehir, Ülke"
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onSettingsClose}>
-              İptal
-            </Button>
-            <Button
-              colorScheme="purple"
-              onClick={handleSubmit}
-              isLoading={isLoading}
-            >
-              Kaydet
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {error ? (
-        <Alert status="error">
-          <AlertIcon />
-          <AlertTitle>Hata!</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : (
-        <AddFriendForm isOpen={isAddFriendOpen} onClose={onAddFriendClose} />
-      )}
-    </Box>
+            <MoonIcon />
+          </HStack>
+        </FormControl>
+      </VStack>
+    </Container>
   );
 };
 

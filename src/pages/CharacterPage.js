@@ -174,62 +174,72 @@ const CharacterPage = ({ initialData }) => {
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
 
-  useEffect(() => {
-    const loadData = () => {
-      try {
-        // First try initialData prop
-        let data = initialData;
-        
-        if (!data && location.state?.result) {
-          // Then try location state
-          console.log('Loading chart data from location state:', location.state.result);
-          data = location.state.result;
-        }
-        
-        if (!data) {
-          // Finally try localStorage
-          const storedData = localStorage.getItem('natalChart');
-          if (storedData) {
-            data = JSON.parse(storedData);
-            console.log('Loading chart data from localStorage:', data);
-          }
-        }
+  const loadData = async () => {
+    try {
+      let data = initialData;
 
-        // Validate data structure
-        if (!data) {
-          throw new Error('No chart data found. Please calculate your natal chart first.');
+      if (!data) {
+        const storedData = localStorage.getItem('natalChart');
+        if (!storedData) {
+          toast({
+            title: "Doğum Haritası Gerekli",
+            description: "Lütfen önce doğum haritanızı hesaplayın.",
+            status: "warning",
+            duration: 5000,
+            isClosable: true,
+          });
+          navigate('/natal-chart');
+          return;
         }
+        data = JSON.parse(storedData);
+        console.log('Loading chart data from localStorage:', data);
+      }
 
-        if (!data.planet_positions || typeof data.planet_positions !== 'object') {
-          throw new Error('Invalid chart data: missing or invalid planet positions');
-        }
-
-        // Validate each planet has required fields
-        Object.entries(data.planet_positions).forEach(([planet, planetData]) => {
-          if (!planetData || typeof planetData !== 'object') {
-            throw new Error(`Invalid data for planet ${planet}`);
-          }
-          if (!planetData.zodiac_sign || typeof planetData.degree === 'undefined' || typeof planetData.minutes === 'undefined') {
-            throw new Error(`Missing required fields for planet ${planet}`);
-          }
-        });
-
-        setChartData(data);
-        
-      } catch (error) {
-        console.error('Error loading chart data:', error);
-        setError(error.message);
+      if (!data || !data.planet_positions || typeof data.planet_positions !== 'object') {
         toast({
-          title: "Error",
-          description: error.message,
+          title: "Hata",
+          description: "Doğum haritası verileri geçersiz. Lütfen tekrar hesaplayın.",
           status: "error",
           duration: 5000,
           isClosable: true,
         });
-        navigate('/');
+        navigate('/natal-chart');
+        return;
       }
-    };
 
+      Object.entries(data.planet_positions).forEach(([planet, planetData]) => {
+        if (!planetData || typeof planetData !== 'object' || 
+            !planetData.zodiac_sign || 
+            typeof planetData.degree === 'undefined' || 
+            typeof planetData.minutes === 'undefined') {
+          toast({
+            title: "Hata",
+            description: `${planet} için geçersiz veri. Lütfen doğum haritanızı tekrar hesaplayın.`,
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          navigate('/natal-chart');
+          return;
+        }
+      });
+
+      setChartData(data);
+        
+    } catch (error) {
+      console.error('Error loading chart data:', error);
+      toast({
+        title: "Hata",
+        description: "Doğum haritası yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      navigate('/natal-chart');
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, [location, navigate, toast, initialData]);
 
@@ -260,18 +270,15 @@ const CharacterPage = ({ initialData }) => {
     );
   }
 
-  // Debug log
   console.log('Rendering chart data:', chartData);
   console.log('Planet positions:', chartData.planet_positions);
 
-  // Sort planets in traditional order
   const planetOrder = [
     'Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 
     'Jupiter', 'Saturn', 'Uranus', 'Neptune', 
     'Pluto', 'North Node'
   ];
 
-  // Create array of sorted planet entries
   const sortedPlanets = Object.entries(chartData.planet_positions)
     .sort(([a], [b]) => {
       const indexA = planetOrder.indexOf(a);
