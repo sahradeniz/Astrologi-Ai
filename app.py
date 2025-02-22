@@ -24,24 +24,10 @@ import ssl
 from pymongo import MongoClient
 import groq
 from groq import Groq
-from flask_talisman import Talisman
 
 load_dotenv()  # Make sure .env is loaded
 
 app = Flask(__name__, static_folder='build')
-
-# Configure CSP
-csp = {
-    'default-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-    'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-    'style-src': ["'self'", "'unsafe-inline'"],
-    'img-src': ["'self'", 'data:', 'https:', '*'],
-    'font-src': ["'self'", 'data:', 'https:'],
-    'connect-src': ["'self'", 'https://*', 'http://*'],
-}
-
-# Initialize Talisman with CSP
-Talisman(app, content_security_policy=csp, force_https=False)
 
 # Configure CORS
 CORS(app, resources={
@@ -1314,6 +1300,22 @@ def test_password():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.after_request
+def add_security_headers(response):
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.astroloji.ai https://api.opencagedata.com https://api.groq.com;"
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
     # Start the Flask app

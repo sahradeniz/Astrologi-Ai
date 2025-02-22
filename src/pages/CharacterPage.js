@@ -34,6 +34,7 @@ import {
 import { FaSun, FaMoon, FaStar, FaArrowRight, FaMars, FaVenus, FaMercury } from "react-icons/fa";
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
+import BirthChartForm from '../components/BirthChartForm';
 
 const PLANET_NAMES = {
   'Sun': 'Güneş',
@@ -188,7 +189,7 @@ const CharacterPage = ({ initialData }) => {
             duration: 5000,
             isClosable: true,
           });
-          navigate('/natal-chart');
+          navigate('/character');
           return;
         }
         data = JSON.parse(storedData);
@@ -203,7 +204,7 @@ const CharacterPage = ({ initialData }) => {
           duration: 5000,
           isClosable: true,
         });
-        navigate('/natal-chart');
+        navigate('/character');
         return;
       }
 
@@ -219,7 +220,7 @@ const CharacterPage = ({ initialData }) => {
             duration: 5000,
             isClosable: true,
           });
-          navigate('/natal-chart');
+          navigate('/character');
           return;
         }
       });
@@ -235,7 +236,7 @@ const CharacterPage = ({ initialData }) => {
         duration: 5000,
         isClosable: true,
       });
-      navigate('/natal-chart');
+      navigate('/character');
     }
   };
 
@@ -260,11 +261,12 @@ const CharacterPage = ({ initialData }) => {
   if (!chartData || !chartData.planet_positions) {
     return (
       <Container maxW="container.xl" py={10}>
-        <VStack spacing={4}>
-          <Text>Loading chart data...</Text>
-          <Button onClick={() => navigate('/')}>
-            Return to Calculator
-          </Button>
+        <VStack spacing={8}>
+          <Heading size="xl" textAlign="center">Doğum Haritası Hesaplama</Heading>
+          <Text textAlign="center">
+            Doğum haritanızı hesaplamak için aşağıdaki formu doldurun.
+          </Text>
+          <BirthChartForm />
         </VStack>
       </Container>
     );
