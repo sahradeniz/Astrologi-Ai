@@ -22,7 +22,8 @@ import {
   useDisclosure,
   Container,
 } from '@chakra-ui/react';
-import { API_URL } from '../config';
+import { useNavigate } from 'react-router-dom';
+import { API_URL, JWT_TOKEN_KEY, USER_ID_KEY } from '../config';
 
 const FriendsPage = () => {
   const [friends, setFriends] = useState([]);
@@ -36,26 +37,34 @@ const FriendsPage = () => {
     birthPlace: '',
   });
   const toast = useToast();
+  const navigate = useNavigate();
 
   const fetchFriends = async () => {
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
+      const userId = localStorage.getItem(USER_ID_KEY);
+      const token = localStorage.getItem(JWT_TOKEN_KEY);
+      if (!userId || !token) {
+        navigate('/login');
         throw new Error('Kullanıcı girişi yapılmamış');
       }
 
-      console.log('Fetching friends for user:', userId);
-      const response = await fetch(`${API_URL}/api/user/friends/${userId}`);
+      const response = await fetch(`${API_URL}/api/friends/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       const data = await response.json();
-      
-      console.log('Friends API response:', data);
-      
+
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem(JWT_TOKEN_KEY);
+          localStorage.removeItem(USER_ID_KEY);
+          navigate('/login');
+        }
         throw new Error(data.error || 'Arkadaş listesi alınamadı');
       }
 
-      setFriends(Array.isArray(data) ? data : []);
-      console.log('Friends list set:', Array.isArray(data) ? data : []);
+      setFriends(Array.isArray(data.friends) ? data.friends : []);
     } catch (err) {
       console.error('Error fetching friends:', err);
       setError(err.message);
@@ -85,8 +94,10 @@ const FriendsPage = () => {
 
   const handleAddFriend = async () => {
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
+      const userId = localStorage.getItem(USER_ID_KEY);
+      const token = localStorage.getItem(JWT_TOKEN_KEY);
+      if (!userId || !token) {
+        navigate('/login');
         throw new Error('Kullanıcı girişi yapılmamış');
       }
 
@@ -94,19 +105,23 @@ const FriendsPage = () => {
         throw new Error('İsim ve doğum tarihi zorunludur');
       }
 
-      console.log('Adding new friend:', newFriend);
-      const response = await fetch(`${API_URL}/api/user/friends/${userId}`, {
+      const response = await fetch(`${API_URL}/api/friends/${userId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(newFriend),
       });
 
       const data = await response.json();
-      console.log('Add friend API response:', data);
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem(JWT_TOKEN_KEY);
+          localStorage.removeItem(USER_ID_KEY);
+          navigate('/login');
+        }
         throw new Error(data.error || 'Arkadaş eklenemedi');
       }
 
@@ -119,8 +134,8 @@ const FriendsPage = () => {
       });
 
       onClose();
-      fetchFriends(); // Listeyi yenile
-      setNewFriend({ name: '', birthDate: '', birthTime: '', birthPlace: '' }); // Formu sıfırla
+      fetchFriends();
+      setNewFriend({ name: '', birthDate: '', birthTime: '', birthPlace: '' });
     } catch (err) {
       console.error('Error adding friend:', err);
       toast({
@@ -169,12 +184,12 @@ const FriendsPage = () => {
             <CardBody>
               <Stack divider={<StackDivider />} spacing={4}>
                 {friends.map((friend, index) => (
-                  <Box key={index}>
+                  <Box key={friend._id || index}>
                     <Heading size="xs" textTransform="uppercase">
                       {friend.name}
                     </Heading>
                     <Text pt={2} fontSize="sm">
-                      Doğum Tarihi: {new Date(friend.birthDate).toLocaleDateString()}
+                      Doğum Tarihi: {friend.birthDate ? new Date(friend.birthDate).toLocaleDateString() : 'Belirtilmemiş'}
                     </Text>
                     {friend.birthTime && (
                       <Text fontSize="sm">Doğum Saati: {friend.birthTime}</Text>

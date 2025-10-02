@@ -21,7 +21,7 @@ import {
   Switch,
 } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { API_URL } from '../config';
+import { API_URL, JWT_TOKEN_KEY, USER_ID_KEY } from '../config';
 import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const LoginPage = () => {
@@ -53,8 +53,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      console.log('Attempting login with:', API_URL);
-      const response = await fetch(`${API_URL}/login`, {
+      const response = await fetch(`${API_URL}/api/user/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,17 +65,15 @@ const LoginPage = () => {
         }),
       });
 
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Giriş yapılamadı');
       }
 
       // Save user data and token
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userId', data.userId);
+      localStorage.setItem(JWT_TOKEN_KEY, data.token);
+      localStorage.setItem(USER_ID_KEY, data.userId);
       localStorage.setItem('name', data.name);
       localStorage.setItem('email', data.email);
       
@@ -113,12 +110,19 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/register`, {
+      const response = await fetch(`${API_URL}/api/user/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          birthDate: formData.birthDate,
+          birthTime: formData.birthTime,
+          birthPlace: formData.birthPlace,
+        }),
       });
 
       const data = await response.json();
@@ -128,10 +132,14 @@ const LoginPage = () => {
       }
 
       // Save user data to localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userId', data.userId);
+      localStorage.setItem(JWT_TOKEN_KEY, data.token);
+      localStorage.setItem(USER_ID_KEY, data.userId);
       localStorage.setItem('name', data.name || 'User');
       localStorage.setItem('email', data.email);
+
+      if (data.birthDate) localStorage.setItem('birthDate', data.birthDate);
+      if (data.birthTime) localStorage.setItem('birthTime', data.birthTime);
+      if (data.birthPlace) localStorage.setItem('birthPlace', data.birthPlace);
       
       toast({
         title: 'Başarılı',

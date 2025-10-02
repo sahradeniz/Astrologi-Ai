@@ -1,5 +1,5 @@
 // API URL configuration
-export const API_URL = 'http://localhost:5003';
+export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5003';
 
 // Authentication keys
 export const JWT_TOKEN_KEY = 'token';

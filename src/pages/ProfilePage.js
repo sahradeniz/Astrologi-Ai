@@ -29,8 +29,7 @@ import {
 import { FaUserPlus, FaHeart, FaUserMinus } from 'react-icons/fa';
 import { SunIcon, MoonIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5003';
+import { API_URL, JWT_TOKEN_KEY, USER_ID_KEY } from '../config';
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
@@ -58,8 +57,8 @@ const ProfilePage = () => {
 
   const fetchUserData = async () => {
     try {
-      const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem(USER_ID_KEY);
+      const token = localStorage.getItem(JWT_TOKEN_KEY);
 
       if (!userId || !token) {
         navigate('/login');
@@ -74,6 +73,8 @@ const ProfilePage = () => {
 
       if (!response.ok) {
         if (response.status === 401) {
+          localStorage.removeItem(JWT_TOKEN_KEY);
+          localStorage.removeItem(USER_ID_KEY);
           navigate('/login');
           return;
         }
@@ -102,8 +103,8 @@ const ProfilePage = () => {
 
   const fetchFriends = async () => {
     try {
-      const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem(USER_ID_KEY);
+      const token = localStorage.getItem(JWT_TOKEN_KEY);
 
       if (!userId || !token) {
         navigate('/login');
@@ -117,6 +118,12 @@ const ProfilePage = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem(JWT_TOKEN_KEY);
+          localStorage.removeItem(USER_ID_KEY);
+          navigate('/login');
+          return;
+        }
         throw new Error('Arkadaşlar listesi alınamadı');
       }
 
@@ -145,8 +152,8 @@ const ProfilePage = () => {
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
-      const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem(USER_ID_KEY);
+      const token = localStorage.getItem(JWT_TOKEN_KEY);
 
       if (!userId || !token) {
         toast({
@@ -177,6 +184,12 @@ const ProfilePage = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem(JWT_TOKEN_KEY);
+          localStorage.removeItem(USER_ID_KEY);
+          navigate('/login');
+          return;
+        }
         throw new Error('Profil güncellenemedi');
       }
 
@@ -213,7 +226,7 @@ const ProfilePage = () => {
   };
 
   const startSynastryAnalysis = (friendId) => {
-    const userId = localStorage.getItem('userId');
+    const userId = localStorage.getItem(USER_ID_KEY);
     if (userId && friendId) {
       navigate(`/synastry?person1=${userId}&person2=${friendId}`);
     }
@@ -221,8 +234,8 @@ const ProfilePage = () => {
 
   const handleRemoveFriend = async (friendId) => {
     try {
-      const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem(USER_ID_KEY);
+      const token = localStorage.getItem(JWT_TOKEN_KEY);
 
       const response = await fetch(`${API_URL}/api/friends/${userId}/${friendId}`, {
         method: 'DELETE',
@@ -232,6 +245,12 @@ const ProfilePage = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem(JWT_TOKEN_KEY);
+          localStorage.removeItem(USER_ID_KEY);
+          navigate('/login');
+          return;
+        }
         throw new Error('Arkadaş silinemedi');
       }
 

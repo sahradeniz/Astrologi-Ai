@@ -193,7 +193,6 @@ const CharacterPage = ({ initialData }) => {
           return;
         }
         data = JSON.parse(storedData);
-        console.log('Loading chart data from localStorage:', data);
       }
 
       if (!data || !data.planet_positions || typeof data.planet_positions !== 'object') {
@@ -272,12 +271,9 @@ const CharacterPage = ({ initialData }) => {
     );
   }
 
-  console.log('Rendering chart data:', chartData);
-  console.log('Planet positions:', chartData.planet_positions);
-
   const planetOrder = [
-    'Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 
-    'Jupiter', 'Saturn', 'Uranus', 'Neptune', 
+    'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+    'Jupiter', 'Saturn', 'Uranus', 'Neptune',
     'Pluto', 'North Node'
   ];
 
@@ -287,8 +283,6 @@ const CharacterPage = ({ initialData }) => {
       const indexB = planetOrder.indexOf(b);
       return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
     });
-
-  console.log('Sorted planets:', sortedPlanets);
 
   return (
     <Box bg={bgColor} minH="100vh" py={8}>

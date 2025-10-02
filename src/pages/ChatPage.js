@@ -131,7 +131,6 @@ const ChatPage = () => {
       }
 
       const data = await response.json();
-      console.log('AI Response:', data); // Debug log
 
       if (!data.response) {
         throw new Error('AI yanıtı alınamadı');

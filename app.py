@@ -22,7 +22,6 @@ from bson.objectid import ObjectId
 import certifi
 import ssl
 from pymongo import MongoClient
-import groq
 from groq import Groq
 
 load_dotenv()  # Make sure .env is loaded
@@ -67,9 +66,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# Load environment variables
-load_dotenv()
-
 # Debug log environment variables
 logger.info(f"GROQ_API_KEY present: {bool(os.getenv('GROQ_API_KEY'))}")
 logger.info(f"OPENCAGE_API_KEY present: {bool(os.getenv('OPENCAGE_API_KEY'))}")
@@ -87,6 +83,7 @@ try:
     db = client.astrologiAi
     users_collection = db.users
     friends_collection = db.friends
+    chat_collection = db.chat_history
     logging.info("Successfully connected to MongoDB")
 except Exception as e:
     logging.error(f"Error connecting to MongoDB: {e}")
@@ -95,6 +92,36 @@ except Exception as e:
 # JWT configuration
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-secret-key')
 JWT_ALGORITHM = 'HS256'
+
+
+def generate_jwt_token(user_id, email, expires_delta=timedelta(days=1)):
+    """Generate a signed JWT for the given user."""
+    payload = {
+        'user_id': str(user_id),
+        'email': email,
+        'exp': datetime.utcnow() + expires_delta
+    }
+    token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    if isinstance(token, bytes):
+        token = token.decode('utf-8')
+    return token
+
+
+def serialize_user(user_doc):
+    """Prepare a user document for API responses."""
+    birth_data = user_doc.get('birth_data', {})
+    birth_date = birth_data.get('birthDate') or user_doc.get('birthDate', '')
+    birth_time = birth_data.get('birthTime') or user_doc.get('birthTime', '')
+    birth_place = birth_data.get('birthPlace') or user_doc.get('birthPlace', '')
+
+    return {
+        "userId": str(user_doc['_id']),
+        "email": user_doc.get('email', ''),
+        "name": user_doc.get('name', ''),
+        "birthDate": birth_date,
+        "birthTime": birth_time,
+        "birthPlace": birth_place,
+    }
 
 def token_required(f):
     @wraps(f)
@@ -242,6 +269,28 @@ def manage_friends(current_user, user_id):
 
     except Exception as e:
         logger.error(f"Error in manage_friends: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/friends/<user_id>/<friend_id>', methods=['DELETE'])
+@token_required
+def remove_friend(current_user, user_id, friend_id):
+    try:
+        if str(current_user['_id']) != user_id:
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        result = friends_collection.delete_one({
+            '_id': ObjectId(friend_id),
+            'user_id': ObjectId(user_id)
+        })
+
+        if result.deleted_count == 0:
+            return jsonify({'error': 'Friend not found'}), 404
+
+        return jsonify({'message': 'Friend removed successfully'})
+
+    except Exception as e:
+        logger.error(f"Error removing friend: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/chat/message', methods=['POST'])
@@ -549,7 +598,7 @@ def calculate_aspects(planets):
     for planet1, data1 in planets.items():
         if planet1 not in aspects:
             aspects[planet1] = {}
-        
+
         for planet2, data2 in planets.items():
             if planet1 >= planet2:
                 continue
@@ -558,30 +607,30 @@ def calculate_aspects(planets):
             if angle > 180:
                 angle = 360 - angle
 
-            # Check each aspect type
             for base_angle, aspect_type in aspect_types.items():
                 orb = orbs[aspect_type]
                 if abs(angle - base_angle) <= orb:
-                    # Get interpretation for this aspect
                     interpretation = get_aspect_interpretation(
                         aspect_type,
                         data1['name_tr'],
                         data2['name_tr']
                     )
-                    
+
                     if planet2 not in aspects[planet1]:
                         aspects[planet1][planet2] = []
-                    
+
                     aspect_data = {
-                        "type": aspect_type,
-                        "angle": angle,
+                        "aspect_type": aspect_type,
+                        "angle": round(angle, 2),
+                        "planet1": planet1,
+                        "planet2": planet2,
                         "planet1_tr": data1['name_tr'],
-                        "planet2_tr": data2['name_tr'],
+                        "planet2_tr": data2['name_tr']
                     }
-                    
+
                     if interpretation:
                         aspect_data["interpretation"] = interpretation
-                        
+
                     aspects[planet1][planet2].append(aspect_data)
 
     return aspects
@@ -726,13 +775,33 @@ def calculate_chart(birth_date, birth_time, location):
         
         logger.info("Chart calculation completed successfully")
         logger.debug(f"Response data: {response}")
-        
+
         return response
 
     except Exception as e:
         logger.error(f"Error in calculate_chart: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise
+
+
+def format_chart_data_for_frontend(chart_data, metadata):
+    """Attach metadata and ensure frontend friendly payload."""
+    formatted = {
+        'planet_positions': chart_data.get('planet_positions', {}),
+        'aspects': chart_data.get('aspects', {}),
+        'house_positions': chart_data.get('house_positions', []),
+        'ascendant': chart_data.get('ascendant'),
+        'midheaven': chart_data.get('midheaven'),
+    }
+
+    formatted.update({
+        'name': metadata.get('name', ''),
+        'birth_date': metadata.get('birthDate', ''),
+        'birth_time': metadata.get('birthTime', ''),
+        'birth_place': metadata.get('birthPlace', ''),
+    })
+
+    return formatted
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -868,8 +937,16 @@ def calculate_natal_chart():
                 missing_planets = set(PLANETS.keys()) - set(chart_data['planet_positions'].keys())
                 logger.warning(f"Missing planets in calculation: {missing_planets}")
 
-            # Return the response
-            response = jsonify(chart_data)
+            metadata = {
+                'name': data.get('name', ''),
+                'birthDate': birth_date,
+                'birthTime': birth_time,
+                'birthPlace': birth_place,
+            }
+
+            frontend_chart = format_chart_data_for_frontend(chart_data, metadata)
+
+            response = jsonify(frontend_chart)
             logger.info(f"Sending response: {response.get_data(as_text=True)}")
             return response
 
@@ -903,8 +980,14 @@ def calculate_synastry():
                 return jsonify({"error": f"İkinci kişinin {field} bilgisi eksik"}), 400
 
         # Calculate natal charts for both persons
-        person1_chart = calculate_chart(person1['birthDate'], person1['birthTime'], person1['birthPlace'])
-        person2_chart = calculate_chart(person2['birthDate'], person2['birthTime'], person2['birthPlace'])
+        person1_location = get_coordinates_and_timezone(person1['birthPlace'])
+        person2_location = get_coordinates_and_timezone(person2['birthPlace'])
+
+        if not person1_location or not person2_location:
+            return jsonify({"error": "Doğum yeri bilgileri doğrulanamadı"}), 400
+
+        person1_chart = calculate_chart(person1['birthDate'], person1['birthTime'], person1_location)
+        person2_chart = calculate_chart(person2['birthDate'], person2['birthTime'], person2_location)
 
         if not person1_chart or not person2_chart:
             raise Exception("Doğum haritaları hesaplanamadı")
@@ -965,11 +1048,11 @@ def calculate_synastry():
             "compatibility_score": round(final_score),
             "aspects": synastry_aspects,
             "person1_positions": [
-                {"planet": name, "sign": data["sign"], "degree": data["degree"]}
+                {"planet": name, "sign": data.get("zodiac_sign"), "degree": data.get("degree")}
                 for name, data in person1_chart['planet_positions'].items()
             ],
             "person2_positions": [
-                {"planet": name, "sign": data["sign"], "degree": data["degree"]}
+                {"planet": name, "sign": data.get("zodiac_sign"), "degree": data.get("degree")}
                 for name, data in person2_chart['planet_positions'].items()
             ],
             "summary": f"{person1['name']} ve {person2['name']} arasındaki uyum skoru: {round(final_score)}%",
@@ -1071,36 +1154,44 @@ def register_user():
     try:
         data = request.json
         logger.info("Received registration data: %s", data)
-        
+
         # Check if user exists
         existing_user = users_collection.find_one({"email": data['email']})
         if existing_user:
             return jsonify({"error": "Email already registered"}), 400
-        
+
         # Hash password using pbkdf2
         hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
-        
+
+        birth_data = {
+            'birthDate': data.get('birthDate', ''),
+            'birthTime': data.get('birthTime', ''),
+            'birthPlace': data.get('birthPlace', ''),
+        }
+
         # Create user document
         user = {
             "email": data['email'],
             "password": hashed_password,
             "name": data.get('name', ''),
-            "birthDate": data.get('birthDate', ''),
-            "birthTime": data.get('birthTime', ''),
-            "birthPlace": data.get('birthPlace', ''),
+            "birth_data": birth_data,
             "created_at": datetime.utcnow()
         }
-        
+
         # Insert user
         result = users_collection.insert_one(user)
         logger.info("User inserted with ID: %s", result.inserted_id)
-        
-        # Return success response
-        return jsonify({
-            "message": "User registered successfully",
-            "userId": str(result.inserted_id)
-        }), 201
-        
+
+        user['_id'] = result.inserted_id
+        token = generate_jwt_token(result.inserted_id, data['email'])
+        response_data = serialize_user(user)
+        response_data.update({
+            "token": token,
+            "message": "User registered successfully"
+        })
+
+        return jsonify(response_data), 201
+
     except Exception as e:
         logger.error("Registration error: %s", str(e))
         return jsonify({"error": str(e)}), 500
@@ -1110,16 +1201,17 @@ def login_user():
     try:
         data = request.get_json()
         logger.info("Received login data: %s", data)
-        
+
         user = users_collection.find_one({"email": data['email']})
-        
+
         if user and check_password_hash(user['password'], data['password']):
-            user['_id'] = str(user['_id'])
-            del user['password']
-            return jsonify(user), 200
-            
+            token = generate_jwt_token(user['_id'], user['email'])
+            response_data = serialize_user(user)
+            response_data['token'] = token
+            return jsonify(response_data), 200
+
         return jsonify({"error": "Invalid credentials"}), 401
-        
+
     except Exception as e:
         logger.error("Login error: %s", str(e))
         return jsonify({"error": str(e)}), 500
@@ -1213,93 +1305,6 @@ def update_user_data():
     except Exception as e:
         logger.error(f"Update user data error: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
-
-@app.route('/register', methods=['POST'])
-def register():
-    try:
-        data = request.get_json()
-        print("Register data:", data)
-        
-        if not data:
-            return jsonify({"error": "Veri gerekli"}), 400
-            
-        email = data.get('email')
-        password = data.get('password')
-        name = data.get('name')
-        
-        if not email or not password:
-            return jsonify({"error": "Email ve şifre gerekli"}), 400
-
-        # Check if user already exists
-        existing_user = users_collection.find_one({"email": email})
-        if existing_user:
-            return jsonify({"error": "Bu email zaten kayıtlı"}), 400
-
-        # Hash password with default method (pbkdf2:sha256)
-        hashed_password = generate_password_hash(password)
-        print(f"Generated hash for {email}: {hashed_password}")
-
-        # Create user document
-        user = {
-            "email": email,
-            "password": hashed_password,
-            "name": name,
-            "birthDate": data.get('birthDate', ''),
-            "birthTime": data.get('birthTime', ''),
-            "birthPlace": data.get('birthPlace', ''),
-            "created_at": datetime.utcnow()
-        }
-        
-        # Insert user
-        result = users_collection.insert_one(user)
-        print(f"Created user with id: {result.inserted_id}")
-        
-        # Generate token
-        token = jwt.encode({
-            'user_id': str(result.inserted_id),
-            'email': email,
-            'exp': datetime.utcnow() + timedelta(days=1)
-        }, JWT_SECRET_KEY)
-
-        return jsonify({
-            "token": token,
-            "userId": str(result.inserted_id),
-            "email": email,
-            "name": name
-        })
-
-    except Exception as e:
-        print(f"Register error: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/test-password', methods=['POST'])
-def test_password():
-    try:
-        data = request.get_json()
-        if not data or 'email' not in data or 'password' not in data:
-            return jsonify({"error": "Email ve şifre gerekli"}), 400
-
-        email = data['email']
-        test_password = data['password']
-
-        # Find user
-        user = users_collection.find_one({"email": email})
-        if not user:
-            return jsonify({"error": "Kullanıcı bulunamadı"}), 404
-
-        stored_hash = user.get('password', '')
-        test_hash = generate_password_hash(test_password)
-        is_valid = check_password_hash(stored_hash, test_password)
-
-        return jsonify({
-            "stored_hash": stored_hash,
-            "test_hash": test_hash,
-            "is_valid": is_valid,
-            "password_tested": test_password
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 @app.after_request
 def add_security_headers(response):

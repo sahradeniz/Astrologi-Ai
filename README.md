@@ -1,70 +1,81 @@
-# Getting Started with Create React App
+# Astrologi AI
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Astrologi AI is a full-stack astrology assistant that combines a Flask backend with a React + Chakra UI frontend. The platform offers personalised natal chart calculations, synastry insights, chat-based guidance, and friend management backed by MongoDB.
 
-## Available Scripts
+## Project Structure
 
-In the project directory, you can run:
+```
+Astrologi-Ai/
+├── app.py                # Flask application exposing REST APIs
+├── src/                  # React single-page application (Create React App)
+├── public/               # Static assets for the frontend
+├── docs/                 # Documentation
+└── requirements.txt      # Python dependencies
+```
 
-### `npm start`
+## Requirements
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Python 3.10+
+- Node.js 18+
+- MongoDB instance (local or cloud)
+- An `.env` file with the following keys:
+  - `MONGO_URI`
+  - `JWT_SECRET_KEY`
+  - `GROQ_API_KEY`
+  - `OPENCAGE_API_KEY`
+  - `ASTROLOGY_API_KEY`
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Backend Setup
 
-### `npm test`
+1. Create and activate a Python virtual environment.
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Export your environment variables or create an `.env` file in the project root.
+4. Run the Flask API (defaults to `http://localhost:5003`):
+   ```bash
+   flask --app app.py run --host 0.0.0.0 --port 5003
+   ```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Key API Endpoints
 
-### `npm run build`
+- `POST /api/user/register` – Register a user and receive a JWT.
+- `POST /api/user/login` – Authenticate and receive a JWT plus profile data.
+- `GET/PUT /api/user/<user_id>` – Retrieve or update profile details (requires `Authorization: Bearer <token>`).
+- `GET/POST /api/friends/<user_id>` – List or add friends.
+- `DELETE /api/friends/<user_id>/<friend_id>` – Remove a stored friend.
+- `POST /calculate_natal_chart` – Calculate a natal chart and receive frontend-ready data.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Frontend Setup
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Provide the backend URL via environment variable when needed:
+   ```bash
+   REACT_APP_API_URL=http://localhost:5003 npm start
+   ```
+   This launches the React app at `http://localhost:3000`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The SPA uses `localStorage` for JWT handling. After authenticating, protected routes (Home, Profile, etc.) automatically load user and friend data from the backend.
 
-### `npm run eject`
+## Running Tests
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Frontend unit tests use Jest and React Testing Library:
+```bash
+npm test -- --watchAll=false
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Back-end tests are not yet implemented. You can exercise the APIs manually with tools such as Postman or curl.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Development Tips
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Ensure the backend is running before exploring authenticated pages; the frontend fetches profile information on load.
+- Update `src/config.js` to point to your backend if you are not using environment variables.
+- Logs are written to `logs/app.log` with rotation enabled for easier debugging.
 
-## Learn More
+## License
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is proprietary and intended for internal use. Please contact the maintainers before sharing or distributing.
