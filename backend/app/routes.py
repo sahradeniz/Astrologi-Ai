@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from datetime import date
 
-from flask import Blueprint, jsonify, request
-from werkzeug.exceptions import BadRequest
+from flask import Blueprint, current_app, jsonify, request
+from werkzeug.exceptions import BadRequest, ServiceUnavailable
 
 from .horoscope import build_horoscope_message, determine_zodiac_sign
+from .external_api import AstrologyApiClient, ExternalServiceError
 
 api_blueprint = Blueprint("api", __name__)
 
@@ -16,6 +17,40 @@ def _parse_request_payload() -> dict:
     if payload is None:
         raise BadRequest("Geçerli bir JSON gövdesi sağlamalısın.")
     return payload
+
+
+def _get_astrology_client() -> AstrologyApiClient:
+    app = current_app
+    cached_client = app.config.get("_ASTROLOGY_API_CLIENT")
+    if isinstance(cached_client, AstrologyApiClient):
+        return cached_client
+
+    base_url = str(app.config.get("ASTROLOGY_API_BASE_URL", "") or "").strip()
+    if not base_url:
+        raise ServiceUnavailable("Harici astroloji servisi yapılandırılmadı.")
+
+    api_key = app.config.get("ASTROLOGY_API_KEY")
+    timeout_raw = app.config.get("ASTROLOGY_API_TIMEOUT", 10.0)
+    try:
+        timeout = float(timeout_raw)
+    except (TypeError, ValueError):  # pragma: no cover - defensive guard
+        timeout = 10.0
+
+    client = AstrologyApiClient(base_url=base_url, api_key=api_key, timeout=timeout)
+    app.config["_ASTROLOGY_API_CLIENT"] = client
+    return client
+
+
+def _proxy_external_post(path: str, payload: dict):
+    try:
+        data = _get_astrology_client().post(path, payload)
+    except ExternalServiceError as exc:
+        raise BadRequest(str(exc)) from exc
+
+    if data is None:
+        return jsonify({})
+
+    return jsonify(data)
 
 
 @api_blueprint.post("/horoscope")
@@ -50,3 +85,27 @@ def get_horoscope():
             "message": message,
         }
     )
+
+
+@api_blueprint.post("/calculate-natal-chart")
+def calculate_natal_chart():
+    payload = _parse_request_payload()
+    return _proxy_external_post("/calculate_natal_chart", payload)
+
+
+@api_blueprint.post("/calculate-synastry")
+def calculate_synastry():
+    payload = _parse_request_payload()
+    return _proxy_external_post("/api/calculate-synastry", payload)
+
+
+@api_blueprint.post("/calculate-transits")
+def calculate_transits():
+    payload = _parse_request_payload()
+    return _proxy_external_post("/api/calculate-transits", payload)
+
+
+@api_blueprint.post("/chat/message")
+def send_chat_message():
+    payload = _parse_request_payload()
+    return _proxy_external_post("/api/chat/message", payload)
