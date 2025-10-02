@@ -1,9 +1,10 @@
-"""WSGI entry-point suitable for gunicorn and Render."""
+"""Application entry point for running on Render or locally."""
 from __future__ import annotations
 
 import os
 
 from app import create_app
+
 
 app = create_app()
 
