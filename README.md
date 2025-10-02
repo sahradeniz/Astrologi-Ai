@@ -1,0 +1,1 @@
+# Astrologi-AI (Clean MVP)
