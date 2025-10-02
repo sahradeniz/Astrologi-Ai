@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+.env
+.venv
+venv/
+instance/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+build/
+.npm/
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
