@@ -22,12 +22,9 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-SWISS_EPHE_PATH = os.environ.get("SWISSEPH_PATH", "./ephe")
-if not os.path.isdir(SWISS_EPHE_PATH):
-    logger.warning("Swiss Ephemeris path '%s' does not exist. Ensure ephemeris files are downloaded.", SWISS_EPHE_PATH)
-
+EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
-    swe.set_ephe_path(SWISS_EPHE_PATH)
+    swe.set_ephe_path(EPHE_PATH)
 except Exception as exc:  # pragma: no cover - depends on runtime environment
     logger.error("Failed to set Swiss Ephemeris path: %s", exc)
 
