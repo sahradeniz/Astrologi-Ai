@@ -4,3 +4,4 @@ requests
 pytz
 swisseph
 python-dotenv
+gunicorn

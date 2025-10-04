@@ -4,4 +4,4 @@ services:
     env: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app.wsgi:app
+    startCommand: gunicorn wsgi:app

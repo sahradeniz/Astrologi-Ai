@@ -1,20 +1,11 @@
-"""WSGI entry-point suitable for gunicorn and Render."""
+"""WSGI entry point for running the Astrologi-AI Backend MVP."""
 from __future__ import annotations
 
 import os
 
-from app import create_app
-
-app = create_app()
-
-
-def _resolve_port(default: int = 5000) -> int:
-    try:
-        return int(os.environ.get("PORT", default))
-    except (TypeError, ValueError):  # pragma: no cover - defensive guard
-        return default
+from app import app
 
 
 if __name__ == "__main__":
-    port = _resolve_port()
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
