@@ -22,6 +22,30 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin") or "*"
+    response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Vary"] = "Origin"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = app.make_default_options_response()
+        origin = request.headers.get("Origin") or "*"
+        headers = response.headers
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        headers["Access-Control-Allow-Credentials"] = "true"
+        headers["Vary"] = "Origin"
+        return response
+
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
     swe.set_ephe_path(EPHE_PATH)
