@@ -49,17 +49,11 @@ async function postJson(path, payload) {
   }
 }
 
-export const requestSynastryReport = (payload) =>
-  postJson('/api/calculate-synastry', payload);
-
 export const requestNatalChart = (payload) =>
-  postJson('/api/calculate-natal-chart', payload);
+  postJson('/natal-chart', payload);
 
-export const requestTransits = (payload) =>
-  postJson('/api/calculate-transits', payload);
+export const requestSynastryReport = (payload) =>
+  postJson('/calculate_synastry_chart', payload);
 
 export const requestChat = (payload) =>
-  postJson('/api/chat/message', payload);
-
-export const requestDailyInsight = (payload) =>
-  postJson('/api/horoscope', payload);
+  postJson('/chat/message', payload);

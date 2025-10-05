@@ -18,7 +18,8 @@ function StoryStudioPage() {
   const toast = useToast();
   const [form, setForm] = useState({
     name: '',
-    birthdate: '',
+    birthDateTime: '',
+    city: '',
     prompt: '',
     tone: 'ilham verici'
   });
@@ -37,7 +38,8 @@ function StoryStudioPage() {
     try {
       const payload = {
         name: form.name,
-        birthdate: form.birthdate || null,
+        birthDateTime: form.birthDateTime,
+        city: form.city,
         prompt: form.prompt,
         tone: form.tone
       };
@@ -56,6 +58,8 @@ function StoryStudioPage() {
       setLoading(false);
     }
   };
+
+  const canSubmit = form.birthDateTime && form.city.trim() && form.prompt.trim();
 
   return (
     <Stack spacing={6}>
@@ -76,20 +80,28 @@ function StoryStudioPage() {
         borderColor="whiteAlpha.200"
       >
         <Stack spacing={4}>
-          <FormControl isRequired>
-            <FormLabel>İsim</FormLabel>
+          <FormControl>
+            <FormLabel>İsim (opsiyonel)</FormLabel>
             <Input
               value={form.name}
               onChange={handleChange('name')}
               placeholder="Adını yaz"
             />
           </FormControl>
-          <FormControl>
-            <FormLabel>Doğum Tarihi</FormLabel>
+          <FormControl isRequired>
+            <FormLabel>Doğum Tarihi ve Saati</FormLabel>
             <Input
-              type="date"
-              value={form.birthdate}
-              onChange={handleChange('birthdate')}
+              type="datetime-local"
+              value={form.birthDateTime}
+              onChange={handleChange('birthDateTime')}
+            />
+          </FormControl>
+          <FormControl isRequired>
+            <FormLabel>Doğum Şehri</FormLabel>
+            <Input
+              value={form.city}
+              onChange={handleChange('city')}
+              placeholder="Örn. İzmir, Türkiye"
             />
           </FormControl>
           <FormControl isRequired>
@@ -97,7 +109,7 @@ function StoryStudioPage() {
             <Input
               value={form.prompt}
               onChange={handleChange('prompt')}
-              placeholder="Örn. Yeni yıl kararları için motive edici kart"
+              placeholder="Örn. Yeni başlangıçlar için motive edici kart"
             />
           </FormControl>
           <FormControl>
@@ -113,23 +125,34 @@ function StoryStudioPage() {
             colorScheme="cyan"
             alignSelf="flex-start"
             isLoading={loading}
-            isDisabled={!form.name.trim() || !form.prompt.trim()}
+            isDisabled={!canSubmit}
           >
-            Hikâyeyi Oluştur
+            Haritadan İlham Al
           </Button>
 
           {result && (
-            <Box mt={4} p={4} borderRadius="lg" bg="blackAlpha.300">
-              <Text fontWeight="medium" mb={2}>
-                Hikâye / Kart İçeriği
-              </Text>
-              <Textarea
-                value={JSON.stringify(result, null, 2)}
-                isReadOnly
-                height="220px"
-                fontFamily="mono"
-              />
-            </Box>
+            <>
+              <Box mt={4} p={4} borderRadius="lg" bg="blackAlpha.300">
+                <Text fontWeight="medium" mb={2}>
+                  Doğum Haritası Verisi
+                </Text>
+                <Textarea
+                  value={JSON.stringify(result, null, 2)}
+                  isReadOnly
+                  height="220px"
+                  fontFamily="mono"
+                />
+              </Box>
+
+              {result.interpretation && (
+                <Box mt={2} p={4} borderRadius="lg" bg="blackAlpha.400">
+                  <Heading size="sm" mb={2}>AI Yorum</Heading>
+                  <Text fontSize="sm" color="gray.100" whiteSpace="pre-wrap">
+                    {result.interpretation}
+                  </Text>
+                </Box>
+              )}
+            </>
           )}
         </Stack>
       </Box>

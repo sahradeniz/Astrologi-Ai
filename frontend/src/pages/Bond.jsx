@@ -25,9 +25,8 @@ import { requestSynastryReport } from '../lib/api.js';
 
 const emptyPerson = {
   name: '',
-  birthdate: '',
-  birthTime: '',
-  birthLocation: ''
+  birthDateTime: '',
+  city: ''
 };
 
 function BondPage() {
@@ -48,26 +47,27 @@ function BondPage() {
     });
   };
 
+  const handlePersonChange = (setter, field) => (event) => {
+    const { value } = event.target;
+    setter((current) => ({ ...current, [field]: value }));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
 
     try {
       const payload = {
-        partners: [
-          {
-            name: personA.name,
-            birthdate: personA.birthdate || null,
-            birthTime: personA.birthTime || null,
-            birthLocation: personA.birthLocation || null
-          },
-          {
-            name: personB.name,
-            birthdate: personB.birthdate || null,
-            birthTime: personB.birthTime || null,
-            birthLocation: personB.birthLocation || null
-          }
-        ]
+        person1: {
+          name: personA.name,
+          birthDateTime: personA.birthDateTime,
+          city: personA.city
+        },
+        person2: {
+          name: personB.name,
+          birthDateTime: personB.birthDateTime,
+          city: personB.city
+        }
       };
 
       const data = await requestSynastryReport(payload);
@@ -81,9 +81,11 @@ function BondPage() {
 
   const canSubmit =
     personA.name.trim() &&
-    personA.birthdate &&
+    personA.birthDateTime &&
+    personA.city.trim() &&
     personB.name.trim() &&
-    personB.birthdate;
+    personB.birthDateTime &&
+    personB.city.trim();
 
   return (
     <Stack spacing={6}>
@@ -110,39 +112,23 @@ function BondPage() {
               <FormLabel>İsim</FormLabel>
               <Input
                 value={personA.name}
-                onChange={(event) =>
-                  setPersonA((current) => ({ ...current, name: event.target.value }))
-                }
+                onChange={handlePersonChange(setPersonA, 'name')}
                 placeholder="Ad"
               />
             </FormControl>
             <FormControl isRequired>
-              <FormLabel>Doğum Tarihi</FormLabel>
+              <FormLabel>Doğum Tarihi ve Saati</FormLabel>
               <Input
-                type="date"
-                value={personA.birthdate}
-                onChange={(event) =>
-                  setPersonA((current) => ({ ...current, birthdate: event.target.value }))
-                }
+                type="datetime-local"
+                value={personA.birthDateTime}
+                onChange={handlePersonChange(setPersonA, 'birthDateTime')}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>Doğum Saati</FormLabel>
+            <FormControl isRequired>
+              <FormLabel>Doğum Şehri</FormLabel>
               <Input
-                type="time"
-                value={personA.birthTime}
-                onChange={(event) =>
-                  setPersonA((current) => ({ ...current, birthTime: event.target.value }))
-                }
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Doğum Yeri</FormLabel>
-              <Input
-                value={personA.birthLocation}
-                onChange={(event) =>
-                  setPersonA((current) => ({ ...current, birthLocation: event.target.value }))
-                }
+                value={personA.city}
+                onChange={handlePersonChange(setPersonA, 'city')}
                 placeholder="Örn. Ankara, Türkiye"
               />
             </FormControl>
@@ -154,39 +140,23 @@ function BondPage() {
               <FormLabel>İsim</FormLabel>
               <Input
                 value={personB.name}
-                onChange={(event) =>
-                  setPersonB((current) => ({ ...current, name: event.target.value }))
-                }
+                onChange={handlePersonChange(setPersonB, 'name')}
                 placeholder="Ad"
               />
             </FormControl>
             <FormControl isRequired>
-              <FormLabel>Doğum Tarihi</FormLabel>
+              <FormLabel>Doğum Tarihi ve Saati</FormLabel>
               <Input
-                type="date"
-                value={personB.birthdate}
-                onChange={(event) =>
-                  setPersonB((current) => ({ ...current, birthdate: event.target.value }))
-                }
+                type="datetime-local"
+                value={personB.birthDateTime}
+                onChange={handlePersonChange(setPersonB, 'birthDateTime')}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>Doğum Saati</FormLabel>
+            <FormControl isRequired>
+              <FormLabel>Doğum Şehri</FormLabel>
               <Input
-                type="time"
-                value={personB.birthTime}
-                onChange={(event) =>
-                  setPersonB((current) => ({ ...current, birthTime: event.target.value }))
-                }
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Doğum Yeri</FormLabel>
-              <Input
-                value={personB.birthLocation}
-                onChange={(event) =>
-                  setPersonB((current) => ({ ...current, birthLocation: event.target.value }))
-                }
+                value={personB.city}
+                onChange={handlePersonChange(setPersonB, 'city')}
                 placeholder="Örn. İzmir, Türkiye"
               />
             </FormControl>
@@ -242,7 +212,6 @@ function BondPage() {
                   const summary =
                     result.summary ??
                     result.description ??
-                    result.interpretation ??
                     result.overview ??
                     null;
                   if (!summary) {
@@ -254,6 +223,31 @@ function BondPage() {
                     </Text>
                   );
                 })()}
+                {Array.isArray(result.aspects) && result.aspects.length > 0 && (
+                  <Box>
+                    <Text fontSize="sm" fontWeight="semibold" mb={2} color="purple.200">
+                      Açı Listesi
+                    </Text>
+                    <List spacing={2} fontSize="sm" color="gray.100">
+                      {result.aspects.map((aspect, index) => (
+                        <ListItem key={`${aspect.planet1}-${aspect.planet2}-${index}`}>
+                          {aspect.planet1} &amp; {aspect.planet2}: {aspect.aspect} (orb {aspect.orb}°)
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                )}
+
+                {result.interpretation && (
+                  <Box>
+                    <Text fontSize="sm" fontWeight="semibold" mb={2} color="purple.200">
+                      AI Yorum
+                    </Text>
+                    <Text fontSize="sm" color="gray.100" whiteSpace="pre-wrap">
+                      {result.interpretation}
+                    </Text>
+                  </Box>
+                )}
 
                 {(() => {
                   const explanations =
@@ -294,6 +288,9 @@ function BondPage() {
                   delete extra.explanations;
                   delete extra.highlights;
                   delete extra.notes;
+                  delete extra.person1;
+                  delete extra.person2;
+                  delete extra.aspects;
                   if (Object.keys(extra).length === 0) {
                     return null;
                   }
