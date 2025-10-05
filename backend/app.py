@@ -554,7 +554,7 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
     # Houses (Placidus by default)
     cusps, ascmc = swe.houses(jd_ut, location.latitude, location.longitude)
     cusp_list = [c % 360 for c in cusps[1:13]]
-    houses = {str(i + 1): round(cusp_list[i], 4) for i in range(12)}
+    houses = {str(i): round(cusps[i], 4) for i in range(1, 13)}
 
     def resolve_house(longitude: float) -> int:
         lon_val = longitude % 360
