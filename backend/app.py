@@ -20,30 +20,51 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+_allowed_origins_raw = os.environ.get('ALLOWED_ORIGINS', '*')
+ALLOWED_ORIGINS = [origin.strip() for origin in _allowed_origins_raw.split(',') if origin.strip()]
+ALLOW_ALL_ORIGINS = '*' in ALLOWED_ORIGINS
+def _origin_allowed(origin: str | None) -> bool:
+    if not origin:
+        return False
+    return ALLOW_ALL_ORIGINS or origin in ALLOWED_ORIGINS
+
+CORS(
+    app,
+    resources={r"/*": {"origins": ALLOWED_ORIGINS if not ALLOW_ALL_ORIGINS else "*"}},
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization"],
+    methods=["GET", "POST", "OPTIONS"],
+)
+
 
 @app.after_request
 def add_cors_headers(response):
-    origin = request.headers.get("Origin") or "*"
-    response.headers["Access-Control-Allow-Origin"] = origin
+    origin = request.headers.get("Origin")
+    if _origin_allowed(origin):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+    elif ALLOW_ALL_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Vary"] = "Origin"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    requested_headers = request.headers.get("Access-Control-Request-Headers", "Content-Type, Authorization")
+    response.headers["Access-Control-Allow-Headers"] = requested_headers
+    response.headers["Access-Control-Allow-Methods"] = request.headers.get("Access-Control-Request-Method", "GET, POST, OPTIONS")
     return response
 
 
 @app.before_request
 def handle_preflight():
     if request.method == "OPTIONS":
-        response = app.make_default_options_response()
-        origin = request.headers.get("Origin") or "*"
-        headers = response.headers
-        headers["Access-Control-Allow-Origin"] = origin
-        headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        headers["Access-Control-Allow-Credentials"] = "true"
-        headers["Vary"] = "Origin"
+        response = app.make_response(("", 204))
+        origin = request.headers.get("Origin")
+        if _origin_allowed(origin):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Vary"] = "Origin"
+        elif ALLOW_ALL_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Headers"] = request.headers.get("Access-Control-Request-Headers", "Content-Type, Authorization")
+        response.headers["Access-Control-Allow-Methods"] = request.headers.get("Access-Control-Request-Method", "GET, POST, OPTIONS")
         return response
 
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
