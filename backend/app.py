@@ -449,6 +449,19 @@ def determine_house(longitude: float, cusps: list[float]) -> int:
 
 
 
+
+
+def get_zodiac_sign(longitude: float) -> str:
+    """Return zodiac sign name for a given longitude."""
+
+    signs = [
+        "Aries", "Taurus", "Gemini", "Cancer",
+        "Leo", "Virgo", "Libra", "Scorpio",
+        "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+    ]
+    index = int((longitude % 360) / 30)
+    return signs[index % 12]
+
 def extract_birth_inputs(payload: Mapping[str, Any]) -> tuple[str, str, str] | tuple[str, str, None]:
     """Extract city and birth date/time components from request payload."""
 
@@ -497,16 +510,105 @@ def extract_birth_inputs(payload: Mapping[str, Any]) -> tuple[str, str, str] | t
 
     return city, str(date_value).strip(), str(time_value).strip() if time_value else None
 
+
 def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
-    city, birth_value, time_value = extract_birth_inputs(payload)
+    city, date_value, time_value = extract_birth_inputs(payload)
 
     location = fetch_location(city)
-    local_dt, utc_dt = parse_birth_datetime_components(birth_value, time_value, location.timezone)
+    local_dt, utc_dt = parse_birth_datetime_components(date_value, time_value, location.timezone)
     jd_ut = julian_day(utc_dt)
 
-    planets = calc_planets(jd_ut)
-    houses, angles = calc_houses(jd_ut, location.latitude, location.longitude)
-    assign_houses(planets, houses)
+    planet_codes = {
+        swe.SUN: "Sun",
+        swe.MOON: "Moon",
+        swe.MERCURY: "Mercury",
+        swe.VENUS: "Venus",
+        swe.MARS: "Mars",
+        swe.JUPITER: "Jupiter",
+        swe.SATURN: "Saturn",
+        swe.URANUS: "Uranus",
+        swe.NEPTUNE: "Neptune",
+        swe.PLUTO: "Pluto",
+    }
+
+    planets: Dict[str, Dict[str, Any]] = {}
+    for code, name in planet_codes.items():
+        try:
+            result = swe.calc_ut(jd_ut, code)
+            if isinstance(result, tuple) and len(result) == 2:
+                lon_p, lat_p = result
+                speed = 0.0
+            else:
+                lon_p, lat_p, _, speed = result
+            lon_norm = lon_p % 360
+            planets[name] = {
+                "longitude": round(lon_norm, 4),
+                "latitude": round(lat_p, 4),
+                "sign": get_zodiac_sign(lon_norm),
+                "retrograde": speed < 0,
+                "speed": round(speed, 6),
+            }
+        except Exception as exc:  # pragma: no cover - defensive
+            planets[name] = {"error": str(exc)}
+
+    # Houses (Placidus by default)
+    cusps, ascmc = swe.houses(jd_ut, location.latitude, location.longitude)
+    cusp_list = [c % 360 for c in cusps[1:13]]
+    houses = {str(i + 1): round(cusp_list[i], 4) for i in range(12)}
+
+    def resolve_house(longitude: float) -> int:
+        lon_val = longitude % 360
+        for idx in range(12):
+            start = cusp_list[idx]
+            end = cusp_list[(idx + 1) % 12]
+            if start <= end:
+                if start <= lon_val < end:
+                    return idx + 1
+            else:  # wrap around 360°
+                if lon_val >= start or lon_val < end:
+                    return idx + 1
+        return 12
+
+    for name, data in planets.items():
+        if "longitude" in data:
+            data["house"] = resolve_house(data["longitude"])
+
+    angles = {
+        "ascendant": round(ascmc[0] % 360, 4),
+        "midheaven": round(ascmc[1] % 360, 4),
+    }
+
+    # Aspects
+    aspect_definitions = [
+        ("Conjunction", 0, 8),
+        ("Sextile", 60, 6),
+        ("Square", 90, 6),
+        ("Trine", 120, 6),
+        ("Opposition", 180, 8),
+    ]
+    aspects: list[Dict[str, Any]] = []
+    planet_items = [
+        (name, data["longitude"])
+        for name, data in planets.items()
+        if "longitude" in data
+    ]
+    for i in range(len(planet_items)):
+        for j in range(i + 1, len(planet_items)):
+            name_a, lon_a = planet_items[i]
+            name_b, lon_b = planet_items[j]
+            diff = abs(lon_a - lon_b)
+            diff = diff if diff <= 180 else 360 - diff
+            for aspect_name, aspect_angle, orb in aspect_definitions:
+                if abs(diff - aspect_angle) <= orb:
+                    aspects.append(
+                        {
+                            "planet1": name_a,
+                            "planet2": name_b,
+                            "aspect": aspect_name,
+                            "exact_angle": round(diff, 2),
+                        }
+                    )
+                    break
 
     return {
         "location": {
@@ -520,6 +622,7 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "planets": planets,
         "houses": houses,
         "angles": angles,
+        "aspects": aspects,
     }
 
 
