@@ -4,4 +4,4 @@ requests
 pytz
 python-dotenv
 gunicorn
-pyswisseph
+pyswisseph==2.10.3.2
