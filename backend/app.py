@@ -295,6 +295,40 @@ def fetch_location(city: str) -> LocationData:
     )
 
 
+
+def parse_birth_datetime_components(date_value: str, time_value: str | None, timezone_name: str) -> tuple[datetime, datetime]:
+    """Build a datetime from separate date/time fields and convert to UTC."""
+
+    if not isinstance(date_value, str) or not date_value.strip():
+        raise ValueError("birth date must be provided as string.")
+
+    date_str = date_value.strip()
+    try:
+        year, month, day = [int(part) for part in date_str.split("-")]
+    except ValueError as exc:
+        raise ValueError("birth date must be in YYYY-MM-DD format.") from exc
+
+    hour = 12
+    minute = 0
+    if time_value:
+        try:
+            hour_str, minute_str = time_value.strip().split(":", 1)
+            hour = int(hour_str)
+            minute = int(minute_str)
+        except ValueError as exc:
+            raise ValueError("birth time must be in HH:MM format.") from exc
+
+    try:
+        tz = pytz.timezone(timezone_name)
+    except pytz.UnknownTimeZoneError as exc:
+        raise ValueError(f"Unknown timezone '{timezone_name}'.") from exc
+
+    local_naive = datetime(year, month, day, hour, minute)
+    local_dt = tz.localize(local_naive)
+    utc_dt = local_dt.astimezone(pytz.utc)
+    return local_dt, utc_dt
+
+
 def parse_birth_datetime(birth_str: str, timezone_name: str) -> tuple[datetime, datetime]:
     """Parse the provided datetime string and convert it using the location timezone."""
 
@@ -396,8 +430,8 @@ def determine_house(longitude: float, cusps: list[float]) -> int:
 
 
 
-def extract_birth_inputs(payload: Mapping[str, Any]) -> tuple[str, str]:
-    """Extract city name and datetime string from request payload."""
+def extract_birth_inputs(payload: Mapping[str, Any]) -> tuple[str, str, str] | tuple[str, str, None]:
+    """Extract city and birth date/time components from request payload."""
 
     city_candidate = (
         payload.get("city")
@@ -415,36 +449,40 @@ def extract_birth_inputs(payload: Mapping[str, Any]) -> tuple[str, str]:
         )
     city = str(city_candidate).strip() if city_candidate else ""
 
+    date_value = (
+        payload.get("birthDate")
+        or payload.get("birth_date")
+        or payload.get("date")
+        or payload.get("birthdate")
+    )
+    time_value = (
+        payload.get("birthTime")
+        or payload.get("time")
+        or payload.get("birth_time")
+    )
     datetime_candidate = (
-        payload.get("birth_date")
-        or payload.get("birthDate")
-        or payload.get("birthDateTime")
+        payload.get("birthDateTime")
         or payload.get("birth_datetime")
         or payload.get("birthDateTimeLocal")
         or payload.get("datetime")
-        or payload.get("birthdate")
     )
-
-    if not datetime_candidate:
-        date_part = payload.get("birthDate") or payload.get("birthdate") or payload.get("date")
-        time_part = payload.get("birthTime") or payload.get("time")
-        if date_part and time_part:
-            datetime_candidate = f"{date_part} {time_part}"
-
-    birth_value = str(datetime_candidate).strip() if datetime_candidate else ""
 
     if not city:
         raise ValueError("city is required.")
-    if not birth_value:
-        raise ValueError("birth_date is required.")
 
-    return city, birth_value
+    if datetime_candidate:
+        return city, str(datetime_candidate).strip(), None
+
+    if not date_value:
+        raise ValueError("birth date is required.")
+
+    return city, str(date_value).strip(), str(time_value).strip() if time_value else None
 
 def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
-    city, birth_value = extract_birth_inputs(payload)
+    city, birth_value, time_value = extract_birth_inputs(payload)
 
     location = fetch_location(city)
-    local_dt, utc_dt = parse_birth_datetime(birth_value, location.timezone)
+    local_dt, utc_dt = parse_birth_datetime_components(birth_value, time_value, location.timezone)
     jd_ut = julian_day(utc_dt)
 
     planets = calc_planets(jd_ut)
