@@ -384,35 +384,41 @@ def julian_day(utc_dt: datetime) -> float:
 
 
 def calc_planets(jd_ut):
-    planets = {}
+    planets: Dict[str, Dict[str, Any]] = {}
     planet_names = {
-        swe.SUN: "Sun",
-        swe.MOON: "Moon",
-        swe.MERCURY: "Mercury",
-        swe.VENUS: "Venus",
-        swe.MARS: "Mars",
-        swe.JUPITER: "Jupiter",
-        swe.SATURN: "Saturn",
-        swe.URANUS: "Uranus",
-        swe.NEPTUNE: "Neptune",
-        swe.PLUTO: "Pluto",
-        swe.MEAN_NODE: "Node",
-        swe.CHIRON: "Chiron"
+        "Sun": swe.SUN,
+        "Moon": swe.MOON,
+        "Mercury": swe.MERCURY,
+        "Venus": swe.VENUS,
+        "Mars": swe.MARS,
+        "Jupiter": swe.JUPITER,
+        "Saturn": swe.SATURN,
+        "Uranus": swe.URANUS,
+        "Neptune": swe.NEPTUNE,
+        "Pluto": swe.PLUTO,
     }
 
-    for code, name in planet_names.items():
+    for name, code in planet_names.items():
         try:
             result = swe.calc_ut(jd_ut, code)
-            # Some Swiss Ephemeris objects only return (lon, lat)
-            if isinstance(result, tuple) and len(result) == 2:
+            if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], tuple):
+                lon, lat, _, speed = result[0]
+            elif isinstance(result, tuple) and len(result) >= 4:
+                lon, lat, _, speed = result
+            elif isinstance(result, tuple) and len(result) == 2:
                 lon, lat = result
                 speed = 0.0
             else:
-                lon, lat, _, speed = result
-            planets[name] = {"longitude": lon, "latitude": lat, "speed": speed}
-        except Exception as e:
-            print(f"Failed to calculate {name}: {e}")
-            planets[name] = {"error": str(e)}
+                lon, lat, speed = 0.0, 0.0, 0.0
+            lon = lon % 360
+            planets[name] = {
+                "longitude": round(lon, 4),
+                "latitude": round(lat, 4),
+                "speed": round(speed, 6),
+            }
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("Failed to calculate %s: %s", name, exc)
+            planets[name] = {"error": str(exc)}
 
     return planets
 
@@ -518,38 +524,20 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
     local_dt, utc_dt = parse_birth_datetime_components(date_value, time_value, location.timezone)
     jd_ut = julian_day(utc_dt)
 
-    planet_codes = {
-        swe.SUN: "Sun",
-        swe.MOON: "Moon",
-        swe.MERCURY: "Mercury",
-        swe.VENUS: "Venus",
-        swe.MARS: "Mars",
-        swe.JUPITER: "Jupiter",
-        swe.SATURN: "Saturn",
-        swe.URANUS: "Uranus",
-        swe.NEPTUNE: "Neptune",
-        swe.PLUTO: "Pluto",
-    }
-
+    planet_positions = calc_planets(jd_ut)
     planets: Dict[str, Dict[str, Any]] = {}
-    for code, name in planet_codes.items():
-        try:
-            result = swe.calc_ut(jd_ut, code)
-            if isinstance(result, tuple) and len(result) == 2:
-                lon_p, lat_p = result
-                speed = 0.0
-            else:
-                lon_p, lat_p, _, speed = result
-            lon_norm = lon_p % 360
+    for name, data in planet_positions.items():
+        if "longitude" in data:
+            lon_norm = data["longitude"] % 360
             planets[name] = {
                 "longitude": round(lon_norm, 4),
-                "latitude": round(lat_p, 4),
+                "latitude": data.get("latitude", 0.0),
                 "sign": get_zodiac_sign(lon_norm),
-                "retrograde": speed < 0,
-                "speed": round(speed, 6),
+                "retrograde": data.get("speed", 0.0) < 0,
+                "speed": data.get("speed"),
             }
-        except Exception as exc:  # pragma: no cover - defensive
-            planets[name] = {"error": str(exc)}
+        else:
+            planets[name] = data
 
     # Houses (Placidus by default)
     cusps, ascmc = swe.houses(jd_ut, location.latitude, location.longitude)
