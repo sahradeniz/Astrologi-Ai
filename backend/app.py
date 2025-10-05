@@ -383,19 +383,38 @@ def julian_day(utc_dt: datetime) -> float:
     return swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, ut, swe.GREG_CAL)
 
 
-def calc_planets(jd_ut: float) -> Dict[str, Dict[str, Any]]:
-    positions: Dict[str, Dict[str, Any]] = {}
-    for name, code in PLANETS.items():
-        lon, lat, _, speed = swe.calc_ut(jd_ut, code)
-        lon = lon % 360
-        sign_index = int(lon // 30)
-        positions[name] = {
-            "longitude": round(lon, 4),
-            "latitude": round(lat, 4),
-            "sign": SIGNS_TR[sign_index],
-            "retrograde": speed < 0,
-        }
-    return positions
+def calc_planets(jd_ut):
+    planets = {}
+    planet_names = {
+        swe.SUN: "Sun",
+        swe.MOON: "Moon",
+        swe.MERCURY: "Mercury",
+        swe.VENUS: "Venus",
+        swe.MARS: "Mars",
+        swe.JUPITER: "Jupiter",
+        swe.SATURN: "Saturn",
+        swe.URANUS: "Uranus",
+        swe.NEPTUNE: "Neptune",
+        swe.PLUTO: "Pluto",
+        swe.MEAN_NODE: "Node",
+        swe.CHIRON: "Chiron"
+    }
+
+    for code, name in planet_names.items():
+        try:
+            result = swe.calc_ut(jd_ut, code)
+            # Some Swiss Ephemeris objects only return (lon, lat)
+            if isinstance(result, tuple) and len(result) == 2:
+                lon, lat = result
+                speed = 0.0
+            else:
+                lon, lat, _, speed = result
+            planets[name] = {"longitude": lon, "latitude": lat, "speed": speed}
+        except Exception as e:
+            print(f"Failed to calculate {name}: {e}")
+            planets[name] = {"error": str(e)}
+
+    return planets
 
 
 def calc_houses(jd_ut: float, latitude: float, longitude: float) -> tuple[list[float], Dict[str, float]]:
