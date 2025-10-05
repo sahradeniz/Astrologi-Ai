@@ -20,67 +20,15 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5173').split(',') if origin.strip()]
-ALLOW_ALL_ORIGINS = '*' in ALLOWED_ORIGINS
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
 
 CORS(
     app,
-    origins=ALLOWED_ORIGINS if not ALLOW_ALL_ORIGINS else "*",
+    origins=[origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()],
     supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "OPTIONS"],
 )
-
-def _resolve_origin(origin: str | None) -> str | None:
-    if not origin:
-        return None
-    if ALLOW_ALL_ORIGINS:
-        return origin
-    return origin if origin in ALLOWED_ORIGINS else None
-
-
-@app.after_request
-def add_cors_headers(response):
-    origin = request.headers.get("Origin")
-    resolved = _resolve_origin(origin)
-    if resolved:
-        response.headers["Access-Control-Allow-Origin"] = resolved
-        response.headers.setdefault("Vary", "Origin")
-    elif ALLOW_ALL_ORIGINS:
-        response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Headers"] = request.headers.get(
-        "Access-Control-Request-Headers",
-        "Content-Type, Authorization",
-    )
-    response.headers["Access-Control-Allow-Methods"] = request.headers.get(
-        "Access-Control-Request-Method",
-        "GET, POST, OPTIONS",
-    )
-    return response
-
-
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        response = app.make_response(("", 204))
-        origin = request.headers.get("Origin")
-        resolved = _resolve_origin(origin)
-        if resolved:
-            response.headers["Access-Control-Allow-Origin"] = resolved
-            response.headers["Vary"] = "Origin"
-        elif ALLOW_ALL_ORIGINS:
-            response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = request.headers.get(
-            "Access-Control-Request-Headers",
-            "Content-Type, Authorization",
-        )
-        response.headers["Access-Control-Allow-Methods"] = request.headers.get(
-            "Access-Control-Request-Method",
-            "GET, POST, OPTIONS",
-        )
-        return response
 
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
@@ -595,32 +543,32 @@ def _handle_chat_request():
         return jsonify({"error": str(exc)}), 400
 
 
-@app.route("/api/calculate-natal-chart", methods=["POST"])
+@app.route("/api/calculate-natal-chart", methods=["POST", "OPTIONS"])
 def api_calculate_natal_chart():
     return _handle_natal_chart_request()
 
 
-@app.route("/natal-chart", methods=["POST"])
+@app.route("/natal-chart", methods=["POST", "OPTIONS"])
 def public_natal_chart():
     return _handle_natal_chart_request()
 
 
-@app.route("/api/calculate-synastry", methods=["POST"])
+@app.route("/api/calculate-synastry", methods=["POST", "OPTIONS"])
 def api_calculate_synastry():
     return _handle_synastry_request()
 
 
-@app.route("/calculate_synastry_chart", methods=["POST"])
+@app.route("/calculate_synastry_chart", methods=["POST", "OPTIONS"])
 def public_calculate_synastry():
     return _handle_synastry_request()
 
 
-@app.route("/api/chat/message", methods=["POST"])
+@app.route("/api/chat/message", methods=["POST", "OPTIONS"])
 def api_chat_message():
     return _handle_chat_request()
 
 
-@app.route("/chat/message", methods=["POST"])
+@app.route("/chat/message", methods=["POST", "OPTIONS"])
 def public_chat_message():
     return _handle_chat_request()
 
