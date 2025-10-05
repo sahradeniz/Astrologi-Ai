@@ -545,31 +545,43 @@ def _handle_chat_request():
 
 @app.route("/api/calculate-natal-chart", methods=["POST", "OPTIONS"])
 def api_calculate_natal_chart():
+    if request.method == "OPTIONS":
+        return "", 204
     return _handle_natal_chart_request()
 
 
 @app.route("/natal-chart", methods=["POST", "OPTIONS"])
 def public_natal_chart():
+    if request.method == "OPTIONS":
+        return "", 204
     return _handle_natal_chart_request()
 
 
 @app.route("/api/calculate-synastry", methods=["POST", "OPTIONS"])
 def api_calculate_synastry():
+    if request.method == "OPTIONS":
+        return "", 204
     return _handle_synastry_request()
 
 
 @app.route("/calculate_synastry_chart", methods=["POST", "OPTIONS"])
 def public_calculate_synastry():
+    if request.method == "OPTIONS":
+        return "", 204
     return _handle_synastry_request()
 
 
 @app.route("/api/chat/message", methods=["POST", "OPTIONS"])
 def api_chat_message():
+    if request.method == "OPTIONS":
+        return "", 204
     return _handle_chat_request()
 
 
 @app.route("/chat/message", methods=["POST", "OPTIONS"])
 def public_chat_message():
+    if request.method == "OPTIONS":
+        return "", 204
     return _handle_chat_request()
 
 
