@@ -5,6 +5,7 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
+import json
 from typing import Any, Dict, Iterable, Mapping, Sequence
 
 import pytz
@@ -131,6 +132,49 @@ def call_groq(messages: Sequence[Dict[str, str]], *, temperature: float = 0.6, m
         raise AIError("Groq yanıtı boş döndü.")
     return content
 
+
+
+def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
+    """Call Groq Chat Completions to produce an interpretation."""
+
+    if not GROQ_API_KEY:
+        return "AI interpretation unavailable."
+
+    if isinstance(chart_data, str):
+        chart_text = chart_data
+    else:
+        try:
+            chart_text = json.dumps(chart_data, ensure_ascii=False)
+        except (TypeError, ValueError):
+            chart_text = str(chart_data)
+
+    prompt = f"You are an expert astrologer. Analyze this chart: {chart_text}"
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": "llama3-8b-8192",
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are an AI astrologer providing deep and empathetic insights.",
+            },
+            {"role": "user", "content": prompt},
+        ],
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+        return result.get("choices", [{}])[0].get("message", {}).get("content", "AI interpretation unavailable.")
+    except requests.RequestException as exc:
+        logger.warning("Groq request failed: %s", exc)
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("Groq response parsing failed: %s", exc)
+    return "AI interpretation unavailable."
 
 def chart_to_summary(chart: Mapping[str, Any]) -> str:
     """Convert chart data into a textual summary for the AI assistant."""
@@ -450,13 +494,8 @@ def _handle_natal_chart_request():
     try:
         payload = request.get_json(force=True) or {}
         chart = build_natal_chart(payload)
-        name = payload.get("name") or payload.get("fullName")
-        if GROQ_API_KEY:
-            try:
-                chart["interpretation"] = generate_chart_interpretation(chart, name=name)
-            except AIError as exc:
-                logger.warning("AI interpretation failed: %s", exc)
-                chart["interpretation_error"] = str(exc)
+        summary = chart_to_summary(chart)
+        chart["interpretation"] = generate_ai_interpretation(summary)
     except ApiError as exc:
         logger.error("External API error: %s", exc)
         return jsonify({"error": str(exc)}), 502
