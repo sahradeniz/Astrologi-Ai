@@ -21,13 +21,66 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5173').split(',') if origin.strip()]
+ALLOW_ALL_ORIGINS = '*' in ALLOWED_ORIGINS
+
 CORS(
     app,
-    origins=ALLOWED_ORIGINS,
+    origins=ALLOWED_ORIGINS if not ALLOW_ALL_ORIGINS else "*",
     supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "OPTIONS"],
 )
+
+def _resolve_origin(origin: str | None) -> str | None:
+    if not origin:
+        return None
+    if ALLOW_ALL_ORIGINS:
+        return origin
+    return origin if origin in ALLOWED_ORIGINS else None
+
+
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin")
+    resolved = _resolve_origin(origin)
+    if resolved:
+        response.headers["Access-Control-Allow-Origin"] = resolved
+        response.headers.setdefault("Vary", "Origin")
+    elif ALLOW_ALL_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Headers"] = request.headers.get(
+        "Access-Control-Request-Headers",
+        "Content-Type, Authorization",
+    )
+    response.headers["Access-Control-Allow-Methods"] = request.headers.get(
+        "Access-Control-Request-Method",
+        "GET, POST, OPTIONS",
+    )
+    return response
+
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = app.make_response(("", 204))
+        origin = request.headers.get("Origin")
+        resolved = _resolve_origin(origin)
+        if resolved:
+            response.headers["Access-Control-Allow-Origin"] = resolved
+            response.headers["Vary"] = "Origin"
+        elif ALLOW_ALL_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Headers"] = request.headers.get(
+            "Access-Control-Request-Headers",
+            "Content-Type, Authorization",
+        )
+        response.headers["Access-Control-Allow-Methods"] = request.headers.get(
+            "Access-Control-Request-Method",
+            "GET, POST, OPTIONS",
+        )
+        return response
 
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
