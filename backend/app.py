@@ -418,27 +418,32 @@ def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str
     for name, code in planet_codes.items():
         try:
             result = swe.calc_ut(jd_ut, code)
-            values = result
-            if isinstance(result, (list, tuple)) and len(result) == 2 and isinstance(result[0], (list, tuple)):
+            if isinstance(result, (tuple, list)) and len(result) == 2 and isinstance(result[0], (tuple, list)):
                 values = result[0]
-            elif not isinstance(result, (list, tuple)):
-                values = (float(result),)
+            elif isinstance(result, (tuple, list)):
+                values = result
+            else:
+                values = (result,)
 
-            lon = float(values[0]) if len(values) > 0 else None
-            lat = float(values[1]) if len(values) > 1 else None
-            speed = float(values[3]) if len(values) > 3 else 0.0
+            lon = values[0] if len(values) > 0 else None
+            lat = values[1] if len(values) > 1 else None
+            speed = values[3] if len(values) > 3 else 0
 
             if lon is None:
                 raise ValueError("Longitude unavailable from Swiss Ephemeris")
 
-            lon_normalised = lon % 360
+            lon = float(lon) % 360
+            lat_value = float(lat) if isinstance(lat, (int, float)) else None
+            speed_value = float(speed) if isinstance(speed, (int, float)) else 0.0
+
+            house = resolve_house(lon)
+
             planets[name] = {
-                "longitude": round(lon_normalised, 2),
-                "latitude": round(lat, 2) if isinstance(lat, (int, float)) else None,
-                "sign": get_zodiac_sign(lon_normalised),
-                "house": resolve_house(lon_normalised),
-                "speed": round(speed, 2),
-                "retrograde": speed < 0,
+                "longitude": round(lon, 2),
+                "latitude": round(lat_value, 2) if lat_value is not None else None,
+                "sign": get_zodiac_sign(lon),
+                "house": house,
+                "speed": round(speed_value, 2),
             }
         except Exception as exc:  # pragma: no cover
             logger.warning("Failed to calculate %s: %s", name, exc)
