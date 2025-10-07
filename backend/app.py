@@ -383,6 +383,22 @@ def julian_day(utc_dt: datetime) -> float:
     return swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, ut, swe.GREG_CAL)
 
 
+def _flatten_calc_result(result: Any) -> list[float]:
+    """Return a flat list of numeric values from Swiss Ephemeris responses."""
+
+    flat: list[float] = []
+
+    def _collect(item: Any) -> None:
+        if isinstance(item, (tuple, list)):
+            for sub in item:
+                _collect(sub)
+        elif isinstance(item, (int, float)):
+            flat.append(float(item))
+
+    _collect(result)
+    return flat
+
+
 def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str, Dict[str, Any]]:
     """Calculate planetary longitudes with safe unpacking and metadata."""
 
@@ -417,24 +433,15 @@ def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str
 
     for name, code in planet_codes.items():
         try:
-            result = swe.calc_ut(jd_ut, code)
-            if isinstance(result, (tuple, list)) and len(result) == 2 and isinstance(result[0], (tuple, list)):
-                values = result[0]
-            elif isinstance(result, (tuple, list)):
-                values = result
-            else:
-                values = (result,)
+            raw_result = swe.calc_ut(jd_ut, code)
+            values = _flatten_calc_result(raw_result)
 
-            lon = values[0] if len(values) > 0 else None
-            lat = values[1] if len(values) > 1 else None
-            speed = values[3] if len(values) > 3 else 0
+            if not values:
+                raise ValueError("Swiss Ephemeris returned no positional values.")
 
-            if lon is None:
-                raise ValueError("Longitude unavailable from Swiss Ephemeris")
-
-            lon = float(lon) % 360
-            lat_value = float(lat) if isinstance(lat, (int, float)) else None
-            speed_value = float(speed) if isinstance(speed, (int, float)) else 0.0
+            lon = float(values[0]) % 360
+            lat_value = float(values[1]) if len(values) > 1 else None
+            speed_value = float(values[3]) if len(values) > 3 else 0.0
 
             house = resolve_house(lon)
 
