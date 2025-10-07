@@ -18,7 +18,8 @@ function HomePage() {
   const toast = useToast();
   const [form, setForm] = useState({
     name: '',
-    birthDateTime: '',
+    date: '',
+    time: '',
     city: ''
   });
   const [loading, setLoading] = useState(false);
@@ -47,7 +48,8 @@ function HomePage() {
     try {
       const payload = {
         name: form.name,
-        birthDateTime: form.birthDateTime,
+        date: form.date,
+        time: form.time,
         city: form.city
       };
       const data = await requestNatalChart(payload);
@@ -59,7 +61,7 @@ function HomePage() {
     }
   };
 
-  const canSubmit = form.birthDateTime && form.city.trim();
+  const canSubmit = form.date && form.time && form.city.trim();
 
   return (
     <Stack spacing={8}>
@@ -93,14 +95,24 @@ function HomePage() {
             />
           </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Doğum Tarihi ve Saati</FormLabel>
-            <Input
-              type="datetime-local"
-              value={form.birthDateTime}
-              onChange={handleChange('birthDateTime')}
-            />
-          </FormControl>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <FormControl isRequired>
+              <FormLabel>Doğum Tarihi</FormLabel>
+              <Input
+                type="date"
+                value={form.date}
+                onChange={handleChange('date')}
+              />
+            </FormControl>
+            <FormControl isRequired>
+              <FormLabel>Doğum Saati</FormLabel>
+              <Input
+                type="time"
+                value={form.time}
+                onChange={handleChange('time')}
+              />
+            </FormControl>
+          </SimpleGrid>
 
           <FormControl isRequired>
             <FormLabel>Doğum Şehri</FormLabel>

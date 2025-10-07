@@ -383,9 +383,11 @@ def julian_day(utc_dt: datetime) -> float:
     return swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, ut, swe.GREG_CAL)
 
 
-def calc_planets(jd_ut):
+def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str, Dict[str, Any]]:
+    """Calculate planetary longitudes with safe unpacking and metadata."""
+
     planets: Dict[str, Dict[str, Any]] = {}
-    planet_names = {
+    planet_codes = {
         "Sun": swe.SUN,
         "Moon": swe.MOON,
         "Mercury": swe.MERCURY,
@@ -398,25 +400,48 @@ def calc_planets(jd_ut):
         "Pluto": swe.PLUTO,
     }
 
-    for name, code in planet_names.items():
+    def resolve_house(longitude: float) -> int | None:
+        if not cusps or len(cusps) < 2:
+            return None
+        lon_val = longitude % 360
+        for idx in range(1, min(len(cusps), 13)):
+            start = cusps[idx] % 360
+            end = cusps[1] % 360 if idx == 12 else cusps[idx + 1] % 360
+            if start <= end:
+                if start <= lon_val < end:
+                    return idx
+            else:
+                if lon_val >= start or lon_val < end:
+                    return idx
+        return None
+
+    for name, code in planet_codes.items():
         try:
             result = swe.calc_ut(jd_ut, code)
             if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], tuple):
-                lon, lat, _, speed = result[0]
-            elif isinstance(result, tuple) and len(result) >= 4:
-                lon, lat, _, speed = result
-            elif isinstance(result, tuple) and len(result) == 2:
-                lon, lat = result
-                speed = 0.0
+                values = result[0]
             else:
-                lon, lat, speed = 0.0, 0.0, 0.0
-            lon = lon % 360
+                values = result
+
+            lon = values[0] if len(values) > 0 else None
+            lat = values[1] if len(values) > 1 else None
+            speed = values[3] if len(values) > 3 else 0.0
+
+            if lon is None:
+                raise ValueError("Longitude unavailable from Swiss Ephemeris")
+
+            lon_normalised = lon % 360
+            lat_value = lat if isinstance(lat, (int, float)) else None
+            speed_value = speed if isinstance(speed, (int, float)) else 0.0
             planets[name] = {
-                "longitude": round(lon, 4),
-                "latitude": round(lat, 4),
-                "speed": round(speed, 6),
+                "longitude": round(lon_normalised, 2),
+                "latitude": round(lat_value, 2) if lat_value is not None else None,
+                "sign": get_zodiac_sign(lon_normalised),
+                "house": resolve_house(lon_normalised),
+                "speed": round(speed_value, 2),
+                "retrograde": speed_value < 0,
             }
-        except Exception as exc:  # pragma: no cover - defensive
+        except Exception as exc:  # pragma: no cover
             logger.warning("Failed to calculate %s: %s", name, exc)
             planets[name] = {"error": str(exc)}
 
@@ -524,24 +549,10 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
     local_dt, utc_dt = parse_birth_datetime_components(date_value, time_value, location.timezone)
     jd_ut = julian_day(utc_dt)
 
-    planet_positions = calc_planets(jd_ut)
-    planets: Dict[str, Dict[str, Any]] = {}
-    for name, data in planet_positions.items():
-        if "longitude" in data:
-            lon_norm = data["longitude"] % 360
-            planets[name] = {
-                "longitude": round(lon_norm, 4),
-                "latitude": data.get("latitude", 0.0),
-                "sign": get_zodiac_sign(lon_norm),
-                "retrograde": data.get("speed", 0.0) < 0,
-                "speed": data.get("speed"),
-            }
-        else:
-            planets[name] = data
-
-    # Houses (Placidus by default)
     cusps, ascmc = swe.houses(jd_ut, location.latitude, location.longitude)
-    cusp_list = [c % 360 for c in cusps[1:13]]
+
+    planets: Dict[str, Dict[str, Any]] = calc_planets(jd_ut, cusps)
+
     houses: Dict[str, Any] = {}
     try:
         cusp_count = len(cusps)
@@ -550,23 +561,6 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
     except Exception as exc:
         print("Failed to calculate houses:", exc)
         houses = {"error": str(exc)}
-
-    def resolve_house(longitude: float) -> int:
-        lon_val = longitude % 360
-        for idx in range(12):
-            start = cusp_list[idx]
-            end = cusp_list[(idx + 1) % 12]
-            if start <= end:
-                if start <= lon_val < end:
-                    return idx + 1
-            else:  # wrap around 360°
-                if lon_val >= start or lon_val < end:
-                    return idx + 1
-        return 12
-
-    for name, data in planets.items():
-        if "longitude" in data:
-            data["house"] = resolve_house(data["longitude"])
 
     angles = {
         "ascendant": round(ascmc[0] % 360, 4),
