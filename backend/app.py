@@ -190,14 +190,47 @@ def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
     return "AI interpretation unavailable."
 
 
-def get_ai_interpretation(chart_data: Any) -> Dict[str, str] | None:
-    """Fetch a concise interpretation using Groq and provide basic debugging output."""
+def get_ai_interpretation(chart_data: Mapping[str, Any]) -> Dict[str, str]:
+    """Generate a rich interpretation by blending archetype themes with Groq output."""
+
+    fallback = {
+        "headline": "Interpretation unavailable",
+        "summary": "We could not generate an interpretation.",
+        "advice": "Reflect on your core themes until clarity comes.",
+    }
+
+    try:
+        archetype = extract_archetype_data(chart_data)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Archetype extraction failed: %s", exc)
+        return fallback
 
     groq_api_key = os.getenv("GROQ_API_KEY")
     groq_model = os.getenv("GROQ_MODEL", GROQ_MODEL)
     if not groq_api_key:
         logger.warning("⚠️ GROQ_API_KEY not found; cannot call Groq.")
-        return None
+        return fallback
+
+    themes = ", ".join(archetype.get("core_themes", [])) or "inner exploration"
+    tone = archetype.get("story_tone", "balanced growth")
+    aspects = ", ".join(archetype.get("notable_aspects", [])) or "No notable aspects recorded."
+
+    prompt = f"""
+You are a skilled psychological astrologer.
+Analyze the chart themes below and write a rich, empathetic interpretation.
+Focus on the user's internal evolution, emotional lessons, and transformation.
+
+Themes: {themes}
+Tone: {tone}
+Aspects: {aspects}
+
+Respond with a JSON object in this format:
+{{
+  "headline": "poetic title",
+  "summary": "3-5 paragraphs, story-like interpretation",
+  "advice": "concise, heartfelt guidance"
+}}
+""".strip()
 
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
@@ -207,52 +240,46 @@ def get_ai_interpretation(chart_data: Any) -> Dict[str, str] | None:
     payload = {
         "model": groq_model,
         "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "You are an AI astrologer who interprets birth charts in a warm, "
-                    "intuitive and psychologically insightful tone."
-                ),
-            },
-            {
-                "role": "user",
-                "content": f"Interpret this astrological chart data: {chart_data}",
-            },
+            {"role": "system", "content": "You are an insightful, compassionate astrologer."},
+            {"role": "user", "content": prompt},
         ],
         "max_tokens": 400,
+        "temperature": 0.8,
     }
 
-    payload_json = json.dumps(payload, ensure_ascii=False)
-    key_prefix = groq_api_key[:8]
     print("Sending to Groq with model:", groq_model)
-    print("Key prefix:", key_prefix)
+    print("Key prefix:", groq_api_key[:8])
+    payload_json = json.dumps(payload, ensure_ascii=False)
     print("Payload preview:", payload_json[:300])
 
-    content: str | None = None
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=30)
-        status = response.status_code
-        response_text = response.text
-        print("Groq response status:", status)
-        print("Groq response preview:", response_text[:500])
-        if status == 200:
-            data = response.json()
-            content = data["choices"][0]["message"]["content"]
-            print("Groq content:", content)
-        else:
-            warning_message = f"⚠️ Groq returned non-200 status: {status}"
-            print(warning_message)
-            logger.warning(warning_message)
+        print("Groq response status:", response.status_code)
+        print("Groq response preview:", response.text[:500])
+        response.raise_for_status()
+        data = response.json()
     except Exception as exc:  # pylint: disable=broad-except
         print("Groq API call failed:", exc)
         traceback.print_exc()
         logger.exception("Groq API call failed: %s", exc)
+        return fallback
 
-    summary_text = content[:200] if content else "Interpretation unavailable"
+    try:
+        content = data["choices"][0]["message"]["content"]
+        print("Groq content:", content[:500])
+        parsed = json.loads(content)
+    except (KeyError, IndexError, json.JSONDecodeError) as exc:
+        logger.warning("Failed to parse Groq response: %s", exc)
+        return fallback
+
+    headline = str(parsed.get("headline", "")).strip() or fallback["headline"]
+    summary = str(parsed.get("summary", "")).strip() or fallback["summary"]
+    advice = str(parsed.get("advice", "")).strip() or fallback["advice"]
+
     return {
-        "headline": "AI Interpretation",
-        "summary": summary_text,
-        "advice": "Trust your inner process.",
+        "headline": headline,
+        "summary": summary,
+        "advice": advice,
     }
 
 
@@ -927,10 +954,10 @@ def interpretation():
         ai_result = _request_refined_interpretation(archetype, chart_dict)
     except AIError as exc:
         logger.error("Groq interpretation error: %s", exc)
-        ai_result = get_ai_interpretation(chart_dict) or _default_fallback()
+        ai_result = get_ai_interpretation(chart_dict)
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Unexpected interpretation failure")
-        ai_result = get_ai_interpretation(chart_dict) or _default_fallback()
+        ai_result = get_ai_interpretation(chart_dict)
 
     response_body = {
         "themes": archetype.get("core_themes", []),
