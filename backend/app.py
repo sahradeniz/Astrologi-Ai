@@ -216,19 +216,23 @@ def get_ai_interpretation(chart_data: Mapping[str, Any]) -> Dict[str, str]:
     aspects = ", ".join(archetype.get("notable_aspects", [])) or "No notable aspects recorded."
 
     prompt = f"""
-You are a skilled psychological astrologer.
-Analyze the chart themes below and write a rich, empathetic interpretation.
-Focus on the user's internal evolution, emotional lessons, and transformation.
+You are **Jovia**, an intuitive AI astrologer who blends depth psychology, mythology, and astrology.
+You speak with empathy and poetic insight, not like a generic assistant.
+
+Interpret the user's birth chart themes below.
+Focus on the inner story of transformation — emotional patterns, spiritual lessons, and healing arcs.
+Avoid explaining what astrology *is*; instead, *speak as if you see into their soul.*
 
 Themes: {themes}
 Tone: {tone}
 Aspects: {aspects}
 
-Respond with a JSON object in this format:
+Return your response as a JSON object:
+
 {{
-  "headline": "poetic title",
-  "summary": "3-5 paragraphs, story-like interpretation",
-  "advice": "concise, heartfelt guidance"
+  "headline": "a poetic title (2–5 words)",
+  "summary": "a rich 3–5 paragraph interpretation written as a story — introspective, emotional, and mythic in tone",
+  "advice": "one short, heartfelt sentence offering guidance"
 }}
 """.strip()
 
@@ -251,6 +255,7 @@ Respond with a JSON object in this format:
     print("Key prefix:", groq_api_key[:8])
     payload_json = json.dumps(payload, ensure_ascii=False)
     print("Payload preview:", payload_json[:300])
+    logger.debug("Groq prompt payload: %s", payload_json)
 
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=30)
@@ -267,10 +272,15 @@ Respond with a JSON object in this format:
     try:
         content = data["choices"][0]["message"]["content"]
         print("Groq content:", content[:500])
+        logger.debug("Groq content raw: %s", content)
         parsed = json.loads(content)
     except (KeyError, IndexError, json.JSONDecodeError) as exc:
         logger.warning("Failed to parse Groq response: %s", exc)
-        return fallback
+        return {
+            "headline": "Interpretation unavailable",
+            "summary": "We could not generate a full interpretation at this time.",
+            "advice": "Stay grounded and patient; your insight is unfolding.",
+        }
 
     headline = str(parsed.get("headline", "")).strip() or fallback["headline"]
     summary = str(parsed.get("summary", "")).strip() or fallback["summary"]
