@@ -257,6 +257,8 @@ Return your response as a JSON object:
     print("Payload preview:", payload_json[:300])
     logger.debug("Groq prompt payload: %s", payload_json)
 
+    time.sleep(0.5)
+
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=30)
         print("Groq response status:", response.status_code)
@@ -271,11 +273,32 @@ Return your response as a JSON object:
 
     try:
         content = data["choices"][0]["message"]["content"]
-        print("Groq content:", content[:500])
-        logger.debug("Groq content raw: %s", content)
+    except (KeyError, IndexError) as exc:
+        logger.warning("Unexpected Groq response structure: %s", exc)
+        return fallback
+
+    print("RAW GROQ OUTPUT:", content)
+    logger.debug("Groq content raw: %s", content)
+
+    parsed = None
+    try:
         parsed = json.loads(content)
-    except (KeyError, IndexError, json.JSONDecodeError) as exc:
-        logger.warning("Failed to parse Groq response: %s", exc)
+        print("PARSE SUCCESS:", True)
+    except json.JSONDecodeError:
+        print("PARSE SUCCESS:", False)
+        match = re.search(r"\{.*\}", content, re.DOTALL)
+        if match:
+            fragment = match.group(0)
+            try:
+                parsed = json.loads(fragment)
+                print("PARSE SUCCESS:", True)
+            except json.JSONDecodeError:
+                print("PARSE SUCCESS:", False)
+                parsed = None
+        else:
+            parsed = None
+
+    if not parsed:
         return {
             "headline": "Interpretation unavailable",
             "summary": "We could not generate a full interpretation at this time.",
