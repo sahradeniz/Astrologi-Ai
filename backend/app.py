@@ -188,10 +188,10 @@ def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Ma
     system_prompt = (
         "You are a calm, wise, mentor-like astrologer. "
         "Study the provided natal chart context and compose a response in JSON with keys "
-        "'headline', 'summary', and 'themes'. Headline must be a short poetic title in English, "
-        "no more than 10 words. Summary must be one paragraph that reflects the psychological and "
-        "spiritual message with an emotionally resonant, reassuring tone. Themes must be a "
-        "comma-separated list of keywords."
+        "'headline', 'summary', and 'advice'. Headline must be a short poetic title in English, "
+        "no more than 10 words. Summary must be exactly one paragraph that expresses the emotional and "
+        "spiritual meaning of the themes in a reflective, compassionate tone. Advice must be a brief, "
+        "mentor-like suggestion for personal growth."
     )
 
     user_payload = {
@@ -253,16 +253,12 @@ def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Ma
 
     headline = str(parsed.get("headline", "")).strip() or "Interpretation Unavailable"
     summary = str(parsed.get("summary", "")).strip() or "We could not generate an interpretation."
-    theme_keywords = str(parsed.get("themes", "")).strip()
-
-    if not theme_keywords:
-        core_themes = archetype.get("core_themes") or []
-        theme_keywords = ", ".join(core_themes)
+    advice = str(parsed.get("advice", "")).strip() or "Take time to reflect gently on your current path."
 
     return {
         "headline": headline,
         "summary": summary,
-        "themes": theme_keywords,
+        "advice": advice,
     }
 
 def chart_to_summary(chart: Mapping[str, Any]) -> str:
@@ -859,14 +855,14 @@ def interpretation():
         ai_result = {
             "headline": "Interpretation unavailable",
             "summary": "We could not reach the interpretation service, yet your chart invites patient reflection.",
-            "themes": ", ".join(archetype.get("core_themes", [])),
+            "advice": "Honour your intuition and stay present with your inner shifts.",
         }
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Unexpected interpretation failure")
         ai_result = {
             "headline": "Interpretation unavailable",
             "summary": "An unexpected error occurred while generating the interpretation.",
-            "themes": ", ".join(archetype.get("core_themes", [])),
+            "advice": "Return to grounding practices until clarity returns.",
         }
 
     response_body = {
