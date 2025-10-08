@@ -181,6 +181,66 @@ def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
     return "AI interpretation unavailable."
 
 
+def get_ai_interpretation(chart_data: Any) -> Dict[str, str] | None:
+    """Fetch a concise interpretation using Groq and provide basic debugging output."""
+
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    groq_model = os.getenv("GROQ_MODEL", GROQ_MODEL)
+    if not groq_api_key:
+        logger.warning("⚠️ GROQ_API_KEY not found; cannot call Groq.")
+        return None
+
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {groq_api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": groq_model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are an AI astrologer who interprets birth charts in a warm, "
+                    "intuitive and psychologically insightful tone."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Interpret this astrological chart data: {chart_data}",
+            },
+        ],
+        "max_tokens": 400,
+    }
+
+    key_preview = groq_api_key[:10]
+    print("🔮 Sending request to Groq with model:", groq_model)
+    print("🔑 Using key starts with:", key_preview)
+
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        status = response.status_code
+        body_preview = response.text[:500]
+        print("📨 Groq response status:", status)
+        print("📄 Groq response preview:", body_preview)
+        if status == 200:
+            data = response.json()
+            content = data["choices"][0]["message"]["content"]
+            return {
+                "headline": "AI Interpretation",
+                "summary": content[:200],
+                "advice": "Trust your inner process.",
+            }
+        error_message = f"Groq error: {status} {response.text}"
+        logger.error(error_message)
+        print(error_message)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Groq API call failed: %s", exc)
+        print("Groq API call failed:", exc)
+
+    return None
+
+
 def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Mapping[str, Any]) -> Dict[str, str]:
     """Call Groq to craft a poetic interpretation informed by extracted themes."""
 
@@ -212,6 +272,9 @@ def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Ma
             "Authorization": f"Bearer {groq_api_key}",
             "Content-Type": "application/json",
         }
+        key_preview = (groq_api_key or "")[:10]
+        print("🔮 Sending request to Groq with model:", GROQ_MODEL)
+        print("🔑 Using key starts with:", key_preview)
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers=headers,
