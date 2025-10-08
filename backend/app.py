@@ -1,11 +1,11 @@
 """Astrologi-AI Backend MVP: Flask REST API for astrology charts."""
 from __future__ import annotations
 
+import json
 import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
-import json
 from typing import Any, Dict, Iterable, Mapping, Sequence
 
 import pytz
@@ -17,7 +17,7 @@ from flask_cors import CORS
 
 from backend.archetype_engine import extract_archetype_data
 
-load_dotenv()
+load_dotenv(dotenv_path="./.env")
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -39,10 +39,12 @@ try:
 except Exception as exc:  # pragma: no cover - depends on runtime environment
     logger.error("Failed to set Swiss Ephemeris path: %s", exc)
 
-OPENCAGE_KEY = os.environ.get("OPENCAGE_API_KEY")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama3-8b")
-GROQ_API_URL = os.environ.get("GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions")
+OPENCAGE_KEY = os.getenv("OPENCAGE_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    logger.warning("⚠️ GROQ_API_KEY not found in environment.")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama3-8b")
+GROQ_API_URL = os.getenv("GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions")
 
 PLANETS = {
     "Sun": swe.SUN,
@@ -182,7 +184,9 @@ def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
 def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Mapping[str, Any]) -> Dict[str, str]:
     """Call Groq to craft a poetic interpretation informed by extracted themes."""
 
-    if not GROQ_API_KEY:
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if not groq_api_key:
+        logger.warning("⚠️ GROQ_API_KEY not found in environment.")
         raise AIError("GROQ_API_KEY yapılandırılmadı.")
 
     system_prompt = (
@@ -209,47 +213,40 @@ def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Ma
         },
     )
 
-    request_payload = {
-        "model": "mixtral-8x7b",
-        "messages": list(messages),
-        "temperature": 0.8,
-        "max_tokens": 400,
-    }
-
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json",
-    }
-
     try:
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
-            json=request_payload,
-            headers=headers,
+            headers={
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "mixtral-8x7b",
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {
+                        "role": "user",
+                        "content": json.dumps(user_payload, ensure_ascii=False),
+                    },
+                ],
+                "max_tokens": 400,
+                "temperature": 0.8,
+            },
             timeout=30,
         )
         response.raise_for_status()
-    except requests.RequestException as exc:
-        raise AIError("Groq interpretation isteği başarısız oldu.") from exc
-
-    try:
         data = response.json()
-    except ValueError as exc:  # pragma: no cover - defensive
-        raise AIError("Groq yanıtı JSON olarak çözülemedi.") from exc
-
-    choices = data.get("choices") or []
-    if not choices:
-        raise AIError("Groq yanıtı beklenen seçenekleri içermiyor.")
-
-    message = choices[0].get("message") or {}
-    content = (message.get("content") or "").strip()
-    if not content:
-        raise AIError("Groq içerik döndürmedi.")
+        ai_message = data["choices"][0]["message"]["content"]
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.warning("Groq request failed: %s", exc)
+        if hasattr(exc, "response") and getattr(exc, "response") is not None:
+            logger.warning("Groq error body: %s", exc.response.text)
+        ai_message = "Interpretation unavailable — Groq API error."
 
     try:
-        parsed = json.loads(content)
-    except json.JSONDecodeError as exc:
-        raise AIError("Groq yanıtı geçerli JSON değil.") from exc
+        parsed = json.loads(ai_message)
+    except json.JSONDecodeError:
+        raise AIError("Groq yanıtı geçerli JSON değil.")
 
     headline = str(parsed.get("headline", "")).strip() or "Interpretation Unavailable"
     summary = str(parsed.get("summary", "")).strip() or "We could not generate an interpretation."
