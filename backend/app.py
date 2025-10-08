@@ -14,18 +14,19 @@ from typing import Any, Dict, Iterable, Mapping, Sequence
 import pytz
 import requests
 import swisseph as swe
-from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from dotenv import load_dotenv
 
 # Ensure project root is on sys.path when running as a script.
-ROOT_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent
+ROOT_DIR = BASE_DIR.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from backend.archetype_engine import extract_archetype_data
 
-load_dotenv(dotenv_path="./.env")
+load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
