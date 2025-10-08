@@ -4,7 +4,9 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import sys
+import time
 import traceback
 from dataclasses import dataclass
 from datetime import datetime
@@ -259,44 +261,51 @@ Return your response as a JSON object:
 
     time.sleep(0.5)
 
+    content = ""
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=30)
         print("Groq response status:", response.status_code)
         print("Groq response preview:", response.text[:500])
         response.raise_for_status()
         data = response.json()
+        choices = data.get("choices") if isinstance(data, dict) else None
+        if choices and isinstance(choices, list) and choices:
+            message = choices[0].get("message") if isinstance(choices[0], dict) else None
+            content = (message or {}).get("content", "") if isinstance(message, dict) else ""
+        else:
+            logger.warning("Groq response missing choices array.")
+            content = ""
     except Exception as exc:  # pylint: disable=broad-except
         print("Groq API call failed:", exc)
         traceback.print_exc()
         logger.exception("Groq API call failed: %s", exc)
         return fallback
 
-    try:
-        content = data["choices"][0]["message"]["content"]
-    except (KeyError, IndexError) as exc:
-        logger.warning("Unexpected Groq response structure: %s", exc)
-        return fallback
-
     print("RAW GROQ OUTPUT:", content)
     logger.debug("Groq content raw: %s", content)
 
     parsed = None
-    try:
-        parsed = json.loads(content)
-        print("PARSE SUCCESS:", True)
-    except json.JSONDecodeError:
-        print("PARSE SUCCESS:", False)
-        match = re.search(r"\{.*\}", content, re.DOTALL)
-        if match:
-            fragment = match.group(0)
-            try:
-                parsed = json.loads(fragment)
-                print("PARSE SUCCESS:", True)
-            except json.JSONDecodeError:
-                print("PARSE SUCCESS:", False)
+    if content:
+        try:
+            parsed = json.loads(content)
+            print("PARSE SUCCESS:", True)
+        except json.JSONDecodeError:
+            print("PARSE SUCCESS:", False)
+            fragment = None
+            match = re.search(r"\{.*\}", content, re.DOTALL)
+            if match:
+                fragment = match.group(0)
+            if fragment:
+                try:
+                    parsed = json.loads(fragment)
+                    print("PARSE SUCCESS:", True)
+                except json.JSONDecodeError:
+                    print("PARSE SUCCESS:", False)
+                    parsed = None
+            else:
                 parsed = None
-        else:
-            parsed = None
+    else:
+        print("PARSE SUCCESS:", False)
 
     if not parsed:
         return {
