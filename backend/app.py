@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, Iterable, Mapping, Sequence
@@ -15,7 +16,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from archetype_engine import extract_archetype_data
+from backend.archetype_engine import extract_archetype_data
 
 load_dotenv(dotenv_path="./.env")
 
@@ -213,32 +214,38 @@ def get_ai_interpretation(chart_data: Any) -> Dict[str, str] | None:
         "max_tokens": 400,
     }
 
-    key_preview = groq_api_key[:10]
-    print("🔮 Sending request to Groq with model:", groq_model)
-    print("🔑 Using key starts with:", key_preview)
+    payload_json = json.dumps(payload, ensure_ascii=False)
+    key_prefix = groq_api_key[:8]
+    print("Sending to Groq with model:", groq_model)
+    print("Key prefix:", key_prefix)
+    print("Payload preview:", payload_json[:300])
 
+    content: str | None = None
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=30)
         status = response.status_code
-        body_preview = response.text[:500]
-        print("📨 Groq response status:", status)
-        print("📄 Groq response preview:", body_preview)
+        response_text = response.text
+        print("Groq response status:", status)
+        print("Groq response preview:", response_text[:500])
         if status == 200:
             data = response.json()
             content = data["choices"][0]["message"]["content"]
-            return {
-                "headline": "AI Interpretation",
-                "summary": content[:200],
-                "advice": "Trust your inner process.",
-            }
-        error_message = f"Groq error: {status} {response.text}"
-        logger.error(error_message)
-        print(error_message)
+            print("Groq content:", content)
+        else:
+            warning_message = f"⚠️ Groq returned non-200 status: {status}"
+            print(warning_message)
+            logger.warning(warning_message)
     except Exception as exc:  # pylint: disable=broad-except
-        logger.exception("Groq API call failed: %s", exc)
         print("Groq API call failed:", exc)
+        traceback.print_exc()
+        logger.exception("Groq API call failed: %s", exc)
 
-    return None
+    summary_text = content[:200] if content else "Interpretation unavailable"
+    return {
+        "headline": "AI Interpretation",
+        "summary": summary_text,
+        "advice": "Trust your inner process.",
+    }
 
 
 def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Mapping[str, Any]) -> Dict[str, str]:
