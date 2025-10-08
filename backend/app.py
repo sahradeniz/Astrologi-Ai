@@ -4,9 +4,11 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sys
 import traceback
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Sequence
 
 import pytz
@@ -15,6 +17,11 @@ import swisseph as swe
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+
+# Ensure project root is on sys.path when running as a script.
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from backend.archetype_engine import extract_archetype_data
 
