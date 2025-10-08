@@ -383,22 +383,6 @@ def julian_day(utc_dt: datetime) -> float:
     return swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, ut, swe.GREG_CAL)
 
 
-def _flatten_calc_result(result: Any) -> list[float]:
-    """Return a flat list of numeric values from Swiss Ephemeris responses."""
-
-    flat: list[float] = []
-
-    def _collect(item: Any) -> None:
-        if isinstance(item, (tuple, list)):
-            for sub in item:
-                _collect(sub)
-        elif isinstance(item, (int, float)):
-            flat.append(float(item))
-
-    _collect(result)
-    return flat
-
-
 def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str, Dict[str, Any]]:
     """Calculate planetary longitudes with safe unpacking and metadata."""
 
@@ -431,30 +415,44 @@ def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str
                     return idx
         return None
 
-    for name, code in planet_codes.items():
+    for planet_name, planet_id in planet_codes.items():
         try:
-            raw_result = swe.calc_ut(jd_ut, code)
-            values = _flatten_calc_result(raw_result)
+            result = swe.calc_ut(jd_ut, planet_id)
 
-            if not values:
-                raise ValueError("Swiss Ephemeris returned no positional values.")
+            values = result[0] if isinstance(result[0], (list, tuple)) else result
 
-            lon = float(values[0]) % 360
-            lat_value = float(values[1]) if len(values) > 1 else None
-            speed_value = float(values[3]) if len(values) > 3 else 0.0
+            lon = values[0] if len(values) > 0 else None
+            lat = values[1] if len(values) > 1 else None
+            dist = values[2] if len(values) > 2 else None
+            speed = values[3] if len(values) > 3 else None
 
-            house = resolve_house(lon)
+            lon_float = float(lon) if lon is not None else None
+            lat_float = float(lat) if lat is not None else None
+            dist_float = float(dist) if dist is not None else None
+            speed_float = float(speed) if speed is not None else None
 
-            planets[name] = {
-                "longitude": round(lon, 2),
-                "latitude": round(lat_value, 2) if lat_value is not None else None,
-                "sign": get_zodiac_sign(lon),
+            house = resolve_house(lon_float) if lon_float is not None else None
+
+            planets[planet_name] = {
+                "longitude": round(lon_float % 360, 2) if lon_float is not None else None,
+                "latitude": round(lat_float, 2) if lat_float is not None else None,
+                "distance": round(dist_float, 4) if dist_float is not None else None,
+                "speed": round(speed_float, 4) if speed_float is not None else None,
+                "sign": get_zodiac_sign(lon_float) if lon_float is not None else None,
                 "house": house,
-                "speed": round(speed_value, 2),
             }
-        except Exception as exc:  # pragma: no cover
-            logger.warning("Failed to calculate %s: %s", name, exc)
-            planets[name] = {"error": str(exc)}
+
+            if planet_name == "Sun" and lon_float is not None:
+                logger.info(
+                    "☀️ Sun calculated successfully → lon=%.4f, lat=%s, dist=%s, speed=%s",
+                    lon_float,
+                    f"{lat_float:.4f}" if lat_float is not None else "None",
+                    f"{dist_float:.4f}" if dist_float is not None else "None",
+                    speed_float,
+                )
+
+        except Exception as e:
+            logger.warning("Failed to calculate %s: %s", planet_name, e)
 
     return planets
 
