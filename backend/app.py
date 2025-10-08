@@ -15,6 +15,8 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+from backend.archetype_engine import extract_archetype_data
+
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
@@ -175,6 +177,93 @@ def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
     except Exception as exc:  # pragma: no cover - defensive
         logger.warning("Groq response parsing failed: %s", exc)
     return "AI interpretation unavailable."
+
+
+def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Mapping[str, Any]) -> Dict[str, str]:
+    """Call Groq to craft a poetic interpretation informed by extracted themes."""
+
+    if not GROQ_API_KEY:
+        raise AIError("GROQ_API_KEY yapılandırılmadı.")
+
+    system_prompt = (
+        "You are a calm, wise, mentor-like astrologer. "
+        "Study the provided natal chart context and compose a response in JSON with keys "
+        "'headline', 'summary', and 'themes'. Headline must be a short poetic title in English, "
+        "no more than 10 words. Summary must be one paragraph that reflects the psychological and "
+        "spiritual message with an emotionally resonant, reassuring tone. Themes must be a "
+        "comma-separated list of keywords."
+    )
+
+    user_payload = {
+        "core_themes": archetype.get("core_themes", []),
+        "story_tone": archetype.get("story_tone"),
+        "notable_aspects": archetype.get("notable_aspects", []),
+        "chart_data": chart_data,
+    }
+
+    messages: Sequence[Dict[str, str]] = (
+        {"role": "system", "content": system_prompt},
+        {
+            "role": "user",
+            "content": json.dumps(user_payload, ensure_ascii=False),
+        },
+    )
+
+    request_payload = {
+        "model": "mixtral-8x7b",
+        "messages": list(messages),
+        "temperature": 0.8,
+        "max_tokens": 400,
+    }
+
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            json=request_payload,
+            headers=headers,
+            timeout=30,
+        )
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        raise AIError("Groq interpretation isteği başarısız oldu.") from exc
+
+    try:
+        data = response.json()
+    except ValueError as exc:  # pragma: no cover - defensive
+        raise AIError("Groq yanıtı JSON olarak çözülemedi.") from exc
+
+    choices = data.get("choices") or []
+    if not choices:
+        raise AIError("Groq yanıtı beklenen seçenekleri içermiyor.")
+
+    message = choices[0].get("message") or {}
+    content = (message.get("content") or "").strip()
+    if not content:
+        raise AIError("Groq içerik döndürmedi.")
+
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError as exc:
+        raise AIError("Groq yanıtı geçerli JSON değil.") from exc
+
+    headline = str(parsed.get("headline", "")).strip() or "Interpretation Unavailable"
+    summary = str(parsed.get("summary", "")).strip() or "We could not generate an interpretation."
+    theme_keywords = str(parsed.get("themes", "")).strip()
+
+    if not theme_keywords:
+        core_themes = archetype.get("core_themes") or []
+        theme_keywords = ", ".join(core_themes)
+
+    return {
+        "headline": headline,
+        "summary": summary,
+        "themes": theme_keywords,
+    }
 
 def chart_to_summary(chart: Mapping[str, Any]) -> str:
     """Convert chart data into a textual summary for the AI assistant."""
@@ -738,6 +827,55 @@ def _handle_chat_request():
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Failed to process chat message")
         return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/interpretation", methods=["POST", "OPTIONS"])
+def interpretation():
+    if request.method == "OPTIONS":
+        return "", 204
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, Mapping):
+        logger.warning("Interpretation endpoint received invalid JSON payload: %s", payload)
+        return jsonify({"error": "Invalid JSON payload."}), 400
+
+    chart_data = payload.get("chart_data")
+    if not isinstance(chart_data, Mapping):
+        logger.warning("Interpretation endpoint missing chart_data: %s", chart_data)
+        return jsonify({"error": "chart_data must be provided as an object."}), 400
+
+    chart_dict = dict(chart_data)
+
+    try:
+        archetype = extract_archetype_data(chart_dict)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Failed to extract archetype data")
+        return jsonify({"error": "Failed to extract archetype data."}), 500
+
+    try:
+        ai_result = _request_refined_interpretation(archetype, chart_dict)
+    except AIError as exc:
+        logger.error("Groq interpretation error: %s", exc)
+        ai_result = {
+            "headline": "Interpretation unavailable",
+            "summary": "We could not reach the interpretation service, yet your chart invites patient reflection.",
+            "themes": ", ".join(archetype.get("core_themes", [])),
+        }
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Unexpected interpretation failure")
+        ai_result = {
+            "headline": "Interpretation unavailable",
+            "summary": "An unexpected error occurred while generating the interpretation.",
+            "themes": ", ".join(archetype.get("core_themes", [])),
+        }
+
+    response_body = {
+        "themes": archetype.get("core_themes", []),
+        "ai_interpretation": ai_result,
+        "tone": archetype.get("story_tone"),
+    }
+
+    return jsonify(response_body), 200
 
 
 @app.route("/api/calculate-natal-chart", methods=["POST", "OPTIONS"])
