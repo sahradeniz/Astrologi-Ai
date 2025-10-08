@@ -43,7 +43,7 @@ OPENCAGE_KEY = os.getenv("OPENCAGE_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     logger.warning("⚠️ GROQ_API_KEY not found in environment.")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama3-8b")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 GROQ_API_URL = os.getenv("GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions")
 
 PLANETS = {
@@ -205,29 +205,21 @@ def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Ma
         "chart_data": chart_data,
     }
 
-    messages: Sequence[Dict[str, str]] = (
-        {"role": "system", "content": system_prompt},
-        {
-            "role": "user",
-            "content": json.dumps(user_payload, ensure_ascii=False),
-        },
-    )
+    user_prompt = json.dumps(user_payload, ensure_ascii=False)
 
     try:
+        headers = {
+            "Authorization": f"Bearer {groq_api_key}",
+            "Content-Type": "application/json",
+        }
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {groq_api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=headers,
             json={
-                "model": "mixtral-8x7b",
+                "model": GROQ_MODEL,
                 "messages": [
                     {"role": "system", "content": system_prompt},
-                    {
-                        "role": "user",
-                        "content": json.dumps(user_payload, ensure_ascii=False),
-                    },
+                    {"role": "user", "content": user_prompt},
                 ],
                 "max_tokens": 400,
                 "temperature": 0.8,
@@ -235,6 +227,7 @@ def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Ma
             timeout=30,
         )
         response.raise_for_status()
+        logger.info("Groq model response: %s", response.status_code)
         data = response.json()
         ai_message = data["choices"][0]["message"]["content"]
     except Exception as exc:  # pylint: disable=broad-except
