@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from backend.archetype_engine import extract_archetype_data
+from archetype_engine import extract_archetype_data
 
 load_dotenv(dotenv_path="./.env")
 
