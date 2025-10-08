@@ -908,22 +908,21 @@ def interpretation():
         logger.exception("Failed to extract archetype data")
         return jsonify({"error": "Failed to extract archetype data."}), 500
 
+    def _default_fallback() -> Dict[str, str]:
+        return {
+            "headline": "Interpretation unavailable",
+            "summary": "We could not generate an interpretation at this time.",
+            "advice": "Return to grounding practices until clarity returns.",
+        }
+
     try:
         ai_result = _request_refined_interpretation(archetype, chart_dict)
     except AIError as exc:
         logger.error("Groq interpretation error: %s", exc)
-        ai_result = {
-            "headline": "Interpretation unavailable",
-            "summary": "We could not reach the interpretation service, yet your chart invites patient reflection.",
-            "advice": "Honour your intuition and stay present with your inner shifts.",
-        }
+        ai_result = get_ai_interpretation(chart_dict) or _default_fallback()
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Unexpected interpretation failure")
-        ai_result = {
-            "headline": "Interpretation unavailable",
-            "summary": "An unexpected error occurred while generating the interpretation.",
-            "advice": "Return to grounding practices until clarity returns.",
-        }
+        ai_result = get_ai_interpretation(chart_dict) or _default_fallback()
 
     response_body = {
         "themes": archetype.get("core_themes", []),
