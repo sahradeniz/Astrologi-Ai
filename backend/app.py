@@ -226,14 +226,17 @@ def get_ai_interpretation(chart_data: Mapping[str, Any]) -> Dict[str, Any]:
             "tone": tone_value,
         }
 
+    fallback_result = build_result(fallback_ai)
+
     groq_api_key = os.getenv("GROQ_API_KEY")
     groq_model = os.getenv("GROQ_MODEL", GROQ_MODEL)
     if not groq_api_key:
         logger.warning("⚠️ GROQ_API_KEY not found; cannot call Groq.")
-        return build_result(fallback_ai)
+        return fallback_result
 
     themes = ", ".join(core_themes) or "inner exploration"
     aspects = ", ".join(archetype.get("notable_aspects", [])) or "No notable aspects recorded."
+    tone = tone_value
 
     prompt = f"""
 You are **Jovia**, an intuitive AI astrologer who blends depth psychology, mythology, and astrology.
@@ -244,7 +247,7 @@ Focus on the inner story of transformation — emotional patterns, spiritual les
 Avoid explaining what astrology *is*; instead, *speak as if you see into their soul.*
 
 Themes: {themes}
-Tone: {tone_value}
+Tone: {tone}
 Aspects: {aspects}
 
 Return your response as a JSON object:
@@ -297,7 +300,7 @@ Return your response as a JSON object:
         print("Groq API call failed:", exc)
         traceback.print_exc()
         logger.exception("Groq API call failed: %s", exc)
-        return build_result(fallback_ai)
+        return fallback_result
 
     print("RAW GROQ OUTPUT:", content)
     logger.debug("Groq content raw: %s", content)
@@ -327,7 +330,7 @@ Return your response as a JSON object:
         print("PARSE SUCCESS:", False)
 
     if not parsed:
-        return build_result(fallback_ai)
+        return fallback_result
 
     headline = str(parsed.get("headline", "")).strip() or fallback_ai["headline"]
     summary = str(parsed.get("summary", "")).strip() or fallback_ai["summary"]
