@@ -1,11 +1,4 @@
-import {
-  Box,
-  Container,
-  Flex,
-  Icon,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Container, Flex } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BrowserRouter,
@@ -29,6 +22,10 @@ import StoryStudio from "./pages/StoryStudio.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
 import ThisYearYou from "./pages/ThisYearYou.jsx";
 import Settings from "./pages/Settings.jsx";
+import SplashScreen from "./pages/SplashScreen.jsx";
+import InterestSelection from "./pages/InterestSelection.jsx";
+import StoryView from "./pages/StoryView.jsx";
+import NavigationBar from "./components/NavigationBar.jsx";
 
 const MotionBox = motion(Box);
 
@@ -54,7 +51,7 @@ const navItems = [
 const AppShell = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const showBottomNav = location.pathname !== "/";
+  const showBottomNav = !["/", "/onboarding"].includes(location.pathname);
 
   return (
     <Flex
@@ -71,7 +68,23 @@ const AppShell = () => {
                 path="/"
                 element={
                   <PageWrapper>
+                    <SplashScreen />
+                  </PageWrapper>
+                }
+              />
+              <Route
+                path="/onboarding"
+                element={
+                  <PageWrapper>
                     <Onboarding />
+                  </PageWrapper>
+                }
+              />
+              <Route
+                path="/interests"
+                element={
+                  <PageWrapper>
+                    <InterestSelection />
                   </PageWrapper>
                 }
               />
@@ -108,6 +121,14 @@ const AppShell = () => {
                 }
               />
               <Route
+                path="/story/:id"
+                element={
+                  <PageWrapper>
+                    <StoryView />
+                  </PageWrapper>
+                }
+              />
+              <Route
                 path="/this-year-you"
                 element={
                   <PageWrapper>
@@ -130,57 +151,11 @@ const AppShell = () => {
       </Box>
 
       {showBottomNav && (
-        <Flex
-          position="fixed"
-          bottom={{ base: 4, md: 6 }}
-          left="50%"
-          transform="translateX(-50%)"
-          bg="whiteAlpha.800"
-          backdropFilter="blur(16px)"
-          borderRadius="full"
-          boxShadow="xl"
-          px={4}
-          py={2}
-          align="center"
-          gap={2}
-          zIndex={1000}
-          border="1px solid rgba(255,255,255,0.4)"
-        >
-          {navItems.map((item) => {
-            const isActive =
-              location.pathname === item.path ||
-              (item.path !== "/home" && location.pathname.startsWith(item.path));
-
-            return (
-              <Flex
-                key={item.path}
-                as="button"
-                onClick={() => navigate(item.path)}
-                align="center"
-                direction="column"
-                px={{ base: 3, md: 4 }}
-                py={2}
-                borderRadius="full"
-                bg={isActive ? "blackAlpha.100" : "transparent"}
-                transition="all 0.2s ease"
-              >
-                <Icon
-                  as={item.icon}
-                  boxSize={5}
-                  color={isActive ? "purple.600" : "gray.600"}
-                />
-                <Text
-                  fontSize="xs"
-                  mt={1}
-                  color={isActive ? "purple.600" : "gray.600"}
-                  fontWeight={isActive ? "semibold" : "medium"}
-                >
-                  {item.label}
-                </Text>
-              </Flex>
-            );
-          })}
-        </Flex>
+        <NavigationBar
+          items={navItems}
+          currentPath={location.pathname}
+          onNavigate={navigate}
+        />
       )}
     </Flex>
   );
