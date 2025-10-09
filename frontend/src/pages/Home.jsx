@@ -1,177 +1,223 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
 import {
+  Badge,
   Box,
   Button,
-  FormControl,
-  FormLabel,
+  Container,
   Heading,
+  HStack,
+  Icon,
   Input,
   SimpleGrid,
+  Spinner,
   Stack,
   Text,
-  useToast
-} from '@chakra-ui/react';
+  VStack,
+  useToast,
+} from "@chakra-ui/react";
+import { motion } from "framer-motion";
+import { Sparkles, Search, RefreshCw } from "lucide-react";
 
-import { requestNatalChart } from '../lib/api.js';
+import { getInterpretation } from "../lib/api.js";
 
-function HomePage() {
-  const toast = useToast();
-  const [form, setForm] = useState({
-    name: '',
-    date: '',
-    time: '',
-    city: ''
-  });
+const MotionBox = motion(Box);
+
+const fallbackInsight = {
+  headline: "Your Cosmic Insight",
+  summary:
+    "Take a breath. The sky is rearranging itself so you can rediscover what feels luminous to you.",
+  advice: "Trust the cadence of your intuition today.",
+};
+
+const Home = () => {
+  const [chart, setChart] = useState(null);
+  const [insight, setInsight] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const toast = useToast();
 
-  const handleChange = (field) => (event) => {
-    const { value } = event.target;
-    setForm((current) => ({ ...current, [field]: value }));
-  };
+  useEffect(() => {
+    const stored = localStorage.getItem("userChart");
+    if (stored) {
+      setChart(JSON.parse(stored));
+    }
+  }, []);
 
-  const showError = (message) => {
-    toast({
-      title: 'Hata',
-      description: message,
-      status: 'error',
-      position: 'top',
-      duration: 4000,
-      isClosable: true
-    });
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const loadInsight = async () => {
+    if (!chart) return;
     setLoading(true);
-
     try {
-      const payload = {
-        name: form.name,
-        date: form.date,
-        time: form.time,
-        city: form.city
-      };
-      const data = await requestNatalChart(payload);
-      setResult(data);
+      const data = await getInterpretation(chart);
+      setInsight(data.ai_interpretation);
+      localStorage.setItem("userInsight", JSON.stringify(data));
     } catch (error) {
-      showError(error.message);
+      toast({
+        title: "We lost the signal",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const canSubmit = form.date && form.time && form.city.trim();
+  useEffect(() => {
+    if (!chart) return;
+    const cached = localStorage.getItem("userInsight");
+    if (cached) {
+      setInsight(JSON.parse(cached).ai_interpretation);
+    } else {
+      loadInsight();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chart]);
+
+  const dailyThemes = useMemo(() => chart?.core_themes || [], [chart]);
+
+  if (!chart) {
+    return (
+      <Container maxW="container.sm" py={{ base: 16, md: 24 }}>
+        <VStack spacing={6} align="center" textAlign="center">
+          <Heading color="white" size="lg">
+            Welcome to Jovia
+          </Heading>
+          <Text color="whiteAlpha.800">
+            Tell us about your birth chart first so we can personalize your insights.
+          </Text>
+          <Button
+            size="lg"
+            borderRadius="full"
+            bgGradient="linear(to-r, #8E2DE2, #4A00E0)"
+            color="white"
+            _hover={{ opacity: 0.9 }}
+            onClick={() => window.location.assign("/")}
+          >
+            Start Onboarding
+          </Button>
+        </VStack>
+      </Container>
+    );
+  }
 
   return (
-    <Stack spacing={8}>
-      <Box>
-        <Heading size="xl" mb={2}>
-          Astrologi-AI
-        </Heading>
-        <Text fontSize="md" color="gray.300">
-          Doğum haritanı hesapla ve gezegenlerin konumlarını keşfet.
-        </Text>
-      </Box>
-
-      <Box
-        as="form"
-        onSubmit={handleSubmit}
-        p={6}
-        bg="whiteAlpha.100"
-        borderRadius="2xl"
-        borderWidth="1px"
-        borderColor="whiteAlpha.200"
-      >
-        <Stack spacing={4}>
-          <Heading size="md">Doğum Haritası Hesapla</Heading>
-
-          <FormControl>
-            <FormLabel>İsim (opsiyonel)</FormLabel>
-            <Input
-              value={form.name}
-              onChange={handleChange('name')}
-              placeholder="Adını yaz"
-            />
-          </FormControl>
-
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            <FormControl isRequired>
-              <FormLabel>Doğum Tarihi</FormLabel>
-              <Input
-                type="date"
-                value={form.date}
-                onChange={handleChange('date')}
-              />
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel>Doğum Saati</FormLabel>
-              <Input
-                type="time"
-                value={form.time}
-                onChange={handleChange('time')}
-              />
-            </FormControl>
-          </SimpleGrid>
-
-          <FormControl isRequired>
-            <FormLabel>Doğum Şehri</FormLabel>
-            <Input
-              value={form.city}
-              onChange={handleChange('city')}
-              placeholder="Örn. İstanbul, Türkiye"
-            />
-          </FormControl>
-
-          <Button
-            type="submit"
-            colorScheme="teal"
-            alignSelf="flex-start"
-            isLoading={loading}
-            isDisabled={!canSubmit}
-          >
-            Haritayı Oluştur
-          </Button>
-        </Stack>
-      </Box>
-
-      {result && (
-        <Box p={6} bg="whiteAlpha.100" borderRadius="2xl" borderWidth="1px" borderColor="whiteAlpha.200">
+    <Container maxW="container.md" py={{ base: 12, md: 16 }}>
+      <VStack spacing={10} align="stretch">
+        <MotionBox
+          bg="rgba(255,255,255,0.12)"
+          borderRadius="2xl"
+          p={6}
+          boxShadow="xl"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           <Stack spacing={4}>
-            <Heading size="md">Harita Özeti</Heading>
-            <Text fontSize="sm" color="gray.300">
-              Zaman dilimi: {result.timezone} • Konum: {result.location?.city}
+            <Heading size="lg" color="white">
+              Who are you this year?
+            </Heading>
+            <HStack bg="whiteAlpha.200" borderRadius="full" px={4} py={3}>
+              <Icon as={Search} color="purple.200" />
+              <Input
+                variant="unstyled"
+                placeholder="Search transits, archetypes, or rituals"
+                color="white"
+              />
+            </HStack>
+            <Text color="whiteAlpha.900">
+              Your chart hums with a bright curiosity. Keep orbiting the ideas that make your
+              heart starglow.
             </Text>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-              {Object.entries(result.planets || {}).map(([planet, details]) => (
-                <Box
-                  key={planet}
-                  p={3}
-                  borderRadius="lg"
-                  bg="blackAlpha.300"
-                  borderWidth="1px"
-                  borderColor="whiteAlpha.200"
-                >
-                  <Text fontWeight="semibold">{planet}</Text>
-                  <Text fontSize="sm" color="gray.200">
-                    {details.sign} • {details.longitude}° • Ev {details.house}
-                  </Text>
-                </Box>
-              ))}
-            </SimpleGrid>
-            {result?.interpretation && (
-              <Box p={4} borderRadius="lg" bg="blackAlpha.400">
-                <Heading size="sm" mb={2}>AI Yorum</Heading>
-                <Text fontSize="sm" color="gray.100" whiteSpace="pre-wrap">
-                  {result.interpretation}
+            <Button
+              leftIcon={<RefreshCw size={18} />}
+              alignSelf="flex-start"
+              borderRadius="full"
+              bgGradient="linear(to-r, #8E2DE2, #4A00E0)"
+              color="white"
+              onClick={loadInsight}
+              isLoading={loading}
+            >
+              Refresh insight
+            </Button>
+          </Stack>
+        </MotionBox>
+
+        <MotionBox
+          bg="rgba(255,255,255,0.16)"
+          borderRadius="3xl"
+          p={{ base: 6, md: 8 }}
+          boxShadow="2xl"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.05 }}
+        >
+          <Stack spacing={5}>
+            <HStack spacing={3}>
+              <Icon as={Sparkles} color="yellow.300" />
+              <Text
+                fontSize="xs"
+                letterSpacing="widest"
+                textTransform="uppercase"
+                color="yellow.200"
+              >
+                Daily insight
+              </Text>
+            </HStack>
+            {loading && !insight ? (
+              <Spinner color="white" />
+            ) : (
+              <VStack align="flex-start" spacing={4} color="white">
+                <Heading size="lg">
+                  {insight?.headline || fallbackInsight.headline}
+                </Heading>
+                <Text whiteSpace="pre-line" lineHeight="taller">
+                  {insight?.summary || fallbackInsight.summary}
                 </Text>
-              </Box>
+                <Text fontStyle="italic" color="purple.200">
+                  {insight?.advice || fallbackInsight.advice}
+                </Text>
+              </VStack>
             )}
           </Stack>
-        </Box>
-      )}
-    </Stack>
-  );
-}
+        </MotionBox>
 
-export default HomePage;
+        <MotionBox
+          bg="rgba(255,255,255,0.14)"
+          borderRadius="2xl"
+          p={6}
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+        >
+          <Stack spacing={4}>
+            <Heading size="sm" color="whiteAlpha.900">
+              Themes orbiting you
+            </Heading>
+            <SimpleGrid columns={{ base: 2, md: 4 }} spacing={3}>
+              {dailyThemes.length ? (
+                dailyThemes.map((theme) => (
+                  <Badge
+                    key={theme}
+                    colorScheme="purple"
+                    borderRadius="full"
+                    px={3}
+                    py={2}
+                    textTransform="capitalize"
+                    textAlign="center"
+                  >
+                    {theme}
+                  </Badge>
+                ))
+              ) : (
+                <Text color="whiteAlpha.800">Themes will appear once we gather more data.</Text>
+              )}
+            </SimpleGrid>
+          </Stack>
+        </MotionBox>
+      </VStack>
+    </Container>
+  );
+};
+
+export default Home;
