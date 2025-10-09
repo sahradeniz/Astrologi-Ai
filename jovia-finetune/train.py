@@ -2,8 +2,13 @@
 from pathlib import Path
 
 from datasets import load_dataset
-from transformers import (AutoModelForCausalLM, AutoTokenizer, Trainer,
-                          TrainingArguments, DataCollatorForLanguageModeling)
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    Trainer,
+    TrainingArguments,
+    DataCollatorForLanguageModeling,
+)
 
 DATA_FILE = Path(__file__).parent / "jovia_tuning.jsonl"
 MODEL_NAME = "distilgpt2"
@@ -11,8 +16,18 @@ OUTPUT_DIR = Path(__file__).parent / "outputs"
 
 
 def tokenize(example, tokenizer):
-    joined = example["prompt"] + "\n" + example["completion"]
-    return tokenizer(joined)
+    completion = example.get("completion")
+    if isinstance(completion, dict):
+        text = (
+            completion.get("interpretation", "")
+            + " "
+            + completion.get("real_life_scenario", "")
+        )
+    else:
+        text = completion or ""
+
+    joined = (example.get("prompt", "") or "") + "\n" + text
+    return tokenizer(joined, truncation=True, padding="max_length")
 
 
 def main():
@@ -24,7 +39,7 @@ def main():
         model.resize_token_embeddings(len(tokenizer))
 
     dataset = load_dataset("json", data_files=str(DATA_FILE), split="train")
-    tokenized = dataset.map(lambda e: tokenize(e, tokenizer), batched=True)
+    tokenized = dataset.map(lambda e: tokenize(e, tokenizer), batched=False)
 
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 

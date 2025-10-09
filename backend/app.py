@@ -20,6 +20,9 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 
+# === Jovia Fine-tuned Model ===
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+
 # Ensure project root is on sys.path when running as a script.
 BASE_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BASE_DIR.parent
@@ -29,6 +32,14 @@ if str(ROOT_DIR) not in sys.path:
 from backend.archetype_engine import extract_archetype_data
 
 load_dotenv(dotenv_path=BASE_DIR / ".env")
+
+MODEL_PATH = (BASE_DIR / ".." / "jovia-finetune" / "jovia_model").resolve()
+
+print("🔮 Loading Jovia fine-tuned model...")
+tokenizer = AutoTokenizer.from_pretrained(str(MODEL_PATH))
+model = AutoModelForCausalLM.from_pretrained(str(MODEL_PATH))
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
+print("✅ Model loaded successfully!")
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -969,46 +980,41 @@ def interpretation():
     if request.method == "OPTIONS":
         return "", 204
 
-    payload = request.get_json(silent=True)
-    if not isinstance(payload, Mapping):
-        logger.warning("Interpretation endpoint received invalid JSON payload: %s", payload)
-        return jsonify({"error": "Invalid JSON payload."}), 400
+    data = request.get_json() or {}
+    chart_data = data.get("chart_data", {}) or {}
+    planets = chart_data.get("planets", {}) or {}
+    aspects = chart_data.get("aspects", []) or []
 
-    chart_data = payload.get("chart_data")
-    if not isinstance(chart_data, Mapping):
-        logger.warning("Interpretation endpoint missing chart_data: %s", chart_data)
-        return jsonify({"error": "chart_data must be provided as an object."}), 400
+    planet_text = ", ".join(
+        f"{name} in {details.get('sign', '')} ({details.get('house', '')}th)"
+        for name, details in planets.items()
+    )
+    aspect_text = ", ".join(
+        f"{aspect.get('planet1')} {aspect.get('aspect')} {aspect.get('planet2')}"
+        for aspect in aspects
+        if isinstance(aspect, Mapping)
+    )
+    prompt = (
+        "Sun and planetary data: "
+        + planet_text
+        + ". Aspects: "
+        + aspect_text
+        + ". Provide interpretation and real-life scenario."
+    )
 
-    chart_dict = dict(chart_data)
+    print(f"🪐 Input prompt: {prompt}")
 
-    try:
-        archetype = extract_archetype_data(chart_dict)
-    except Exception as exc:  # pylint: disable=broad-except
-        logger.exception("Failed to extract archetype data")
-        return jsonify({"error": "Failed to extract archetype data."}), 500
+    generated = pipe(
+        prompt,
+        max_new_tokens=180,
+        temperature=0.8,
+        top_p=0.9,
+    )[0]["generated_text"]
 
-    fallback_response = None
-    ai_result: Dict[str, str] | None = None
-    try:
-        ai_result = _request_refined_interpretation(archetype, chart_dict)
-    except AIError as exc:
-        logger.error("Groq interpretation error: %s", exc)
-        fallback_response = get_ai_interpretation(chart_dict)
-    except Exception as exc:  # pylint: disable=broad-except
-        logger.exception("Unexpected interpretation failure")
-        fallback_response = get_ai_interpretation(chart_dict)
-
-    if fallback_response is not None:
-        return jsonify(fallback_response), 200
-
-    assert ai_result is not None  # for type checkers
-    response_body = {
-        "themes": archetype.get("core_themes", []),
-        "ai_interpretation": ai_result,
-        "tone": archetype.get("story_tone"),
-    }
-
-    return jsonify(response_body), 200
+    return jsonify({
+        "ai_interpretation": generated,
+        "source": "Jovia Fine-tuned Model",
+    })
 
 
 @app.route("/api/calculate-natal-chart", methods=["POST", "OPTIONS"])
