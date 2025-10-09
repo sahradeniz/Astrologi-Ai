@@ -192,31 +192,47 @@ def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
     return "AI interpretation unavailable."
 
 
-def get_ai_interpretation(chart_data: Mapping[str, Any]) -> Dict[str, str]:
+def get_ai_interpretation(chart_data: Mapping[str, Any]) -> Dict[str, Any]:
     """Generate a rich interpretation by blending archetype themes with Groq output."""
 
     try:
         archetype = extract_archetype_data(chart_data)
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Archetype extraction failed: %s", exc)
+        fallback_ai = {
+            "headline": "Interpretation unavailable",
+            "summary": "We could not generate a full interpretation at this time.",
+            "advice": "Stay grounded and patient; your insight is unfolding.",
+        }
         return {
-            "ai_interpretation": {
-                "headline": "Interpretation unavailable",
-                "summary": "We could not generate a full interpretation at this time.",
-                "advice": "Stay grounded and patient; your insight is unfolding.",
-            },
+            "ai_interpretation": fallback_ai,
             "themes": [],
             "tone": "balanced growth",
+        }
+
+    core_themes = archetype.get("core_themes", [])
+    tone_value = archetype.get("story_tone", "balanced growth")
+
+    fallback_ai = {
+        "headline": "Interpretation unavailable",
+        "summary": "We could not generate a full interpretation at this time.",
+        "advice": "Stay grounded and patient; your insight is unfolding.",
+    }
+
+    def build_result(ai_output: Dict[str, str]) -> Dict[str, Any]:
+        return {
+            "ai_interpretation": ai_output,
+            "themes": core_themes,
+            "tone": tone_value,
         }
 
     groq_api_key = os.getenv("GROQ_API_KEY")
     groq_model = os.getenv("GROQ_MODEL", GROQ_MODEL)
     if not groq_api_key:
         logger.warning("⚠️ GROQ_API_KEY not found; cannot call Groq.")
-        return fallback
+        return build_result(fallback_ai)
 
-    themes = ", ".join(archetype.get("core_themes", [])) or "inner exploration"
-    tone = archetype.get("story_tone", "balanced growth")
+    themes = ", ".join(core_themes) or "inner exploration"
     aspects = ", ".join(archetype.get("notable_aspects", [])) or "No notable aspects recorded."
 
     prompt = f"""
@@ -228,7 +244,7 @@ Focus on the inner story of transformation — emotional patterns, spiritual les
 Avoid explaining what astrology *is*; instead, *speak as if you see into their soul.*
 
 Themes: {themes}
-Tone: {tone}
+Tone: {tone_value}
 Aspects: {aspects}
 
 Return your response as a JSON object:
@@ -281,7 +297,7 @@ Return your response as a JSON object:
         print("Groq API call failed:", exc)
         traceback.print_exc()
         logger.exception("Groq API call failed: %s", exc)
-        return fallback
+        return build_result(fallback_ai)
 
     print("RAW GROQ OUTPUT:", content)
     logger.debug("Groq content raw: %s", content)
@@ -306,19 +322,16 @@ Return your response as a JSON object:
                 "summary": summary,
                 "advice": advice,
             }
+            print("PARSE SUCCESS:", True)
     else:
         print("PARSE SUCCESS:", False)
 
     if not parsed:
-        parsed = {
-            "headline": "Interpretation unavailable",
-            "summary": "We could not generate a full interpretation at this time.",
-            "advice": "Stay grounded and patient; your insight is unfolding.",
-        }
+        return build_result(fallback_ai)
 
-    headline = str(parsed.get("headline", "")).strip() or "Interpretation unavailable"
-    summary = str(parsed.get("summary", "")).strip() or "We could not generate a full interpretation at this time."
-    advice = str(parsed.get("advice", "")).strip() or "Stay grounded and patient; your insight is unfolding."
+    headline = str(parsed.get("headline", "")).strip() or fallback_ai["headline"]
+    summary = str(parsed.get("summary", "")).strip() or fallback_ai["summary"]
+    advice = str(parsed.get("advice", "")).strip() or fallback_ai["advice"]
 
     ai_output = {
         "headline": headline,
@@ -326,11 +339,7 @@ Return your response as a JSON object:
         "advice": advice,
     }
 
-    return {
-        "ai_interpretation": ai_output,
-        "themes": archetype.get("core_themes", []),
-        "tone": archetype.get("story_tone", "balanced growth"),
-    }
+    return build_result(ai_output)
 
 
 def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Mapping[str, Any]) -> Dict[str, str]:
@@ -993,27 +1002,24 @@ def interpretation():
         logger.exception("Failed to extract archetype data")
         return jsonify({"error": "Failed to extract archetype data."}), 500
 
-    def _default_fallback() -> Dict[str, str]:
-        return {
-            "headline": "Interpretation unavailable",
-            "summary": "We could not generate an interpretation at this time.",
-            "advice": "Return to grounding practices until clarity returns.",
-        }
-
+    fallback_response: Dict[str, Any] | None = None
     try:
         ai_result = _request_refined_interpretation(archetype, chart_dict)
     except AIError as exc:
         logger.error("Groq interpretation error: %s", exc)
-        ai_result = get_ai_interpretation(chart_dict)
+        fallback_response = get_ai_interpretation(chart_dict)
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Unexpected interpretation failure")
-        ai_result = get_ai_interpretation(chart_dict)
+        fallback_response = get_ai_interpretation(chart_dict)
 
-    response_body = {
-        "themes": archetype.get("core_themes", []),
-        "ai_interpretation": ai_result,
-        "tone": archetype.get("story_tone"),
-    }
+    if fallback_response is not None:
+        response_body = fallback_response
+    else:
+        response_body = {
+            "themes": archetype.get("core_themes", []),
+            "ai_interpretation": ai_result,
+            "tone": archetype.get("story_tone"),
+        }
 
     return jsonify(response_body), 200
 
