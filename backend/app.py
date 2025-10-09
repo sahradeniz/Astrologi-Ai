@@ -205,27 +205,26 @@ def get_ai_interpretation(chart_data: Mapping[str, Any]):
         archetype_data = extract_archetype_data(chart_data)
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Archetype extraction failed: %s", exc)
-        return jsonify(
-            {
-                "ai_interpretation": fallback_ai,
-                "themes": [],
-                "tone": "balanced growth",
-            }
-        )
+        return {
+            "ai_interpretation": fallback_ai,
+            "themes": [],
+            "tone": "balanced growth",
+        }
 
     core_themes = archetype_data.get("core_themes", [])
     tone_value = archetype_data.get("story_tone", "balanced growth")
-    fallback_payload = {
-        "ai_interpretation": fallback_ai,
-        "themes": core_themes,
-        "tone": tone_value,
-    }
+    def build_payload(ai_output: Dict[str, str]) -> Dict[str, Any]:
+        return {
+            "ai_interpretation": ai_output,
+            "themes": core_themes,
+            "tone": tone_value,
+        }
 
     groq_api_key = os.getenv("GROQ_API_KEY")
     groq_model = os.getenv("GROQ_MODEL", GROQ_MODEL)
     if not groq_api_key:
         logger.warning("⚠️ GROQ_API_KEY not found; cannot call Groq.")
-        return jsonify(fallback_payload)
+        return build_payload(fallback_ai)
 
     themes = ", ".join(core_themes) or "inner exploration"
     aspects = ", ".join(archetype_data.get("notable_aspects", [])) or "No notable aspects recorded."
@@ -294,7 +293,7 @@ Return your response as a JSON object:
         print("Groq API call failed:", exc)
         traceback.print_exc()
         logger.exception("Groq API call failed: %s", exc)
-        return jsonify(fallback_payload)
+        return build_payload(fallback_ai)
 
     print("RAW GROQ OUTPUT:", content)
     logger.debug("Groq content raw: %s", content)
@@ -326,12 +325,7 @@ Return your response as a JSON object:
     else:
         print("PARSE SUCCESS:", False)
 
-    response_payload = {
-        "ai_interpretation": ai_output,
-        "themes": core_themes,
-        "tone": tone_value,
-    }
-    return jsonify(response_payload)
+    return build_payload(ai_output)
 
 
 def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Mapping[str, Any]) -> Dict[str, str]:
@@ -1006,14 +1000,14 @@ def interpretation():
         fallback_response = get_ai_interpretation(chart_dict)
 
     if fallback_response is not None:
-        return fallback_response
-    else:
-        assert ai_result is not None  # for type checkers
-        response_body = {
-            "themes": archetype.get("core_themes", []),
-            "ai_interpretation": ai_result,
-            "tone": archetype.get("story_tone"),
-        }
+        return jsonify(fallback_response), 200
+
+    assert ai_result is not None  # for type checkers
+    response_body = {
+        "themes": archetype.get("core_themes", []),
+        "ai_interpretation": ai_result,
+        "tone": archetype.get("story_tone"),
+    }
 
     return jsonify(response_body), 200
 
