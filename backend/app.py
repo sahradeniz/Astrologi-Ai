@@ -192,10 +192,10 @@ def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
     return "AI interpretation unavailable."
 
 
-def get_ai_interpretation(chart_data: Mapping[str, Any]):
-    """Return a resilient AI interpretation payload based on archetype themes."""
+def get_ai_interpretation(chart_data: Mapping[str, Any]) -> Dict[str, Any]:
+    """Return a resilient AI interpretation payload anchored in archetype themes."""
 
-    fallback_ai = {
+    fallback_ai: Dict[str, str] = {
         "headline": "Interpretation unavailable",
         "summary": "We could not generate a full interpretation at this time.",
         "advice": "Stay grounded and patient; your insight is unfolding.",
@@ -211,12 +211,14 @@ def get_ai_interpretation(chart_data: Mapping[str, Any]):
             "tone": "balanced growth",
         }
 
-    core_themes = archetype_data.get("core_themes", [])
-    tone_value = archetype_data.get("story_tone", "balanced growth")
+    themes_list = archetype_data.get("core_themes", [])
+    tone_value = str(archetype_data.get("story_tone", "balanced growth"))
+    aspects_text = ", ".join(archetype_data.get("notable_aspects", [])) or "No notable aspects recorded."
+
     def build_payload(ai_output: Dict[str, str]) -> Dict[str, Any]:
         return {
             "ai_interpretation": ai_output,
-            "themes": core_themes,
+            "themes": themes_list,
             "tone": tone_value,
         }
 
@@ -226,8 +228,7 @@ def get_ai_interpretation(chart_data: Mapping[str, Any]):
         logger.warning("⚠️ GROQ_API_KEY not found; cannot call Groq.")
         return build_payload(fallback_ai)
 
-    themes = ", ".join(core_themes) or "inner exploration"
-    aspects = ", ".join(archetype_data.get("notable_aspects", [])) or "No notable aspects recorded."
+    themes_text = ", ".join(themes_list) or "inner exploration"
 
     prompt = f"""
 You are **Jovia**, an intuitive AI astrologer who blends depth psychology, mythology, and astrology.
@@ -237,9 +238,9 @@ Interpret the user's birth chart themes below.
 Focus on the inner story of transformation — emotional patterns, spiritual lessons, and healing arcs.
 Avoid explaining what astrology *is*; instead, *speak as if you see into their soul.*
 
-Themes: {themes}
+Themes: {themes_text}
 Tone: {tone_value}
-Aspects: {aspects}
+Aspects: {aspects_text}
 
 Return your response as a JSON object:
 
@@ -303,25 +304,23 @@ Return your response as a JSON object:
         try:
             parsed = json.loads(content)
             print("PARSE SUCCESS:", True)
+            ai_output = {
+                "headline": str(parsed.get("headline", "")).strip() or fallback_ai["headline"],
+                "summary": str(parsed.get("summary", "")).strip() or fallback_ai["summary"],
+                "advice": str(parsed.get("advice", "")).strip() or fallback_ai["advice"],
+            }
         except json.JSONDecodeError:
             print("PARSE SUCCESS:", False)
             headline_match = re.search(r"(?i)(headline|title)[:\-]\s*(.*)", content)
             summary_match = re.search(r"(?i)(summary|interpretation)[:\-]\s*(.*)", content)
             advice_match = re.search(r"(?i)(advice|guidance)[:\-]\s*(.*)", content)
 
-            parsed = {
+            ai_output = {
                 "headline": headline_match.group(2).strip() if headline_match else fallback_ai["headline"],
                 "summary": summary_match.group(2).strip() if summary_match else content[:400].strip(),
                 "advice": advice_match.group(2).strip() if advice_match else "Trust your own timing.",
             }
             print("PARSE SUCCESS:", True)
-        else:
-            parsed = {
-                "headline": str(parsed.get("headline", "")).strip() or fallback_ai["headline"],
-                "summary": str(parsed.get("summary", "")).strip() or fallback_ai["summary"],
-                "advice": str(parsed.get("advice", "")).strip() or fallback_ai["advice"],
-            }
-        ai_output = parsed
     else:
         print("PARSE SUCCESS:", False)
 
