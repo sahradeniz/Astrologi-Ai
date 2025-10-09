@@ -195,17 +195,19 @@ def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
 def get_ai_interpretation(chart_data: Mapping[str, Any]) -> Dict[str, str]:
     """Generate a rich interpretation by blending archetype themes with Groq output."""
 
-    fallback = {
-        "headline": "Interpretation unavailable",
-        "summary": "We could not generate an interpretation.",
-        "advice": "Reflect on your core themes until clarity comes.",
-    }
-
     try:
         archetype = extract_archetype_data(chart_data)
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Archetype extraction failed: %s", exc)
-        return fallback
+        return {
+            "ai_interpretation": {
+                "headline": "Interpretation unavailable",
+                "summary": "We could not generate a full interpretation at this time.",
+                "advice": "Stay grounded and patient; your insight is unfolding.",
+            },
+            "themes": [],
+            "tone": "balanced growth",
+        }
 
     groq_api_key = os.getenv("GROQ_API_KEY")
     groq_model = os.getenv("GROQ_MODEL", GROQ_MODEL)
@@ -291,37 +293,43 @@ Return your response as a JSON object:
             print("PARSE SUCCESS:", True)
         except json.JSONDecodeError:
             print("PARSE SUCCESS:", False)
-            fragment = None
-            match = re.search(r"\{.*\}", content, re.DOTALL)
-            if match:
-                fragment = match.group(0)
-            if fragment:
-                try:
-                    parsed = json.loads(fragment)
-                    print("PARSE SUCCESS:", True)
-                except json.JSONDecodeError:
-                    print("PARSE SUCCESS:", False)
-                    parsed = None
-            else:
-                parsed = None
+            headline_match = re.search(r"(?i)(headline|title)[:\-]\s*(.*)", content)
+            summary_match = re.search(r"(?i)(summary|interpretation)[:\-]\s*(.*)", content)
+            advice_match = re.search(r"(?i)(advice|guidance)[:\-]\s*(.*)", content)
+
+            headline = headline_match.group(2).strip() if headline_match else "Interpretation unavailable"
+            summary = summary_match.group(2).strip() if summary_match else content[:400].strip()
+            advice = advice_match.group(2).strip() if advice_match else "Trust your own timing."
+
+            parsed = {
+                "headline": headline,
+                "summary": summary,
+                "advice": advice,
+            }
     else:
         print("PARSE SUCCESS:", False)
 
     if not parsed:
-        return {
+        parsed = {
             "headline": "Interpretation unavailable",
             "summary": "We could not generate a full interpretation at this time.",
             "advice": "Stay grounded and patient; your insight is unfolding.",
         }
 
-    headline = str(parsed.get("headline", "")).strip() or fallback["headline"]
-    summary = str(parsed.get("summary", "")).strip() or fallback["summary"]
-    advice = str(parsed.get("advice", "")).strip() or fallback["advice"]
+    headline = str(parsed.get("headline", "")).strip() or "Interpretation unavailable"
+    summary = str(parsed.get("summary", "")).strip() or "We could not generate a full interpretation at this time."
+    advice = str(parsed.get("advice", "")).strip() or "Stay grounded and patient; your insight is unfolding."
 
-    return {
+    ai_output = {
         "headline": headline,
         "summary": summary,
         "advice": advice,
+    }
+
+    return {
+        "ai_interpretation": ai_output,
+        "themes": archetype.get("core_themes", []),
+        "tone": archetype.get("story_tone", "balanced growth"),
     }
 
 
