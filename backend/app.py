@@ -33,7 +33,7 @@ from backend.archetype_engine import extract_archetype_data
 
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
-MODEL_PATH = (BASE_DIR / ".." / "jovia-finetune" / "jovia_model").resolve()
+MODEL_PATH = "Sahradeniz/jovia-finetune"
 
 print("🔮 Loading Jovia fine-tuned model...")
 tokenizer = AutoTokenizer.from_pretrained(str(MODEL_PATH))
