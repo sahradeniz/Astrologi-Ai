@@ -25,3 +25,4 @@ backend/.env
 jovia_model/
 jovia-finetune/outputs/
 jovia-finetune/jovia_model/
+jovia_model/
