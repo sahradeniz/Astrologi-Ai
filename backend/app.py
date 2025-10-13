@@ -34,7 +34,7 @@ from backend.archetype_engine import extract_archetype_data
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 MODEL_PATH = "Sahradeniz/jovia-finetune"
-HF_TOKEN = os.getenv("HF_TOKEN", None)
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 print("🔮 Loading Jovia fine-tuned model from Hugging Face...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, token=HF_TOKEN)
