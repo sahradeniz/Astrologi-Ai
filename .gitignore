@@ -23,3 +23,5 @@ build/
 backend/.env
 backend/.env
 jovia_model/
+jovia-finetune/outputs/
+jovia-finetune/jovia_model/
