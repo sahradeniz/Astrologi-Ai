@@ -34,10 +34,11 @@ from backend.archetype_engine import extract_archetype_data
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 MODEL_PATH = "Sahradeniz/jovia-finetune"
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 print("🔮 Loading Jovia fine-tuned model...")
-tokenizer = AutoTokenizer.from_pretrained(str(MODEL_PATH))
-model = AutoModelForCausalLM.from_pretrained(str(MODEL_PATH))
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, token=HF_TOKEN)
+model = AutoModelForCausalLM.from_pretrained(MODEL_PATH, token=HF_TOKEN)
 pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
 print("✅ Model loaded successfully!")
 
