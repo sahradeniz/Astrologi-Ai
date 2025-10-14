@@ -1029,10 +1029,37 @@ def interpretation():
 
     generated_text = ""
     if isinstance(output, list) and output:
-        generated_text = output[0].get("generated_text", "")
+        generated_text = output[0].get("generated_text", "") or ""
+
+    categories = {
+        "love": {
+            "headline": "A time to open your heart",
+            "summary": generated_text or "Venus trine Moon softens your emotional field.",
+            "advice": "Let yourself be seen.",
+            "themes": ["emotional harmony", "self-expression"],
+        },
+        "career": {
+            "headline": "Structure brings success",
+            "summary": generated_text or "Your Capricorn energy demands consistency and grounded action.",
+            "advice": "Plan before acting.",
+            "themes": ["discipline", "growth"],
+        },
+        "spiritual": {
+            "headline": "Listen to the shimmer",
+            "summary": generated_text or "Dreams and synchronicities carry your guidance right now.",
+            "advice": "Give yourself reflective space.",
+            "themes": ["intuition", "alignment"],
+        },
+        "shadow": {
+            "headline": "Integrate the unseen",
+            "summary": generated_text or "Old narratives surface so you can heal and reframe.",
+            "advice": "Name what you fear and offer it compassion.",
+            "themes": ["healing", "transformation"],
+        },
+    }
 
     return jsonify({
-        "ai_interpretation": generated_text,
+        "categories": categories,
         "source": "Hugging Face Inference API",
     })
 

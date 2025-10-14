@@ -13,22 +13,40 @@ import {
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
+import InterpretationCard from "../components/InterpretationCard.jsx";
+import { getInterpretation } from "../lib/api.js";
 
 const MotionBox = motion(Box);
 
 const Profile = () => {
   const [chart, setChart] = useState(null);
-  const [insight, setInsight] = useState(null);
+  const [categories, setCategories] = useState(null);
+  const [loadingInterpretation, setLoadingInterpretation] = useState(false);
+  const [interpretationError, setInterpretationError] = useState(null);
 
   useEffect(() => {
     const savedChart = localStorage.getItem("userChart");
     if (savedChart) setChart(JSON.parse(savedChart));
-    const savedInsight = localStorage.getItem("userInsight");
-    if (savedInsight) {
-      const parsed = JSON.parse(savedInsight);
-      setInsight(parsed.ai_interpretation);
-    }
   }, []);
+
+  useEffect(() => {
+    if (!chart) return;
+
+    const fetchInterpretation = async () => {
+      setLoadingInterpretation(true);
+      setInterpretationError(null);
+      try {
+        const response = await getInterpretation(chart);
+        setCategories(response?.categories || null);
+      } catch (error) {
+        setInterpretationError(error.message);
+      } finally {
+        setLoadingInterpretation(false);
+      }
+    };
+
+    fetchInterpretation();
+  }, [chart]);
 
   if (!chart) {
     return (
@@ -82,14 +100,33 @@ const Profile = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <Stack spacing={4} color="white">
-            <Heading size="md">AI Archetype Insight</Heading>
-            <Text whiteSpace="pre-line" lineHeight="taller">
-              {insight?.summary ||
-                "Your chart is composing a new melody. Stay tuned for the next cosmic update."}
-            </Text>
-            <Text fontStyle="italic" color="purple.200">
-              {insight?.advice || "Keep following the shimmer."}
-            </Text>
+            <Heading size="md">Cosmic Interpretation</Heading>
+            {loadingInterpretation && <Text color="whiteAlpha.700">Loading your cosmic insights...</Text>}
+            {interpretationError && (
+              <Text color="red.300">{interpretationError}</Text>
+            )}
+            {categories ? (
+              <>
+                <InterpretationCard
+                  title="💖 Love & Relationships"
+                  data={categories.love}
+                />
+                <InterpretationCard
+                  title="💼 Career & Purpose"
+                  data={categories.career}
+                />
+                <InterpretationCard
+                  title="🌱 Spiritual Growth"
+                  data={categories.spiritual}
+                />
+                <InterpretationCard
+                  title="🌑 Shadow Integration"
+                  data={categories.shadow}
+                />
+              </>
+            ) : ( !loadingInterpretation && !interpretationError && (
+              <Text color="whiteAlpha.700">Interpretation will appear after we receive the latest guidance.</Text>
+            ))}
           </Stack>
         </MotionBox>
 
