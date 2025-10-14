@@ -21,7 +21,6 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 # === Jovia Fine-tuned Model ===
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 # Ensure project root is on sys.path when running as a script.
 BASE_DIR = Path(__file__).resolve().parent
@@ -36,11 +35,7 @@ load_dotenv(dotenv_path=BASE_DIR / ".env")
 MODEL_PATH = "Sahradeniz/jovia-finetune"
 HF_TOKEN = os.getenv("HF_TOKEN")
 
-print("🔮 Loading Jovia fine-tuned model from Hugging Face...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, token=HF_TOKEN)
-model = AutoModelForCausalLM.from_pretrained(MODEL_PATH, token=HF_TOKEN)
-pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
-print("✅ Model successfully loaded!")
+print("✅ Hugging Face proxy mode ready!")
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -1005,16 +1000,40 @@ def interpretation():
 
     print(f"🪐 Input prompt: {prompt}")
 
-    generated = pipe(
-        prompt,
-        max_new_tokens=180,
-        temperature=0.8,
-        top_p=0.9,
-    )[0]["generated_text"]
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"} if HF_TOKEN else {}
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 180,
+            "temperature": 0.8,
+            "top_p": 0.9,
+        },
+    }
+
+    try:
+        response = requests.post(
+            f"https://api-inference.huggingface.co/models/{MODEL_PATH}",
+            headers=headers,
+            json=payload,
+            timeout=60,
+        )
+        response.raise_for_status()
+        output = response.json()
+    except requests.RequestException as exc:
+        logger.error("Failed to call Hugging Face Inference API: %s", exc)
+        return jsonify({"error": "Model service unavailable."}), 503
+
+    if isinstance(output, dict) and output.get("error"):
+        logger.error("Hugging Face API error: %s", output["error"])
+        return jsonify({"error": output["error"]}), 502
+
+    generated_text = ""
+    if isinstance(output, list) and output:
+        generated_text = output[0].get("generated_text", "")
 
     return jsonify({
-        "ai_interpretation": generated,
-        "source": "Jovia Fine-tuned Model",
+        "ai_interpretation": generated_text,
+        "source": "Hugging Face Inference API",
     })
 
 
