@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const API_BASE = "https://astrolog-ai.onrender.com";
 
 function makeUrl(path) {
   if (!path) return API_BASE;
@@ -38,3 +38,13 @@ export const getInterpretation = (chartData) =>
 
 export const calculateSynastry = (payload) =>
   post("/calculate_synastry_chart", payload);
+
+export const sendChatMessage = async (message) => {
+  try {
+    const res = await axios.post(`${API_BASE}/chat/message`, { message });
+    return res.data.reply;
+  } catch (err) {
+    console.error("Chat error:", err);
+    return "Üzgünüm, şu anda yanıt veremiyorum.";
+  }
+};

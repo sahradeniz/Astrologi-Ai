@@ -19,6 +19,7 @@ import Bond from "./pages/Bond.jsx";
 import Home from "./pages/Home.jsx";
 import Profile from "./pages/Profile.jsx";
 import StoryStudio from "./pages/StoryStudio.jsx";
+import AiChat from "./pages/AiChat.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
 import ThisYearYou from "./pages/ThisYearYou.jsx";
 import Settings from "./pages/Settings.jsx";
@@ -125,6 +126,14 @@ const AppShell = () => {
                 element={
                   <PageWrapper>
                     <StoryView />
+                  </PageWrapper>
+                }
+              />
+              <Route
+                path="/chat"
+                element={
+                  <PageWrapper>
+                    <AiChat />
                   </PageWrapper>
                 }
               />
