@@ -267,6 +267,39 @@ def _mock_categories(archetype: Mapping[str, Any]) -> Mapping[str, Any]:
     }
 
 
+def _summarise_chart_for_chat(chart: Mapping[str, Any]) -> str:
+    planets = chart.get("planets") or {}
+    planet_summary = []
+    for name, details in planets.items():
+        if not isinstance(details, Mapping):
+            continue
+        sign = details.get("sign") or ""
+        house = details.get("house")
+        house_part = f" ({house}. ev)" if house else ""
+        planet_summary.append(f"{name}: {sign}{house_part}")
+
+    aspects = chart.get("aspects") or []
+    aspect_summary = []
+    for aspect in aspects:
+        if not isinstance(aspect, Mapping):
+            continue
+        p1 = aspect.get("planet1")
+        aspect_name = aspect.get("aspect")
+        p2 = aspect.get("planet2")
+        if p1 and p2 and aspect_name:
+            aspect_summary.append(f"{p1} {aspect_name} {p2}")
+
+    summary_sections = []
+    if planet_summary:
+        summary_sections.append("Gezegenler: " + ", ".join(planet_summary))
+    if aspect_summary:
+        summary_sections.append("Önemli açılar: " + ", ".join(aspect_summary))
+    if chart.get("story_tone"):
+        summary_sections.append(f"Genel hikâye tonu: {chart.get('story_tone')}")
+
+    return "\n".join(summary_sections).strip()
+
+
 def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
     """Call Groq Chat Completions to produce an interpretation."""
 
@@ -1061,15 +1094,20 @@ def _handle_chat_request():
         ]
 
         chart_context = payload.get("chart")
+        chart_summary_text = ""
         if isinstance(chart_context, Mapping):
+            chart_summary_text = _summarise_chart_for_chat(chart_context)
             system_messages.append(
                 {
                     "role": "system",
-                    "content": "Kullanıcı doğum haritası verileri:\n" + chart_to_summary(chart_context),
+                    "content": "Kullanıcı doğum haritası özet bilgileri:\n" + chart_summary_text,
                 }
             )
 
-        messages = [*system_messages, *history, {"role": "user", "content": message}]
+        messages = [*system_messages, *history]
+        if chart_summary_text:
+            messages.append({"role": "user", "content": "Harita özeti: " + chart_summary_text})
+        messages.append({"role": "user", "content": message})
         temperature = float(payload.get("temperature", 0.6))
         max_tokens = int(payload.get("maxTokens", 600))
         reply = call_groq(messages, temperature=temperature, max_tokens=max_tokens)
