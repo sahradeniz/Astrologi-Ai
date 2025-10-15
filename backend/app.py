@@ -41,7 +41,7 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": ["*", "http://localhost:5173", "https://jovia.app"]}})
 
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
