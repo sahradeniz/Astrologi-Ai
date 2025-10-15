@@ -106,27 +106,36 @@ const Profile = () => {
               <Text color="red.300">{interpretationError}</Text>
             )}
             {categories ? (
-              <>
+              <SimpleGrid columns={[1, 1, 2]} spacing={4}>
                 <InterpretationCard
-                  title="💖 Love & Relationships"
+                  title="Love & Relationships"
                   data={categories.love}
+                  variant="love"
                 />
                 <InterpretationCard
-                  title="💼 Career & Purpose"
+                  title="Career & Purpose"
                   data={categories.career}
+                  variant="career"
                 />
                 <InterpretationCard
-                  title="🌱 Spiritual Growth"
+                  title="Spiritual Growth"
                   data={categories.spiritual}
+                  variant="spiritual"
                 />
                 <InterpretationCard
-                  title="🌑 Shadow Integration"
+                  title="Shadow Integration"
                   data={categories.shadow}
+                  variant="shadow"
                 />
-              </>
-            ) : ( !loadingInterpretation && !interpretationError && (
-              <Text color="whiteAlpha.700">Interpretation will appear after we receive the latest guidance.</Text>
-            ))}
+              </SimpleGrid>
+            ) : (
+              !loadingInterpretation &&
+              !interpretationError && (
+                <Text color="whiteAlpha.700">
+                  Interpretation will appear after we receive the latest guidance.
+                </Text>
+              )
+            )}
           </Stack>
         </MotionBox>
 

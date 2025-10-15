@@ -12,6 +12,7 @@ import {
   BookOpen,
   HeartHandshake,
   Home as HomeIcon,
+  MessageCircle,
   User,
 } from "lucide-react";
 
@@ -46,6 +47,7 @@ const navItems = [
   { label: "Home", path: "/home", icon: HomeIcon },
   { label: "Story", path: "/story-studio", icon: BookOpen },
   { label: "Bond", path: "/bond", icon: HeartHandshake },
+  { label: "Chat", path: "/chat", icon: MessageCircle },
   { label: "Profile", path: "/profile", icon: User },
 ];
 
