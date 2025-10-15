@@ -41,7 +41,14 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["*", "http://localhost:5173", "https://jovia.app"]}})
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": ["*", "http://localhost:5173", "https://jovia.app", "https://astrolog-ai.vercel.app"]
+        }
+    },
+)
 
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
@@ -220,6 +227,47 @@ def _parse_categories_from_output(output: Any) -> Mapping[str, Any] | None:
     return None
 
 
+def _fetch_model_categories(prompt: str, archetype: Mapping[str, Any]) -> Mapping[str, Any] | None:
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"} if HF_TOKEN else {}
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 180,
+            "temperature": 0.8,
+            "top_p": 0.9,
+        },
+    }
+
+    start_time = time.time()
+    try:
+        response = requests.post(
+            f"https://api-inference.huggingface.co/models/{MODEL_PATH}",
+            headers=headers,
+            json=payload,
+            timeout=60,
+        )
+        response.raise_for_status()
+        output = response.json()
+        logger.debug("Model raw output received: %s", output)
+    except requests.RequestException as exc:
+        latency = time.time() - start_time
+        logger.error("Failed to call Hugging Face Inference API after %.2fs: %s", latency, exc)
+        logger.debug("Prompt used for failed interpretation: %s", prompt)
+        return None
+    finally:
+        latency = time.time() - start_time
+        logger.info("✨ Hugging Face latency: %.2fs", latency)
+
+    if isinstance(output, dict) and output.get("error"):
+        logger.error("Hugging Face API error payload: %s", output)
+        return None
+
+    categories = _parse_categories_from_output(output)
+    if not categories:
+        logger.warning("Unable to parse model output; archetype themes=%s", archetype.get("core_themes"))
+    return categories
+
+
 def _mock_categories(archetype: Mapping[str, Any]) -> Mapping[str, Any]:
     story_tone = archetype.get("story_tone") or "Balanced growth"
     core = ", ".join(archetype.get("core_themes", []) or [])
@@ -290,6 +338,36 @@ def _summarise_chart_for_chat(chart: Mapping[str, Any]) -> str:
         summary_sections.append(f"Genel hikâye tonu: {chart.get('story_tone')}")
 
     return "\n".join(summary_sections).strip()
+
+
+def _build_chat_greeting(chart: Mapping[str, Any]) -> str:
+    if not isinstance(chart, Mapping):
+        return "Merhaba! Kozmik yolculuğuna hazır mısın?"
+
+    name: str | None = None
+    raw_name = chart.get("name")
+    if isinstance(raw_name, str) and raw_name.strip():
+        name = raw_name.strip()
+    else:
+        user_block = chart.get("user")
+        if isinstance(user_block, Mapping):
+            user_name = user_block.get("name")
+            if isinstance(user_name, str) and user_name.strip():
+                name = user_name.strip()
+
+    if name:
+        return f"Merhaba {name}! Haritanı birlikte inceleyelim."
+
+    sun_sign = None
+    planets = chart.get("planets")
+    if isinstance(planets, Mapping):
+        sun_details = planets.get("Sun")
+        if isinstance(sun_details, Mapping):
+            sun_sign = sun_details.get("sign")
+    if isinstance(sun_sign, str) and sun_sign.strip():
+        return f"Merhaba parlak {sun_sign} ruhu! Haritan neler fısıldıyor bakalım."
+
+    return "Merhaba! Kozmik yolculuğuna hazır mısın?"
 
 
 def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
@@ -1071,6 +1149,18 @@ def _handle_chat_request():
         if not isinstance(chart_context, Mapping):
             return jsonify({"error": "chart information is required for detailed chat guidance."}), 400
 
+        normalized_message = re.sub(r"[^\w\s]", " ", message.lower())
+        greetings = {"selam", "hey", "merhaba", "hi", "hello"}
+        if any(word in normalized_message.split() for word in greetings):
+            logger.info("💫 Greeting detected in chat message.")
+            return jsonify({
+                "reply": (
+                    "Merhaba! Ben Astrologi-AI, kozmik rehberin. "
+                    "Doğum haritana göre yıldızların rehberliğini paylaşabilirim. "
+                    "Ne konuda destek istersin — aşk, kariyer ya da ruhsal gelişim mi?"
+                )
+            })
+
         history = []
         raw_history = payload.get("history")
         if isinstance(raw_history, list):
@@ -1082,10 +1172,12 @@ def _handle_chat_request():
                 if role in {"user", "assistant"} and isinstance(content, str):
                     history.append({"role": role, "content": content})
 
+        logger.info("💬 Chat request received. history=%d message_preview=%s", len(history), message[:80])
+
         system_messages = [
             {
                 "role": "system",
-                "content": "Sen Astrologi-AI adlı kozmik rehbersin. Türkçe yanıt ver, kullanıcıya empatik ve açıklayıcı bir tavırla yaklaş.",
+                "content": "Sen Astrologi-AI adlı kozmik rehbersin. Türkçe yanıt ver, kullanıcıya empatik ve açıklayıcı bir tavırla yaklaş. Her yanıtına sıcak bir selamlama ile başla, ardından astrolojik rehberliğe geç.",
             }
         ]
 
@@ -1104,6 +1196,12 @@ def _handle_chat_request():
         temperature = float(payload.get("temperature", 0.6))
         max_tokens = int(payload.get("maxTokens", 600))
         reply = call_groq(messages, temperature=temperature, max_tokens=max_tokens)
+
+        has_previous_assistant = any(item.get("role") == "assistant" for item in history)
+        if not has_previous_assistant:
+            greeting = _build_chat_greeting(chart_context)
+            reply = f"{greeting}\n\n{reply}" if greeting else reply
+
         return jsonify({"reply": reply})
     except AIError as exc:
         logger.error("AI chat error: %s", exc)
@@ -1121,8 +1219,10 @@ def interpretation():
     data = request.get_json(silent=True) or {}
     chart = data.get("chart")
     if not isinstance(chart, Mapping):
-        logger.warning("Interpretation request missing chart payload")
+        logger.warning("Interpretation request missing chart payload: %s", data)
         return jsonify({"error": "chart must be provided"}), 400
+
+    logger.info("🪐 Interpretation requested for chart keys: planets=%s aspects=%s", bool(chart.get("planets")), bool(chart.get("aspects")))
 
     planets_section = chart.get("planets") or {}
     aspects_section = chart.get("aspects") or []
@@ -1168,53 +1268,18 @@ def interpretation():
     try:
         archetype = extract_archetype_data(chart)
     except Exception as exc:  # pylint: disable=broad-except
-        logger.exception("Failed to extract archetype data")
+        logger.exception("Failed to extract archetype data: %s", exc)
         return jsonify({"error": "Failed to extract archetype data."}), 500
 
     prompt = _build_interpretation_prompt(archetype, planet_text, aspect_text)
-    logger.info("🪐 Built prompt: %s", prompt)
+    logger.debug("🪐 Interpretation prompt built: %s", prompt)
 
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"} if HF_TOKEN else {}
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 180,
-            "temperature": 0.8,
-            "top_p": 0.9,
-        },
-    }
-
-    start_time = time.time()
-    try:
-        response = requests.post(
-            f"https://api-inference.huggingface.co/models/{MODEL_PATH}",
-            headers=headers,
-            json=payload,
-            timeout=60,
-        )
-        response.raise_for_status()
-        output = response.json()
-    except requests.RequestException as exc:
-        logger.error("Failed to call Hugging Face Inference API: %s", exc)
-        return jsonify({"error": "Model service unavailable."}), 503
-    finally:
-        latency = time.time() - start_time
-        logger.info("✨ Hugging Face latency: %.2fs", latency)
-
-    if isinstance(output, dict) and output.get("error"):
-        logger.error("Hugging Face API error: %s", output["error"])
-        return jsonify({"error": output["error"]}), 502
-
-    categories = _parse_categories_from_output(output)
+    categories = _fetch_model_categories(prompt, archetype)
     if not categories:
-        logger.warning("Unable to parse model output; using mock categories.")
+        logger.info("Falling back to mock categories for interpretation")
         categories = _mock_categories(archetype)
 
-    return jsonify({
-        "categories": categories,
-        "archetype": archetype,
-        "source": "Hugging Face Inference API",
-    })
+    return jsonify({"archetype": archetype, "categories": categories})
 
 
 @app.route("/api/calculate-natal-chart", methods=["POST", "OPTIONS"])
