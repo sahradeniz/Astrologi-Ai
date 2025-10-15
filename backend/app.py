@@ -155,6 +155,117 @@ def call_groq(messages: Sequence[Dict[str, str]], *, temperature: float = 0.6, m
     return content
 
 
+def _build_interpretation_prompt(
+    archetype: Mapping[str, Any], planet_text: str, aspect_text: str
+) -> str:
+    core_themes = ", ".join(archetype.get("core_themes", []) or []) or "Not specified"
+    story_tone = archetype.get("story_tone") or "Balanced growth"
+    notable_aspects = ", ".join(archetype.get("notable_aspects", []) or [])
+
+    prompt_sections = [
+        "You are Jovia, an AI astrologer.",
+        f"User chart themes: {core_themes}",
+        f"Story tone: {story_tone}",
+        f"Notable aspects: {notable_aspects or aspect_text or 'Not specified'}",
+    ]
+    if planet_text:
+        prompt_sections.append(f"Planet positions: {planet_text}")
+
+    prompt_sections.append(
+        "Generate short paragraph insights for these categories:\n"
+        "- Love & Relationships\n"
+        "- Career & Purpose\n"
+        "- Spiritual Growth\n"
+        "- Shadow & Transformation\n"
+        "Return result as JSON with keys love, career, spiritual, shadow, each containing headline, summary, advice, and a list named themes."
+    )
+
+    return "\n".join(prompt_sections)
+
+
+def _extract_json_from_text(text: str) -> Mapping[str, Any] | None:
+    if not text:
+        return None
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if match:
+        candidate = match.group(0)
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            return None
+    return None
+
+
+def _validate_categories(candidate: Mapping[str, Any]) -> bool:
+    if not isinstance(candidate, Mapping):
+        return False
+    required_keys = {"love", "career", "spiritual", "shadow"}
+    if not required_keys.issubset(candidate.keys()):
+        return False
+    for value in required_keys:
+        if not isinstance(candidate.get(value), Mapping):
+            return False
+    return True
+
+
+def _parse_categories_from_output(output: Any) -> Mapping[str, Any] | None:
+    generated_text = ""
+    if isinstance(output, list) and output:
+        generated_text = output[0].get("generated_text", "") or ""
+    elif isinstance(output, Mapping):
+        generated_text = output.get("generated_text", "") or output.get("data", "")
+
+    parsed = _extract_json_from_text(generated_text)
+    if parsed and "categories" in parsed and _validate_categories(parsed["categories"]):
+        return parsed["categories"]
+    if parsed and _validate_categories(parsed):
+        return parsed
+    return None
+
+
+def _mock_categories(archetype: Mapping[str, Any]) -> Mapping[str, Any]:
+    story_tone = archetype.get("story_tone") or "Balanced growth"
+    core = ", ".join(archetype.get("core_themes", []) or [])
+    base_summary = (
+        f"Themes of {story_tone.lower()} weave through your chart."
+        if story_tone
+        else "Your chart opens new pathways."
+    )
+    if core:
+        base_summary += f" Key motifs: {core}."
+
+    return {
+        "love": {
+            "headline": "A time to open your heart",
+            "summary": base_summary,
+            "advice": "Share your emotions with trust.",
+            "themes": ["empathy", "connection", "self-expression"],
+        },
+        "career": {
+            "headline": "Structure brings success",
+            "summary": base_summary,
+            "advice": "Anchor your vision with consistent action.",
+            "themes": ["discipline", "focus", "growth"],
+        },
+        "spiritual": {
+            "headline": "Follow the intuitive shimmer",
+            "summary": base_summary,
+            "advice": "Create quiet moments to listen inward.",
+            "themes": ["intuition", "alignment", "reflection"],
+        },
+        "shadow": {
+            "headline": "Integrate the unseen",
+            "summary": base_summary,
+            "advice": "Meet old stories with compassion.",
+            "themes": ["healing", "transmutation", "awareness"],
+        },
+    }
+
 
 def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
     """Call Groq Chat Completions to produce an interpretation."""
@@ -990,15 +1101,15 @@ def interpretation():
         for aspect in aspects
         if isinstance(aspect, Mapping)
     )
-    prompt = (
-        "Sun and planetary data: "
-        + planet_text
-        + ". Aspects: "
-        + aspect_text
-        + ". Provide interpretation and real-life scenario."
-    )
 
-    print(f"🪐 Input prompt: {prompt}")
+    try:
+        archetype = extract_archetype_data(chart_dict)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Failed to extract archetype data")
+        return jsonify({"error": "Failed to extract archetype data."}), 500
+
+    prompt = _build_interpretation_prompt(archetype, planet_text, aspect_text)
+    logger.info("🪐 Built prompt: %s", prompt)
 
     headers = {"Authorization": f"Bearer {HF_TOKEN}"} if HF_TOKEN else {}
     payload = {
@@ -1010,6 +1121,7 @@ def interpretation():
         },
     }
 
+    start_time = time.time()
     try:
         response = requests.post(
             f"https://api-inference.huggingface.co/models/{MODEL_PATH}",
@@ -1022,44 +1134,22 @@ def interpretation():
     except requests.RequestException as exc:
         logger.error("Failed to call Hugging Face Inference API: %s", exc)
         return jsonify({"error": "Model service unavailable."}), 503
+    finally:
+        latency = time.time() - start_time
+        logger.info("✨ Hugging Face latency: %.2fs", latency)
 
     if isinstance(output, dict) and output.get("error"):
         logger.error("Hugging Face API error: %s", output["error"])
         return jsonify({"error": output["error"]}), 502
 
-    generated_text = ""
-    if isinstance(output, list) and output:
-        generated_text = output[0].get("generated_text", "") or ""
-
-    categories = {
-        "love": {
-            "headline": "A time to open your heart",
-            "summary": generated_text or "Venus trine Moon softens your emotional field.",
-            "advice": "Let yourself be seen.",
-            "themes": ["emotional harmony", "self-expression"],
-        },
-        "career": {
-            "headline": "Structure brings success",
-            "summary": generated_text or "Your Capricorn energy demands consistency and grounded action.",
-            "advice": "Plan before acting.",
-            "themes": ["discipline", "growth"],
-        },
-        "spiritual": {
-            "headline": "Listen to the shimmer",
-            "summary": generated_text or "Dreams and synchronicities carry your guidance right now.",
-            "advice": "Give yourself reflective space.",
-            "themes": ["intuition", "alignment"],
-        },
-        "shadow": {
-            "headline": "Integrate the unseen",
-            "summary": generated_text or "Old narratives surface so you can heal and reframe.",
-            "advice": "Name what you fear and offer it compassion.",
-            "themes": ["healing", "transformation"],
-        },
-    }
+    categories = _parse_categories_from_output(output)
+    if not categories:
+        logger.warning("Unable to parse model output; using mock categories.")
+        categories = _mock_categories(archetype)
 
     return jsonify({
         "categories": categories,
+        "archetype": archetype,
         "source": "Hugging Face Inference API",
     })
 
