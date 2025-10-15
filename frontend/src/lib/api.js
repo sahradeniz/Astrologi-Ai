@@ -34,17 +34,17 @@ async function post(path, payload) {
 export const calculateNatalChart = (payload) => post("/natal-chart", payload);
 
 export const getInterpretation = (chartData) =>
-  post("/interpretation", { chart_data: chartData });
+  post("/interpretation", { chart: chartData });
 
 export const calculateSynastry = (payload) =>
   post("/calculate_synastry_chart", payload);
 
-export const sendChatMessage = async (message) => {
+export const sendChatMessage = async (message, chartData) => {
   try {
-    const res = await axios.post(`${API_BASE}/chat/message`, { message });
-    return res.data.reply;
-  } catch (err) {
-    console.error("Chat error:", err);
+    const response = await post("/chat/message", { message, chart: chartData });
+    return response.reply;
+  } catch (error) {
+    console.error("Chat error:", error);
     return "Üzgünüm, şu anda yanıt veremiyorum.";
   }
 };

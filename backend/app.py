@@ -41,15 +41,7 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
-
-CORS(
-    app,
-    origins=[origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()],
-    supports_credentials=True,
-    allow_headers=["Content-Type", "Authorization"],
-    methods=["GET", "POST", "OPTIONS"],
-)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
@@ -1075,6 +1067,10 @@ def _handle_chat_request():
         if not message:
             raise ValueError("message alanı gerekli.")
 
+        chart_context = payload.get("chart")
+        if not isinstance(chart_context, Mapping):
+            return jsonify({"error": "chart information is required for detailed chat guidance."}), 400
+
         history = []
         raw_history = payload.get("history")
         if isinstance(raw_history, list):
@@ -1093,16 +1089,13 @@ def _handle_chat_request():
             }
         ]
 
-        chart_context = payload.get("chart")
-        chart_summary_text = ""
-        if isinstance(chart_context, Mapping):
-            chart_summary_text = _summarise_chart_for_chat(chart_context)
-            system_messages.append(
-                {
-                    "role": "system",
-                    "content": "Kullanıcı doğum haritası özet bilgileri:\n" + chart_summary_text,
-                }
-            )
+        chart_summary_text = _summarise_chart_for_chat(chart_context)
+        system_messages.append(
+            {
+                "role": "system",
+                "content": "Kullanıcı doğum haritası özet bilgileri:\n" + chart_summary_text,
+            }
+        )
 
         messages = [*system_messages, *history]
         if chart_summary_text:
@@ -1125,23 +1118,55 @@ def interpretation():
     if request.method == "OPTIONS":
         return "", 204
 
-    data = request.get_json() or {}
-    chart_data = data.get("chart_data", {}) or {}
-    planets = chart_data.get("planets", {}) or {}
-    aspects = chart_data.get("aspects", []) or []
+    data = request.get_json(silent=True) or {}
+    chart = data.get("chart")
+    if not isinstance(chart, Mapping):
+        logger.warning("Interpretation request missing chart payload")
+        return jsonify({"error": "chart must be provided"}), 400
 
-    planet_text = ", ".join(
-        f"{name} in {details.get('sign', '')} ({details.get('house', '')}th)"
-        for name, details in planets.items()
-    )
-    aspect_text = ", ".join(
-        f"{aspect.get('planet1')} {aspect.get('aspect')} {aspect.get('planet2')}"
-        for aspect in aspects
-        if isinstance(aspect, Mapping)
-    )
+    planets_section = chart.get("planets") or {}
+    aspects_section = chart.get("aspects") or []
+
+    planet_text = ""
+    if isinstance(planets_section, Mapping):
+        planet_descriptions = []
+        for name, details in planets_section.items():
+            if not isinstance(details, Mapping):
+                continue
+            sign = details.get("sign", "")
+            house = details.get("house")
+            descriptor = f"{name} in {sign}".strip()
+            if house not in (None, "", []):
+                descriptor = f"{descriptor} ({house}th)"
+            planet_descriptions.append(descriptor.strip())
+        planet_text = ", ".join(filter(None, planet_descriptions))
+
+    aspect_text = ""
+    if isinstance(aspects_section, Sequence) and not isinstance(aspects_section, str):
+        aspect_labels = []
+        for aspect in aspects_section:
+            if not isinstance(aspect, Mapping):
+                continue
+            planet1 = (
+                aspect.get("planet1")
+                or aspect.get("planet_1")
+                or aspect.get("body_1")
+                or aspect.get("object_1")
+            )
+            planet2 = (
+                aspect.get("planet2")
+                or aspect.get("planet_2")
+                or aspect.get("body_2")
+                or aspect.get("object_2")
+            )
+            aspect_name = aspect.get("aspect") or aspect.get("type") or aspect.get("name")
+            if not all(isinstance(value, str) and value for value in (planet1, planet2, aspect_name)):
+                continue
+            aspect_labels.append(f"{planet1} {aspect_name} {planet2}")
+        aspect_text = ", ".join(aspect_labels)
 
     try:
-        archetype = extract_archetype_data(chart_dict)
+        archetype = extract_archetype_data(chart)
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Failed to extract archetype data")
         return jsonify({"error": "Failed to extract archetype data."}), 500

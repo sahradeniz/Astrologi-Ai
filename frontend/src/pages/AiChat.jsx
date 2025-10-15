@@ -1,18 +1,32 @@
 import React, { useState } from "react";
-import { Box, Input, Button, VStack, Text } from "@chakra-ui/react";
+import { Box, Input, Button, VStack, Text, useToast } from "@chakra-ui/react";
 
-import { sendChatMessage } from "../lib/api";
+import { sendChatMessage } from "../lib/api.js";
 
 const AiChat = () => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
+  const toast = useToast();
 
   const handleSend = async () => {
     if (!input.trim()) return;
+    const chartData = JSON.parse(localStorage.getItem("userChart") || "null");
+    if (!chartData) {
+      toast({
+        title: "Harita bulunamadı",
+        description: "Önce doğum haritanı oluşturmalısın.",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
+
     const userMsg = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMsg]);
 
-    const reply = await sendChatMessage(input);
+    const reply = await sendChatMessage(input, chartData);
     const botMsg = { sender: "jovia", text: reply };
     setMessages((prev) => [...prev, botMsg]);
     setInput("");
