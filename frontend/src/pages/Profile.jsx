@@ -55,6 +55,42 @@ const degreeToSign = (degree) => {
   return signs[index] || null;
 };
 
+const formatDateDisplay = (value) => {
+  if (!value) return null;
+  try {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleDateString("tr-TR", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    }
+  } catch (error) {
+    console.debug("Date formatting failed", error);
+  }
+  return value;
+};
+
+const formatTimeDisplay = (value) => {
+  if (!value) return null;
+  if (/^\d{1,2}:\d{2}$/.test(value)) {
+    return value;
+  }
+  try {
+    const date = new Date(`1970-01-01T${value}`);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleTimeString("tr-TR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+  } catch {
+    /* ignore */
+  }
+  return value;
+};
+
 const Profile = () => {
   const toast = useToast();
   const [profile, setProfile] = useState(() => {
@@ -103,6 +139,12 @@ const Profile = () => {
       }
     })();
   }, [profile]);
+
+  useEffect(() => {
+    if (!profile && !editMode) {
+      setEditMode(true);
+    }
+  }, [profile, editMode]);
 
   useEffect(() => {
     if (!chart || !chart.planets) return;
@@ -168,7 +210,9 @@ const Profile = () => {
   const bigThreeLine = `${sunSign} ☀ — ${moonSign} 🌙 — ASC ${ascSign}`;
 
   const username = (editMode ? form?.name : profile?.name) || chartData?.name || "stargazer";
-  const profileSubtitle = [currentProfileDetails?.date, currentProfileDetails?.time, currentProfileDetails?.city]
+  const formattedDate = formatDateDisplay(currentProfileDetails?.date);
+  const formattedTime = formatTimeDisplay(currentProfileDetails?.time);
+  const profileSubtitle = [formattedDate, formattedTime, currentProfileDetails?.city]
     .filter(Boolean)
     .join(" · ");
 

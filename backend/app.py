@@ -366,6 +366,19 @@ def _get_latest_profile() -> Dict[str, Any] | None:
     return _serialise_profile(document)
 
 
+def _load_chart_from_profile() -> Dict[str, Any] | None:
+    try:
+        profile = _get_latest_profile()
+    except Exception as exc:  # pragma: no cover - graceful fallback
+        logger.warning("Failed to pull chart from profile: %s", exc)
+        return None
+    if isinstance(profile, Mapping):
+        chart = profile.get("chart")
+        if isinstance(chart, Mapping):
+            return chart
+    return None
+
+
 def _summarise_chart_for_chat(chart: Mapping[str, Any]) -> str:
     planets = chart.get("planets") or {}
     planet_summary = []
@@ -1205,6 +1218,8 @@ def _handle_chat_request():
 
         chart_context_raw = payload.get("chart")
         chart_context = chart_context_raw if isinstance(chart_context_raw, Mapping) else None
+        if chart_context is None:
+            chart_context = _load_chart_from_profile()
         if chart_context is None and chart_context_raw is not None:
             logger.warning("Chat request provided invalid chart context type: %s", type(chart_context_raw))
 
@@ -1296,9 +1311,11 @@ def interpretation():
 
     data = request.get_json(silent=True) or {}
     chart = data.get("chart")
-    if not isinstance(chart, Mapping):
-        logger.warning("Interpretation request missing chart payload: %s", data)
-        return jsonify({"error": "chart must be provided"}), 400
+    if not isinstance(chart, Mapping) or not chart:
+        chart = _load_chart_from_profile()
+        if not isinstance(chart, Mapping):
+            logger.warning("Interpretation request missing chart payload and no stored profile available: %s", data)
+            return jsonify({"error": "chart must be provided"}), 400
 
     logger.info("🪐 Interpretation requested for chart keys: planets=%s aspects=%s", bool(chart.get("planets")), bool(chart.get("aspects")))
 

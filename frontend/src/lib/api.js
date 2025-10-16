@@ -43,18 +43,6 @@ async function get(path) {
   }
 }
 
-async function put(path, payload) {
-  try {
-    const response = await axios.put(makeUrl(path), payload, {
-      headers: { "Content-Type": "application/json" },
-      timeout: 15000,
-    });
-    return response.data;
-  } catch (error) {
-    throw new Error(extractMessage(error));
-  }
-}
-
 export const calculateNatalChart = (payload) => post("/natal-chart", payload);
 
 export const getInterpretation = (chartData) =>
