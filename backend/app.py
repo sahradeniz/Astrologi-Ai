@@ -903,7 +903,7 @@ def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str
 
 
 def calc_houses(jd_ut: float, latitude: float, longitude: float) -> tuple[list[float], Dict[str, float]]:
-    cusps, ascmc = swe.houses(jd_ut, latitude, longitude)
+    cusps, ascmc = swe.houses(jd_ut, latitude, longitude, b"P")
     houses = [round(angle % 360, 4) for angle in cusps[:12]]
     angles = {
         "ascendant": round(ascmc[0] % 360, 4),
@@ -1002,8 +1002,7 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
     location = fetch_location(city)
     local_dt, utc_dt = parse_birth_datetime_components(date_value, time_value, location.timezone)
     jd_ut = julian_day(utc_dt)
-
-    cusps, ascmc = swe.houses(jd_ut, location.latitude, location.longitude)
+    cusps, ascmc = swe.houses(jd_ut, location.latitude, location.longitude, b"P")
 
     planets: Dict[str, Dict[str, Any]] = calc_planets(jd_ut, cusps)
 
