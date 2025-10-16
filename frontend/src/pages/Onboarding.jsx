@@ -15,7 +15,7 @@ import {
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-import { calculateNatalChart } from "../lib/api.js";
+import { calculateNatalChart, saveUserProfile } from "../lib/api.js";
 
 const MotionBox = motion(Box);
 
@@ -50,7 +50,23 @@ const Onboarding = () => {
     try {
       const chart = await calculateNatalChart(form);
       localStorage.setItem("userChart", JSON.stringify(chart));
-      navigate("/interests", { replace: true });
+
+      const profileData = {
+        name: form.name,
+        date: form.date,
+        time: form.time,
+        city: form.city,
+        chart,
+      };
+
+      localStorage.setItem("userProfile", JSON.stringify(profileData));
+      try {
+        await saveUserProfile(profileData);
+      } catch (profileError) {
+        console.warn("Profile save failed:", profileError);
+      }
+
+      navigate("/home", { replace: true });
     } catch (error) {
       toast({
         title: "Oops!",

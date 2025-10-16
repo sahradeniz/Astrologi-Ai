@@ -50,6 +50,8 @@ CORS(
     },
 )
 
+USER_DATA_FILE = BASE_DIR / "user_profile.json"
+
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
     swe.set_ephe_path(EPHE_PATH)
@@ -1144,19 +1146,20 @@ def _handle_chat_request():
         if not message:
             raise ValueError("message alanı gerekli.")
 
-        chart_context = payload.get("chart")
-        if not isinstance(chart_context, Mapping):
-            return jsonify({"error": "chart information is required for detailed chat guidance."}), 400
+        chart_context_raw = payload.get("chart")
+        chart_context = chart_context_raw if isinstance(chart_context_raw, Mapping) else None
+        if chart_context is None and chart_context_raw is not None:
+            logger.warning("Chat request provided invalid chart context type: %s", type(chart_context_raw))
 
-        normalized_message = re.sub(r"[^\w\s]", " ", message.lower())
+        normalized_message = message.lower()
         greetings = {"selam", "hey", "merhaba", "hi", "hello"}
-        if any(word in normalized_message.split() for word in greetings):
+        if any(greet in normalized_message for greet in greetings):
             logger.info("💫 Greeting detected in chat message.")
             return jsonify({
                 "reply": (
-                    "Merhaba! Ben Astrologi-AI, kozmik rehberin. "
-                    "Doğum haritana göre yıldızların rehberliğini paylaşabilirim. "
-                    "Ne konuda destek istersin — aşk, kariyer ya da ruhsal gelişim mi?"
+                    "Merhaba! Ben Astrologi-AI, kişisel kozmik rehberin ✨ "
+                    "Doğum haritandaki yıldızların rehberliğiyle seninle konuşmak için buradayım. "
+                    "Aşk, kariyer, ya da kişisel dönüşüm mü merak ediyorsun?"
                 )
             })
 
@@ -1176,30 +1179,49 @@ def _handle_chat_request():
         system_messages = [
             {
                 "role": "system",
-                "content": "Sen Astrologi-AI adlı kozmik rehbersin. Türkçe yanıt ver, kullanıcıya empatik ve açıklayıcı bir tavırla yaklaş. Her yanıtına sıcak bir selamlama ile başla, ardından astrolojik rehberliğe geç.",
+                "content": (
+                    "Sen Astrologi-AI adlı kozmik rehbersin. Türkçe yanıt ver, kullanıcıya empatik "
+                    "ve açıklayıcı bir tavırla yaklaş. Placidus ev sistemini temel al ve gezegen "
+                    "yerleşimlerini dikkatli biçimde değerlendir."
+                ),
             }
         ]
 
-        chart_summary_text = _summarise_chart_for_chat(chart_context)
-        system_messages.append(
-            {
-                "role": "system",
-                "content": "Kullanıcı doğum haritası özet bilgileri:\n" + chart_summary_text,
-            }
-        )
+        chart_summary_text = ""
+        if chart_context:
+            chart_summary_text = _summarise_chart_for_chat(chart_context)
+            if chart_summary_text:
+                system_messages.append(
+                    {
+                        "role": "system",
+                        "content": "Kullanıcı doğum haritası özet bilgileri:\n" + chart_summary_text,
+                    }
+                )
+        else:
+            system_messages.append(
+                {
+                    "role": "system",
+                    "content": "Kullanıcının detaylı doğum haritası paylaşılmadı; yine de astrolojik prensiplerle yardımcı ol.",
+                }
+            )
 
         messages = [*system_messages, *history]
         if chart_summary_text:
             messages.append({"role": "user", "content": "Harita özeti: " + chart_summary_text})
-        messages.append({"role": "user", "content": message})
+        context_line = (
+            "Soru Placidus ev sistemine göre yanıtlanmalı."
+            if chart_context
+            else "Kullanıcı harita detaylarını paylaşmadı."
+        )
+        user_prompt = (
+            f"Kullanıcının mesajı: {message}\n"
+            f"{context_line}\n"
+            "Soğukkanlı, mistik ve içten bir tavırla yanıt ver."
+        )
+        messages.append({"role": "user", "content": user_prompt})
         temperature = float(payload.get("temperature", 0.6))
         max_tokens = int(payload.get("maxTokens", 600))
         reply = call_groq(messages, temperature=temperature, max_tokens=max_tokens)
-
-        has_previous_assistant = any(item.get("role") == "assistant" for item in history)
-        if not has_previous_assistant:
-            greeting = _build_chat_greeting(chart_context)
-            reply = f"{greeting}\n\n{reply}" if greeting else reply
 
         return jsonify({"reply": reply})
     except AIError as exc:
@@ -1321,6 +1343,44 @@ def public_chat_message():
     if request.method == "OPTIONS":
         return "", 204
     return _handle_chat_request()
+
+
+@app.route("/save-profile", methods=["POST", "OPTIONS"])
+def save_profile():
+    if request.method == "OPTIONS":
+        return "", 204
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, Mapping):
+        logger.warning("Profile save attempted with invalid payload: %s", data)
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        USER_DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        logger.info("User profile saved to %s", USER_DATA_FILE)
+    except OSError as exc:
+        logger.exception("Failed to persist profile data: %s", exc)
+        return jsonify({"error": "Unable to save profile"}), 500
+
+    return jsonify({"status": "saved"})
+
+
+@app.route("/get-profile", methods=["GET", "OPTIONS"])
+def get_profile():
+    if request.method == "OPTIONS":
+        return "", 204
+
+    if not USER_DATA_FILE.exists():
+        logger.info("Profile requested but not found on disk.")
+        return jsonify({"error": "Profile not found"}), 404
+
+    try:
+        data = json.loads(USER_DATA_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        logger.exception("Failed to load profile data: %s", exc)
+        return jsonify({"error": "Unable to read profile"}), 500
+
+    return jsonify(data)
 
 
 @app.route("/api/health", methods=["GET"])

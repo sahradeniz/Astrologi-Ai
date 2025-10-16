@@ -3,36 +3,100 @@ import {
   Avatar,
   Badge,
   Box,
-  Button,
   Container,
+  Divider,
   Heading,
   SimpleGrid,
   Stack,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { Users } from "lucide-react";
 import InterpretationCard from "../components/InterpretationCard.jsx";
-import { getInterpretation } from "../lib/api.js";
+import { fetchUserProfile, getInterpretation } from "../lib/api.js";
 
 const MotionBox = motion(Box);
 
+const signs = [
+  "Aries",
+  "Taurus",
+  "Gemini",
+  "Cancer",
+  "Leo",
+  "Virgo",
+  "Libra",
+  "Scorpio",
+  "Sagittarius",
+  "Capricorn",
+  "Aquarius",
+  "Pisces",
+];
+
+const ordinalSuffix = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "?";
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n}st`;
+  if (mod10 === 2 && mod100 !== 12) return `${n}nd`;
+  if (mod10 === 3 && mod100 !== 13) return `${n}rd`;
+  return `${n}th`;
+};
+
+const degreeToSign = (degree) => {
+  if (typeof degree !== "number") return null;
+  const index = Math.floor(((degree % 360) + 360) % 360 / 30);
+  return signs[index] || null;
+};
+
 const Profile = () => {
-  const [chart, setChart] = useState(null);
+  const toast = useToast();
+  const [profile, setProfile] = useState(() => {
+    const stored = localStorage.getItem("userProfile");
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  });
+  const [chart, setChart] = useState(() => {
+    try {
+      if (profile?.chart) return profile.chart;
+      const storedChart = localStorage.getItem("userChart");
+      return storedChart ? JSON.parse(storedChart) : null;
+    } catch {
+      return null;
+    }
+  });
   const [categories, setCategories] = useState(null);
   const [loadingInterpretation, setLoadingInterpretation] = useState(false);
   const [interpretationError, setInterpretationError] = useState(null);
+  const [profileError, setProfileError] = useState(null);
 
   useEffect(() => {
-    const savedChart = localStorage.getItem("userChart");
-    if (savedChart) setChart(JSON.parse(savedChart));
-  }, []);
+    if (profile) return;
+
+    (async () => {
+      try {
+        const remote = await fetchUserProfile();
+        setProfile(remote);
+        localStorage.setItem("userProfile", JSON.stringify(remote));
+        if (remote?.chart) {
+          setChart(remote.chart);
+          localStorage.setItem("userChart", JSON.stringify(remote.chart));
+        }
+      } catch (error) {
+        setProfileError(error.message);
+      }
+    })();
+  }, [profile]);
 
   useEffect(() => {
     if (!chart) return;
 
-    const fetchInterpretation = async () => {
+    (async () => {
       setLoadingInterpretation(true);
       setInterpretationError(null);
       try {
@@ -43,52 +107,98 @@ const Profile = () => {
       } finally {
         setLoadingInterpretation(false);
       }
-    };
-
-    fetchInterpretation();
+    })();
   }, [chart]);
 
-  if (!chart) {
+  useEffect(() => {
+    if (!profileError) return;
+    toast({
+      title: "Profile not found",
+      description: profileError,
+      status: "warning",
+      duration: 4000,
+      isClosable: true,
+      position: "top",
+    });
+  }, [profileError, toast]);
+
+  if (!profile && !chart) {
     return (
       <Container maxW="container.sm" py={{ base: 16, md: 20 }}>
         <VStack spacing={6} textAlign="center" color="white">
           <Heading size="lg">Profile</Heading>
-          <Text>Create your chart to unlock your profile.</Text>
+          <Text>We could not find your cosmic profile yet. Create your chart to begin.</Text>
         </VStack>
       </Container>
     );
   }
 
-  const username = chart.name || "stargazer";
+  const chartData = chart || profile?.chart || {};
+  const sun = chartData?.planets?.Sun || {};
+  const moon = chartData?.planets?.Moon || {};
+  const sunHouse = ordinalSuffix(sun.house);
+  const ascDegree = chartData?.angles?.ascendant;
+  const ascSign =
+    chartData?.angles?.ascendant_sign ||
+    chartData?.Ascendant?.sign ||
+    degreeToSign(typeof ascDegree === "number" ? ascDegree : Number.NaN) ||
+    "—";
+
+  const sunSign = sun.sign || "—";
+  const moonSign = moon.sign || "—";
+  const bigThreeLine = `${sunSign} ☀ — ${moonSign} 🌙 — ASC ${ascSign}`;
+
+  const username = profile?.name || chartData?.name || "stargazer";
+  const profileSubtitle = [profile?.date, profile?.time, profile?.city]
+    .filter(Boolean)
+    .join(" · ");
+
+  const summary = [
+    `☀ Sun: ${sunSign} (${sunHouse !== "?" ? `${sunHouse} house` : "house unknown"})`,
+    `🌙 Moon: ${moonSign}`,
+    `ASC: ${ascSign}`,
+  ];
 
   return (
-    <Container maxW="container.md" py={{ base: 12, md: 16 }}>
+    <Container maxW="container.lg" py={{ base: 12, md: 16 }}>
       <VStack spacing={10} align="stretch">
         <MotionBox
-          bg="rgba(255,255,255,0.16)"
+          bgGradient="linear(to-br, rgba(138,92,255,0.45), rgba(45,15,104,0.85))"
           borderRadius="3xl"
           p={{ base: 6, md: 8 }}
           boxShadow="2xl"
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
+          color="white"
         >
-          <Stack direction={{ base: "column", md: "row" }} spacing={6} align="center">
-            <Avatar
-              name={username}
-              size="xl"
-              border="4px solid rgba(255,255,255,0.6)"
-              bg="rgba(0,0,0,0.1)"
-            />
-            <VStack align="flex-start" spacing={2} color="white">
-              <Heading size="lg">@{username.toLowerCase()}</Heading>
-              <Badge colorScheme="purple" borderRadius="full" px={3} py={1}>
-                {chart.planets?.Sun?.sign || "Solar Mystic"}
-              </Badge>
-              <Text color="whiteAlpha.800">
-                Story tone: {chart.story_tone || "Balanced growth"}
-              </Text>
+          <VStack spacing={4} align="stretch">
+            <Stack direction={{ base: "column", md: "row" }} spacing={6} align={{ base: "center", md: "flex-start" }}>
+              <Avatar
+                name={username}
+                size="xl"
+                border="4px solid rgba(255,255,255,0.6)"
+                bg="rgba(0,0,0,0.2)"
+              />
+              <VStack align={{ base: "center", md: "flex-start" }} spacing={2}>
+                <Heading size="lg">@{username.toLowerCase()}</Heading>
+                <Badge colorScheme="purple" borderRadius="full" px={3} py={1}>
+                  SOLAR MYSTIC
+                </Badge>
+                <Text fontSize="sm" color="whiteAlpha.800">
+                  {profileSubtitle || "Birth details pending"}
+                </Text>
+                <Text fontWeight="medium">{bigThreeLine}</Text>
+              </VStack>
+            </Stack>
+            <Divider borderColor="whiteAlpha.400" />
+            <VStack align="flex-start" spacing={1}>
+              {summary.map((line, idx) => (
+                <Text key={idx} fontSize="sm" color="whiteAlpha.900">
+                  {line}
+                </Text>
+              ))}
             </VStack>
-          </Stack>
+          </VStack>
         </MotionBox>
 
         <MotionBox
@@ -98,41 +208,24 @@ const Profile = () => {
           boxShadow="xl"
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
+          color="white"
         >
-          <Stack spacing={4} color="white">
-            <Heading size="md">Cosmic Interpretation</Heading>
+          <Stack spacing={4}>
+            <Heading size="md">Cosmic Interpretation 🪐</Heading>
             {loadingInterpretation && <Text color="whiteAlpha.700">Loading your cosmic insights...</Text>}
-            {interpretationError && (
-              <Text color="red.300">{interpretationError}</Text>
-            )}
+            {interpretationError && <Text color="red.300">{interpretationError}</Text>}
             {categories ? (
-              <SimpleGrid columns={[1, 1, 2]} spacing={4}>
-                <InterpretationCard
-                  title="Love & Relationships"
-                  data={categories.love}
-                  variant="love"
-                />
-                <InterpretationCard
-                  title="Career & Purpose"
-                  data={categories.career}
-                  variant="career"
-                />
-                <InterpretationCard
-                  title="Spiritual Growth"
-                  data={categories.spiritual}
-                  variant="spiritual"
-                />
-                <InterpretationCard
-                  title="Shadow Integration"
-                  data={categories.shadow}
-                  variant="shadow"
-                />
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                <InterpretationCard title="Love & Relationships" data={categories.love} variant="love" />
+                <InterpretationCard title="Career & Purpose" data={categories.career} variant="career" />
+                <InterpretationCard title="Spiritual Growth" data={categories.spiritual} variant="spiritual" />
+                <InterpretationCard title="Shadow Integration" data={categories.shadow} variant="shadow" />
               </SimpleGrid>
             ) : (
               !loadingInterpretation &&
               !interpretationError && (
                 <Text color="whiteAlpha.700">
-                  Interpretation will appear after we receive the latest guidance.
+                  We are calling in your celestial insights. Refresh soon for the latest download.
                 </Text>
               )
             )}
@@ -140,16 +233,17 @@ const Profile = () => {
         </MotionBox>
 
         <MotionBox
-          bg="rgba(255,255,255,0.14)"
+          bg="rgba(255,255,255,0.16)"
           borderRadius="2xl"
           p={{ base: 6, md: 8 }}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
+          color="white"
         >
-          <Stack spacing={4} color="white">
-            <Heading size="md">Planetary snapshot</Heading>
+          <Stack spacing={4}>
+            <Heading size="md">Planetary Snapshot</Heading>
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-              {Object.entries(chart.planets || {}).map(([planet, details]) => (
+              {Object.entries(chartData.planets || {}).map(([planet, details]) => (
                 <Box
                   key={planet}
                   borderRadius="lg"
@@ -159,38 +253,12 @@ const Profile = () => {
                 >
                   <Text fontWeight="semibold">{planet}</Text>
                   <Text fontSize="sm" color="whiteAlpha.800">
-                    {details.sign} • {details.longitude}° • House {details.house}
+                    {details.sign || "—"} • {details.longitude}° • House {details.house || "?"}
                   </Text>
                 </Box>
               ))}
             </SimpleGrid>
           </Stack>
-        </MotionBox>
-
-        <MotionBox
-          bg="rgba(255,255,255,0.1)"
-          borderRadius="2xl"
-          p={6}
-          initial={{ opacity: 0, y: 26 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <VStack spacing={3} color="white">
-            <Heading size="sm">Friends constellation</Heading>
-            <Text color="whiteAlpha.700">
-              Invite friends soon to see how your stories interlace.
-            </Text>
-            <Button
-              leftIcon={<Users size={18} />}
-              borderRadius="full"
-              alignSelf="flex-start"
-              bgGradient="linear(to-r, #FF8A00, #E52E71)"
-              color="white"
-              _hover={{ opacity: 0.9 }}
-              onClick={() => alert("Friends feature coming soon!")}
-            >
-              My friends
-            </Button>
-          </VStack>
         </MotionBox>
       </VStack>
     </Container>
