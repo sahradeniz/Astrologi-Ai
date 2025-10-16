@@ -1619,8 +1619,13 @@ def update_profile():
 
 @app.route("/health", methods=["GET"])
 def health_check():
-    payload, status_code = _health_response()
-    return jsonify(payload), status_code
+    try:
+        if mongo_client is None:
+            raise RuntimeError("MongoDB not configured")
+        mongo_client.admin.command("ping")
+        return jsonify({"status": "ok", "mongo": "connected"}), 200
+    except Exception as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 500
 
 
 @app.route("/test-db", methods=["GET", "OPTIONS"])
