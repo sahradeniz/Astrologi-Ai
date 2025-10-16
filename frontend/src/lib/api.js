@@ -40,6 +40,18 @@ async function get(path) {
   }
 }
 
+async function put(path, payload) {
+  try {
+    const response = await axios.put(makeUrl(path), payload, {
+      headers: { "Content-Type": "application/json" },
+      timeout: 15000,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(extractMessage(error));
+  }
+}
+
 export const calculateNatalChart = (payload) => post("/natal-chart", payload);
 
 export const getInterpretation = (chartData) =>
@@ -51,6 +63,8 @@ export const calculateSynastry = (payload) =>
 export const saveUserProfile = (profile) => post("/save-profile", profile);
 
 export const fetchUserProfile = () => get("/get-profile");
+
+export const updateUserProfile = (profile) => put("/update-profile", profile);
 
 export const sendChatMessage = async (message, chartData) => {
   try {

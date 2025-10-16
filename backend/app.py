@@ -1383,6 +1383,26 @@ def get_profile():
     return jsonify(data)
 
 
+@app.route("/update-profile", methods=["PUT", "OPTIONS"])
+def update_profile():
+    if request.method == "OPTIONS":
+        return "", 204
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, Mapping):
+        logger.warning("Profile update attempted with invalid payload: %s", data)
+        return jsonify({"error": "no data"}), 400
+
+    try:
+        USER_DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        logger.info("User profile updated at %s", USER_DATA_FILE)
+    except OSError as exc:
+        logger.exception("Failed to update profile data: %s", exc)
+        return jsonify({"error": "Unable to update profile"}), 500
+
+    return jsonify({"status": "updated"})
+
+
 @app.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "ok"})

@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Avatar,
   Badge,
   Box,
+  Button,
   Container,
   Divider,
+  FormControl,
+  FormLabel,
+  Input,
   Heading,
   SimpleGrid,
   Stack,
@@ -14,7 +18,8 @@ import {
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import InterpretationCard from "../components/InterpretationCard.jsx";
-import { fetchUserProfile, getInterpretation } from "../lib/api.js";
+import { fetchUserProfile, getInterpretation, updateUserProfile } from "../lib/api.js";
+import ArchetypeDashboard from "../components/ArchetypeDashboard.jsx";
 
 const MotionBox = motion(Box);
 
@@ -71,9 +76,13 @@ const Profile = () => {
     }
   });
   const [categories, setCategories] = useState(null);
+  const [archetype, setArchetype] = useState(null);
   const [loadingInterpretation, setLoadingInterpretation] = useState(false);
   const [interpretationError, setInterpretationError] = useState(null);
   const [profileError, setProfileError] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [form, setForm] = useState(profile || {});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (profile) return;
@@ -102,6 +111,7 @@ const Profile = () => {
       try {
         const response = await getInterpretation(chart);
         setCategories(response?.categories || null);
+        setArchetype(response?.archetype || null);
       } catch (error) {
         setInterpretationError(error.message);
       } finally {
@@ -122,6 +132,12 @@ const Profile = () => {
     });
   }, [profileError, toast]);
 
+  useEffect(() => {
+    if (profile) {
+      setForm((prev) => ({ ...prev, ...profile }));
+    }
+  }, [profile]);
+
   if (!profile && !chart) {
     return (
       <Container maxW="container.sm" py={{ base: 16, md: 20 }}>
@@ -134,6 +150,7 @@ const Profile = () => {
   }
 
   const chartData = chart || profile?.chart || {};
+  const currentProfileDetails = editMode ? form : profile;
   const sun = chartData?.planets?.Sun || {};
   const moon = chartData?.planets?.Moon || {};
   const sunHouse = ordinalSuffix(sun.house);
@@ -148,8 +165,8 @@ const Profile = () => {
   const moonSign = moon.sign || "—";
   const bigThreeLine = `${sunSign} ☀ — ${moonSign} 🌙 — ASC ${ascSign}`;
 
-  const username = profile?.name || chartData?.name || "stargazer";
-  const profileSubtitle = [profile?.date, profile?.time, profile?.city]
+  const username = (editMode ? form?.name : profile?.name) || chartData?.name || "stargazer";
+  const profileSubtitle = [currentProfileDetails?.date, currentProfileDetails?.time, currentProfileDetails?.city]
     .filter(Boolean)
     .join(" · ");
 
@@ -158,6 +175,55 @@ const Profile = () => {
     `🌙 Moon: ${moonSign}`,
     `ASC: ${ascSign}`,
   ];
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleToggleEdit = () => {
+    setEditMode((prev) => {
+      if (prev) {
+        setForm(profile || {});
+      }
+      return !prev;
+    });
+  };
+
+  const handleSave = async () => {
+    const updatedProfile = {
+      ...(profile || {}),
+      ...form,
+      chart: chartData,
+    };
+    setSaving(true);
+    try {
+      await updateUserProfile(updatedProfile);
+      localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
+      setProfile(updatedProfile);
+      toast({
+        title: "Profil güncellendi",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      setEditMode(false);
+    } catch (error) {
+      toast({
+        title: "Profili kaydedemedik",
+        description: error.message,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const behaviorCount = useMemo(() => archetype?.behavior_patterns?.length || 0, [archetype]);
 
   return (
     <Container maxW="container.lg" py={{ base: 12, md: 16 }}>
@@ -182,13 +248,105 @@ const Profile = () => {
               <VStack align={{ base: "center", md: "flex-start" }} spacing={2}>
                 <Heading size="lg">@{username.toLowerCase()}</Heading>
                 <Badge colorScheme="purple" borderRadius="full" px={3} py={1}>
-                  SOLAR MYSTIC
+                  SOLAR MYSTIC · {behaviorCount} pattern
                 </Badge>
                 <Text fontSize="sm" color="whiteAlpha.800">
                   {profileSubtitle || "Birth details pending"}
                 </Text>
                 <Text fontWeight="medium">{bigThreeLine}</Text>
               </VStack>
+            </Stack>
+            <Stack
+              direction={{ base: "column", md: "row" }}
+              spacing={4}
+              align={{ base: "stretch", md: "center" }}
+              justify="space-between"
+            >
+              <VStack align="stretch" spacing={3} flex="1">
+                {editMode ? (
+                  <>
+                    <FormControl>
+                      <FormLabel color="whiteAlpha.800">İsim</FormLabel>
+                      <Input
+                        name="name"
+                        value={form?.name || ""}
+                        onChange={handleInputChange}
+                        placeholder="Adın"
+                        bg="rgba(255,255,255,0.1)"
+                        border="none"
+                        _focus={{ bg: "rgba(255,255,255,0.2)" }}
+                      />
+                    </FormControl>
+                    <Stack direction={{ base: "column", md: "row" }} spacing={3}>
+                      <FormControl>
+                        <FormLabel color="whiteAlpha.800">Doğum Tarihi</FormLabel>
+                        <Input
+                          name="date"
+                          value={form?.date || ""}
+                          onChange={handleInputChange}
+                          placeholder="1996-12-28"
+                          bg="rgba(255,255,255,0.1)"
+                          border="none"
+                          _focus={{ bg: "rgba(255,255,255,0.2)" }}
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel color="whiteAlpha.800">Doğum Saati</FormLabel>
+                        <Input
+                          name="time"
+                          value={form?.time || ""}
+                          onChange={handleInputChange}
+                          placeholder="07:10"
+                          bg="rgba(255,255,255,0.1)"
+                          border="none"
+                          _focus={{ bg: "rgba(255,255,255,0.2)" }}
+                        />
+                      </FormControl>
+                    </Stack>
+                    <FormControl>
+                      <FormLabel color="whiteAlpha.800">Doğum Şehri</FormLabel>
+                      <Input
+                        name="city"
+                        value={form?.city || ""}
+                        onChange={handleInputChange}
+                        placeholder="İstanbul"
+                        bg="rgba(255,255,255,0.1)"
+                        border="none"
+                        _focus={{ bg: "rgba(255,255,255,0.2)" }}
+                      />
+                    </FormControl>
+                  </>
+                ) : (
+                  <VStack align="flex-start" spacing={1}>
+                    <Text fontSize="md" color="whiteAlpha.900">
+                      {currentProfileDetails?.name || "İsimsiz kahraman"}
+                    </Text>
+                    <Text fontSize="sm" color="whiteAlpha.800">
+                      {profileSubtitle || "Doğum bilgilerini düzenleyebilirsin."}
+                    </Text>
+                  </VStack>
+                )}
+              </VStack>
+              <Stack direction="row" spacing={3}>
+                <Button
+                  variant="outline"
+                  borderColor="whiteAlpha.800"
+                  color="white"
+                  onClick={handleToggleEdit}
+                >
+                  {editMode ? "Vazgeç" : "Profili Düzenle ✏️"}
+                </Button>
+                {editMode && (
+                  <Button
+                    colorScheme="purple"
+                    bgGradient="linear(to-r, purple.400, pink.400)"
+                    onClick={handleSave}
+                    isLoading={saving}
+                  >
+                    Kaydet
+                  </Button>
+                )}
+              </Stack>
             </Stack>
             <Divider borderColor="whiteAlpha.400" />
             <VStack align="flex-start" spacing={1}>
@@ -260,6 +418,18 @@ const Profile = () => {
             </SimpleGrid>
           </Stack>
         </MotionBox>
+
+        {archetype && (
+          <MotionBox
+            bg="rgba(255,255,255,0.18)"
+            borderRadius="2xl"
+            p={{ base: 6, md: 8 }}
+            initial={{ opacity: 0, y: 26 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <ArchetypeDashboard archetype={archetype} />
+          </MotionBox>
+        )}
       </VStack>
     </Container>
   );
