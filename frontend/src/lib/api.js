@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "https://astrolog-ai.onrender.com";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function makeUrl(path) {
   if (!path) return API_BASE;
@@ -36,6 +36,9 @@ async function get(path) {
     const response = await axios.get(makeUrl(path), { timeout: 15000 });
     return response.data;
   } catch (error) {
+    if (error.response?.status === 404) {
+      return null;
+    }
     throw new Error(extractMessage(error));
   }
 }
@@ -62,7 +65,14 @@ export const calculateSynastry = (payload) =>
 
 export const saveUserProfile = (profile) => post("/save-profile", profile);
 
-export const fetchUserProfile = () => get("/get-profile");
+export const fetchUserProfile = async () => {
+  const result = await get("/get-profile");
+  if (!result) return null;
+  if (result.profile !== undefined) {
+    return result.profile;
+  }
+  return result;
+};
 
 export const updateUserProfile = (profile) => put("/update-profile", profile);
 

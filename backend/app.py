@@ -1372,15 +1372,15 @@ def get_profile():
 
     if not USER_DATA_FILE.exists():
         logger.info("Profile requested but not found on disk.")
-        return jsonify({"error": "Profile not found"}), 404
+        return jsonify({"profile": None})
 
     try:
         data = json.loads(USER_DATA_FILE.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as exc:
         logger.exception("Failed to load profile data: %s", exc)
-        return jsonify({"error": "Unable to read profile"}), 500
+        return jsonify({"profile": None})
 
-    return jsonify(data)
+    return jsonify({"profile": data})
 
 
 @app.route("/update-profile", methods=["PUT", "OPTIONS"])

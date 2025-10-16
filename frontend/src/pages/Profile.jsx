@@ -90,11 +90,13 @@ const Profile = () => {
     (async () => {
       try {
         const remote = await fetchUserProfile();
-        setProfile(remote);
-        localStorage.setItem("userProfile", JSON.stringify(remote));
-        if (remote?.chart) {
-          setChart(remote.chart);
-          localStorage.setItem("userChart", JSON.stringify(remote.chart));
+        if (remote) {
+          setProfile(remote);
+          localStorage.setItem("userProfile", JSON.stringify(remote));
+          if (remote.chart) {
+            setChart(remote.chart);
+            localStorage.setItem("userChart", JSON.stringify(remote.chart));
+          }
         }
       } catch (error) {
         setProfileError(error.message);
@@ -103,7 +105,7 @@ const Profile = () => {
   }, [profile]);
 
   useEffect(() => {
-    if (!chart) return;
+    if (!chart || !chart.planets) return;
 
     (async () => {
       setLoadingInterpretation(true);
@@ -210,10 +212,12 @@ const Profile = () => {
       });
       setEditMode(false);
     } catch (error) {
+      localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
+      setProfile(updatedProfile);
       toast({
-        title: "Profili kaydedemedik",
-        description: error.message,
-        status: "error",
+        title: "Profil yerel olarak güncellendi",
+        description: `Sunucuya kaydedilemedi: ${error.message}`,
+        status: "warning",
         duration: 4000,
         isClosable: true,
         position: "top",
