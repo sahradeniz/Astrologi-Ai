@@ -6,6 +6,7 @@ import {
   Container,
   Heading,
   Icon,
+  HStack,
   Image,
   SimpleGrid,
   Stack,
@@ -47,7 +48,17 @@ const StoryStudio = () => {
     setLoading(true);
     try {
       const res = await getInterpretation(chart);
-      setStory(res.ai_interpretation);
+      const categories = res?.categories || {};
+      const chosen =
+        categories.spiritual ||
+        categories.love ||
+        categories.career ||
+        categories.shadow ||
+        null;
+      setStory(chosen);
+      if (chosen) {
+        localStorage.setItem("userStory", JSON.stringify(chosen));
+      }
     } catch (error) {
       toast({
         title: "Could not reach the stars",
@@ -63,7 +74,12 @@ const StoryStudio = () => {
 
   useEffect(() => {
     if (chart) {
-      fetchStory();
+      const cached = localStorage.getItem("userStory");
+      if (cached) {
+        setStory(JSON.parse(cached));
+      } else {
+        fetchStory();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chart]);
