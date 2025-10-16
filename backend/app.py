@@ -12,6 +12,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Sequence
 
+import json
+
 import pytz
 import requests
 import swisseph as swe
@@ -363,6 +365,19 @@ def _normalise_time(value: Any) -> str | None:
             return parsed.strftime("%H:%M")
         except ValueError:
             pass
+    return None
+
+
+def _prepare_chart_payload(payload: Any) -> Dict[str, Any] | None:
+    if isinstance(payload, Mapping):
+        return dict(payload)
+    if isinstance(payload, str):
+        try:
+            parsed = json.loads(payload)
+            if isinstance(parsed, Mapping):
+                return parsed
+        except json.JSONDecodeError:
+            logger.debug("Failed to decode chart payload string")
     return None
 
 
@@ -1393,7 +1408,9 @@ def interpretation():
         return "", 204
 
     data = request.get_json(silent=True) or {}
-    chart = data.get("chart")
+    chart = _prepare_chart_payload(data.get("chart"))
+    if chart is None:
+        chart = _prepare_chart_payload(data.get("chart_data"))
     profile_doc: Dict[str, Any] | None = None
     if not isinstance(chart, Mapping) or not chart:
         try:
@@ -1413,7 +1430,7 @@ def interpretation():
             logger.warning("Stored profile missing required fields for interpretation: %s", profile_doc)
             return jsonify({"error": "Stored profile must include date, time, and city"}), 400
 
-        chart = profile_doc.get("chart") if isinstance(profile_doc.get("chart"), Mapping) else None
+        chart = _prepare_chart_payload(profile_doc.get("chart"))
         if not isinstance(chart, Mapping) or not chart:
             try:
                 chart = build_natal_chart(

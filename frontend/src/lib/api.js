@@ -53,8 +53,26 @@ async function get(path) {
 
 export const calculateNatalChart = (payload) => post("/natal-chart", payload);
 
-export const getInterpretation = (chartData) =>
-  post("/interpretation", { chart: chartData });
+export const getInterpretation = (chartData) => {
+  let preparedChart = chartData;
+  if (typeof preparedChart === "string") {
+    try {
+      preparedChart = JSON.parse(preparedChart);
+    } catch (error) {
+      console.warn("Unable to parse chart data string:", error);
+      preparedChart = null;
+    }
+  }
+
+  if (!preparedChart || typeof preparedChart !== "object") {
+    console.warn("Invalid chart data supplied to getInterpretation", chartData);
+  }
+
+  return post("/interpretation", {
+    chart: preparedChart,
+    chart_data: preparedChart,
+  });
+};
 
 export const calculateSynastry = (payload) =>
   post("/calculate_synastry_chart", payload);
