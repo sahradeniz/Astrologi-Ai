@@ -91,6 +91,38 @@ const formatTimeDisplay = (value) => {
   return value;
 };
 
+const toISODateString = (value) => {
+  if (!value) return "";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+  const date = new Date(value);
+  if (!Number.isNaN(date.getTime())) {
+    return date.toISOString().split("T")[0];
+  }
+  return "";
+};
+
+const toTimeHHMM = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    const directMatch = trimmed.match(/^(\d{1,2}):(\d{2})/);
+    if (directMatch) {
+      return `${directMatch[1].padStart(2, "0")}:${directMatch[2]}`;
+    }
+    try {
+      const parsed = new Date(`1970-01-01T${trimmed}`);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toISOString().substring(11, 16);
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return "";
+};
+
 const Profile = () => {
   const toast = useToast();
   const [profile, setProfile] = useState(() => {
@@ -178,7 +210,12 @@ const Profile = () => {
 
   useEffect(() => {
     if (profile) {
-      setForm((prev) => ({ ...prev, ...profile }));
+      setForm((prev) => ({
+        ...prev,
+        ...profile,
+        date: toISODateString(profile?.date) || "",
+        time: toTimeHHMM(profile?.time) || "",
+      }));
     }
   }, [profile]);
 
@@ -237,11 +274,28 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
+    const normalisedDate = toISODateString(form?.date);
+    const normalisedTime = toTimeHHMM(form?.time);
+    const trimmedCity = (form?.city || "").trim();
     const updatedProfile = {
       ...(profile || {}),
       ...form,
+      date: normalisedDate,
+      time: normalisedTime,
+      city: trimmedCity,
       chart: chartData,
     };
+    if (!updatedProfile.date || !updatedProfile.time || !updatedProfile.city) {
+      toast({
+        title: "Eksik bilgiler",
+        description: "Lütfen doğum tarihi, saati ve şehrini doldur.",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
     setSaving(true);
     try {
       await updateUserProfile(updatedProfile);
@@ -329,6 +383,7 @@ const Profile = () => {
                       <FormControl>
                         <FormLabel color="whiteAlpha.800">Doğum Tarihi</FormLabel>
                         <Input
+                          type="date"
                           name="date"
                           value={form?.date || ""}
                           onChange={handleInputChange}
@@ -341,6 +396,7 @@ const Profile = () => {
                       <FormControl>
                         <FormLabel color="whiteAlpha.800">Doğum Saati</FormLabel>
                         <Input
+                          type="time"
                           name="time"
                           value={form?.time || ""}
                           onChange={handleInputChange}

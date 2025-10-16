@@ -48,13 +48,21 @@ const Onboarding = () => {
     event.preventDefault();
     setLoading(true);
     try {
-      const chart = await calculateNatalChart(form);
+      const formattedDate = form.date ? new Date(form.date).toISOString().split("T")[0] : "";
+      const formattedTime = form.time ? form.time.slice(0, 5) : "";
+      const payload = {
+        ...form,
+        date: formattedDate,
+        time: formattedTime,
+      };
+
+      const chart = await calculateNatalChart(payload);
       localStorage.setItem("userChart", JSON.stringify(chart));
 
       const profileData = {
         name: form.name,
-        date: form.date,
-        time: form.time,
+        date: formattedDate,
+        time: formattedTime,
         city: form.city,
         chart,
       };

@@ -18,7 +18,7 @@ import swisseph as swe
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-from pymongo import MongoClient, ReturnDocument
+from pymongo import MongoClient
 
 # === Jovia Fine-tuned Model ===
 
@@ -325,6 +325,53 @@ def _mock_categories(archetype: Mapping[str, Any]) -> Mapping[str, Any]:
     }
 
 
+def _normalise_date(value: Any) -> str | None:
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value.date().isoformat()
+    if isinstance(value, str):
+        candidate = value.strip()
+        if not candidate:
+            return None
+        # Direct ISO format
+        try:
+            return datetime.fromisoformat(candidate).date().isoformat()
+        except ValueError:
+            pass
+        for pattern in ("%Y-%m-%d", "%d/%m/%Y", "%d.%m.%Y", "%m/%d/%Y"):
+            try:
+                return datetime.strptime(candidate, pattern).date().isoformat()
+            except ValueError:
+                continue
+    return None
+
+
+def _normalise_time(value: Any) -> str | None:
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value.strftime("%H:%M")
+    if isinstance(value, str):
+        candidate = value.strip()
+        if not candidate:
+            return None
+        if len(candidate) == 5 and candidate[2] == ":" and candidate.replace(":", "").isdigit():
+            return candidate
+        for pattern in ("%H:%M:%S", "%H.%M", "%I:%M %p", "%I.%M %p"):
+            try:
+                parsed = datetime.strptime(candidate, pattern)
+                return parsed.strftime("%H:%M")
+            except ValueError:
+                continue
+        try:
+            parsed = datetime.strptime(candidate, "%H:%M")
+            return parsed.strftime("%H:%M")
+        except ValueError:
+            pass
+    return None
+
+
 def _ensure_profiles_collection():
     if profiles_collection is None:
         raise RuntimeError("MongoDB connection is not configured.")
@@ -348,13 +395,24 @@ def _upsert_profile(data: Mapping[str, Any]) -> Dict[str, Any]:
     payload = dict(data)
     if not payload.get("name"):
         payload["name"] = identifier if identifier != "default_profile" else "Stargazer"
+    normalised_date = _normalise_date(payload.get("date"))
+    if normalised_date:
+        payload["date"] = normalised_date
+    elif "date" in payload:
+        payload.pop("date")
+    normalised_time = _normalise_time(payload.get("time"))
+    if normalised_time:
+        payload["time"] = normalised_time
+    elif "time" in payload:
+        payload.pop("time")
+    city_value = payload.get("city")
+    if isinstance(city_value, str):
+        payload["city"] = city_value.strip()
+        if not payload["city"]:
+            payload.pop("city")
     payload["updated_at"] = datetime.utcnow()
-    document = collection.find_one_and_update(
-        {"name": identifier},
-        {"$set": payload},
-        upsert=True,
-        return_document=ReturnDocument.AFTER,
-    )
+    collection.update_one({"name": identifier}, {"$set": payload}, upsert=True)
+    document = collection.find_one({"name": identifier})
     return _serialise_profile(document)
 
 
@@ -374,8 +432,29 @@ def _load_chart_from_profile() -> Dict[str, Any] | None:
         return None
     if isinstance(profile, Mapping):
         chart = profile.get("chart")
-        if isinstance(chart, Mapping):
+        if isinstance(chart, Mapping) and chart:
             return chart
+        date_value = profile.get("date")
+        time_value = profile.get("time")
+        city_value = profile.get("city")
+        if date_value and time_value and city_value:
+            payload = {
+                "date": date_value,
+                "time": time_value,
+                "city": city_value,
+                "name": profile.get("name"),
+            }
+            try:
+                chart = build_natal_chart(payload)
+                updated_profile = dict(profile)
+                updated_profile["chart"] = chart
+                try:
+                    _upsert_profile(updated_profile)
+                except Exception as update_exc:  # pragma: no cover - best effort
+                    logger.debug("Unable to persist rebuilt chart: %s", update_exc)
+                return chart
+            except Exception as exc:  # pragma: no cover - diagnostics
+                logger.warning("Unable to rebuild chart from profile: %s", exc)
     return None
 
 
@@ -1311,11 +1390,45 @@ def interpretation():
 
     data = request.get_json(silent=True) or {}
     chart = data.get("chart")
+    profile_doc: Dict[str, Any] | None = None
     if not isinstance(chart, Mapping) or not chart:
-        chart = _load_chart_from_profile()
-        if not isinstance(chart, Mapping):
+        try:
+            profile_doc = _get_latest_profile()
+        except RuntimeError as exc:
+            logger.error("Profile lookup failed: %s", exc)
+            return jsonify({"error": str(exc)}), 500
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.exception("Unexpected profile lookup error: %s", exc)
+            return jsonify({"error": "Unable to access stored profile"}), 500
+
+        if not profile_doc:
             logger.warning("Interpretation request missing chart payload and no stored profile available: %s", data)
             return jsonify({"error": "chart must be provided"}), 400
+
+        if not all(profile_doc.get(field) for field in ("date", "time", "city")):
+            logger.warning("Stored profile missing required fields for interpretation: %s", profile_doc)
+            return jsonify({"error": "Stored profile must include date, time, and city"}), 400
+
+        chart = profile_doc.get("chart") if isinstance(profile_doc.get("chart"), Mapping) else None
+        if not isinstance(chart, Mapping) or not chart:
+            try:
+                chart = build_natal_chart(
+                    {
+                        "date": profile_doc.get("date"),
+                        "time": profile_doc.get("time"),
+                        "city": profile_doc.get("city"),
+                        "name": profile_doc.get("name"),
+                    }
+                )
+                updated_profile = dict(profile_doc)
+                updated_profile["chart"] = chart
+                try:
+                    _upsert_profile(updated_profile)
+                except Exception as update_exc:  # pragma: no cover - non critical
+                    logger.debug("Unable to persist generated chart for profile: %s", update_exc)
+            except Exception as exc:
+                logger.exception("Failed to build chart from stored profile: %s", exc)
+                return jsonify({"error": "Unable to build chart from stored profile"}), 500
 
     logger.info("🪐 Interpretation requested for chart keys: planets=%s aspects=%s", bool(chart.get("planets")), bool(chart.get("aspects")))
 
@@ -1454,6 +1567,9 @@ def get_profile():
     except Exception as exc:  # pragma: no cover
         logger.exception("Failed to load profile data: %s", exc)
         return jsonify({"error": "Unable to read profile"}), 500
+
+    if not profile_doc:
+        return jsonify({"error": "Profile not found"}), 404
 
     return jsonify({"profile": profile_doc})
 
