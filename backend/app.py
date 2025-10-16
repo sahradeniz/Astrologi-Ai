@@ -64,6 +64,7 @@ GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 GROQ_API_URL = os.getenv("GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions")
 MONGO_URI = os.getenv("MONGO_URI")
 mongo_client: MongoClient | None = None
+db = None
 profiles_collection = None
 
 if MONGO_URI:
@@ -456,6 +457,16 @@ def _load_chart_from_profile() -> Dict[str, Any] | None:
             except Exception as exc:  # pragma: no cover - diagnostics
                 logger.warning("Unable to rebuild chart from profile: %s", exc)
     return None
+
+
+def _health_response() -> tuple[Dict[str, Any], int]:
+    try:
+        if db is None:
+            raise RuntimeError("MongoDB not configured")
+        db.command("ping")
+        return {"status": "ok", "mongo": True}, 200
+    except Exception as exc:
+        return {"status": "degraded", "mongo": False, "error": str(exc)}, 503
 
 
 def _summarise_chart_for_chat(chart: Mapping[str, Any]) -> str:
@@ -1596,6 +1607,12 @@ def update_profile():
     return jsonify({"status": "updated", "profile": profile_doc})
 
 
+@app.route("/health", methods=["GET"])
+def health_check():
+    payload, status_code = _health_response()
+    return jsonify(payload), status_code
+
+
 @app.route("/test-db", methods=["GET", "OPTIONS"])
 def test_db_connection():
     if request.method == "OPTIONS":
@@ -1612,8 +1629,9 @@ def test_db_connection():
 
 
 @app.route("/api/health", methods=["GET"])
-def health_check():
-    return jsonify({"status": "ok"})
+def health_check_api():
+    payload, status_code = _health_response()
+    return jsonify(payload), status_code
 
 
 if __name__ == "__main__":

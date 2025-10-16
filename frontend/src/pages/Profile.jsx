@@ -151,6 +151,7 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState(profile || {});
   const [saving, setSaving] = useState(false);
+  const [backendStatus, setBackendStatus] = useState("online");
 
   useEffect(() => {
     if (profile) return;
@@ -165,12 +166,24 @@ const Profile = () => {
             setChart(remote.chart);
             localStorage.setItem("userChart", JSON.stringify(remote.chart));
           }
+          setBackendStatus("online");
+        } else {
+          setBackendStatus("online");
         }
       } catch (error) {
         setProfileError(error.message);
+        setBackendStatus("offline");
+        toast({
+          title: "Sunucuya ulaşılamadı",
+          description: "Veriler yalnızca yerel olarak kaydedilecek.",
+          status: "warning",
+          duration: 4000,
+          isClosable: true,
+          position: "top",
+        });
       }
     })();
-  }, [profile]);
+  }, [profile, toast]);
 
   useEffect(() => {
     if (!profile && !editMode) {
@@ -197,16 +210,16 @@ const Profile = () => {
   }, [chart]);
 
   useEffect(() => {
-    if (!profileError) return;
+    if (!profileError || backendStatus === "offline") return;
     toast({
-      title: "Profile not found",
+      title: "Profil bilgisi bulunamadı",
       description: profileError,
       status: "warning",
       duration: 4000,
       isClosable: true,
       position: "top",
     });
-  }, [profileError, toast]);
+  }, [profileError, backendStatus, toast]);
 
   useEffect(() => {
     if (profile) {
@@ -301,6 +314,7 @@ const Profile = () => {
       await updateUserProfile(updatedProfile);
       localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
       setProfile(updatedProfile);
+      setBackendStatus("online");
       toast({
         title: "Profil güncellendi",
         status: "success",
@@ -312,10 +326,11 @@ const Profile = () => {
     } catch (error) {
       localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
       setProfile(updatedProfile);
+      setBackendStatus("offline");
       toast({
-        title: "Profil yerel olarak güncellendi",
-        description: `Sunucuya kaydedilemedi: ${error.message}`,
-        status: "warning",
+        title: "Sunucuya ulaşılamadı",
+        description: "Veriler yalnızca yerel olarak kaydedildi. Bağlantıyı kontrol edip tekrar deneyebilirsin.",
+        status: "error",
         duration: 4000,
         isClosable: true,
         position: "top",
@@ -330,6 +345,18 @@ const Profile = () => {
   return (
     <Container maxW="container.lg" py={{ base: 12, md: 16 }}>
       <VStack spacing={10} align="stretch">
+        {backendStatus === "offline" && (
+          <Box
+            bg="red.500"
+            color="white"
+            borderRadius="lg"
+            textAlign="center"
+            py={3}
+            px={4}
+          >
+            Sunucuya bağlanılamadı — veriler şu anda yalnızca bu cihazda saklanıyor.
+          </Box>
+        )}
         <MotionBox
           bgGradient="linear(to-br, rgba(138,92,255,0.45), rgba(45,15,104,0.85))"
           borderRadius="3xl"

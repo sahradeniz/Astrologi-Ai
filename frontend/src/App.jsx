@@ -1,4 +1,5 @@
-import { Box, Container, Flex } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { Box, Container, Flex, useToast } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BrowserRouter,
@@ -55,6 +56,44 @@ const AppShell = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const showBottomNav = !["/", "/onboarding"].includes(location.pathname);
+  const toast = useToast();
+  const [backendStatus, setBackendStatus] = useState("unknown");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+    fetch(`${apiBase}/health`, { signal: controller.signal })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data?.mongo) {
+          setBackendStatus("online");
+        } else {
+          setBackendStatus("offline");
+          toast({
+            title: "Sunucu bağlantısı yok",
+            description: "Veriler şu anda sadece yerelde saklanacak.",
+            status: "warning",
+            duration: 4000,
+            isClosable: true,
+            position: "top",
+          });
+        }
+      })
+      .catch(() => {
+        setBackendStatus("offline");
+        toast({
+          title: "Sunucuya bağlanılamadı",
+          description: "Veriler şu anda sadece yerelde saklanacak.",
+          status: "warning",
+          duration: 4000,
+          isClosable: true,
+          position: "top",
+        });
+      });
+
+    return () => controller.abort();
+  }, [toast]);
 
   return (
     <Flex
@@ -63,6 +102,11 @@ const AppShell = () => {
       bgGradient="linear(to-b, #C2AFF0, #8E7FFF)"
       color="gray.800"
     >
+      {backendStatus === "offline" && (
+        <Box bg="red.500" color="white" textAlign="center" py={2}>
+          Sunucuya bağlanılamadı — veriler şu anda yalnızca bu cihazda saklanıyor.
+        </Box>
+      )}
       <Box flex="1" pb={showBottomNav ? { base: "90px", md: "110px" } : 0}>
         <Container maxW="container.md" py={{ base: 10, md: 16 }}>
           <AnimatePresence mode="wait" initial={false}>

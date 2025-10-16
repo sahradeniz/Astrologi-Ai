@@ -46,6 +46,18 @@ const Onboarding = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const trimmedCity = form.city.trim();
+    if (!form.date || !form.time || !trimmedCity) {
+      toast({
+        title: "Eksik bilgiler",
+        description: "Lütfen doğum tarihini, saatini ve şehrini doldur.",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
     setLoading(true);
     try {
       const formattedDate = form.date ? new Date(form.date).toISOString().split("T")[0] : "";
@@ -54,16 +66,17 @@ const Onboarding = () => {
         ...form,
         date: formattedDate,
         time: formattedTime,
+        city: trimmedCity,
       };
 
       const chart = await calculateNatalChart(payload);
       localStorage.setItem("userChart", JSON.stringify(chart));
 
       const profileData = {
-        name: form.name,
+        name: form.name?.trim() || "",
         date: formattedDate,
         time: formattedTime,
-        city: form.city,
+        city: trimmedCity,
         chart,
       };
 

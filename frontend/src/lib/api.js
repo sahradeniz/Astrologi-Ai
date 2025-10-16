@@ -1,11 +1,17 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+if (!import.meta.env.VITE_API_URL) {
+  console.warn(
+    "⚠️ VITE_API_URL is missing. Falling back to http://localhost:5000. Configure .env or vite.config.js for production deployments."
+  );
+}
 
 function makeUrl(path) {
-  if (!path) return API_BASE;
+  if (!path) return BASE_URL;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  return `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  return `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 function extractMessage(error) {
@@ -27,6 +33,7 @@ async function post(path, payload) {
     });
     return response.data;
   } catch (error) {
+    console.error(`❌ API Error on ${path}:`, error.response?.data || error.message);
     throw new Error(extractMessage(error));
   }
 }
@@ -36,6 +43,7 @@ async function get(path) {
     const response = await axios.get(makeUrl(path), { timeout: 15000 });
     return response.data;
   } catch (error) {
+    console.error(`❌ API Error on ${path}:`, error.response?.data || error.message);
     if (error.response?.status === 404) {
       return null;
     }
