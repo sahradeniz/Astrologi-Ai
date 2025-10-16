@@ -41,16 +41,9 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(
-    app,
-    resources={
-        r"/*": {
-            "origins": ["*", "http://localhost:5173", "https://jovia.app", "https://astrolog-ai.vercel.app"]
-        }
-    },
-)
+CORS(app, supports_credentials=True, origins=["*"])
 
-EPHE_PATH = os.environ.get('EPHE_PATH', '')
+EPHE_PATH = os.environ.get('SWISSEPH_PATH') or os.environ.get('EPHE_PATH', '')
 try:
     swe.set_ephe_path(EPHE_PATH)
 except Exception as exc:  # pragma: no cover - depends on runtime environment
