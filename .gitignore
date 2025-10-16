@@ -22,6 +22,7 @@ build/
 .DS_Store
 backend/.env
 backend/.env
+frontend/.env.local
 jovia_model/
 jovia-finetune/outputs/
 jovia-finetune/jovia_model/
