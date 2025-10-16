@@ -74,7 +74,7 @@ export const fetchUserProfile = async () => {
   return result;
 };
 
-export const updateUserProfile = (profile) => put("/update-profile", profile);
+export const updateUserProfile = (profile) => post("/update-profile", profile);
 
 export const sendChatMessage = async (message, chartData) => {
   try {

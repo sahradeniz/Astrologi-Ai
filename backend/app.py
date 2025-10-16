@@ -1,7 +1,6 @@
 """Astrologi-AI Backend MVP: Flask REST API for astrology charts."""
 from __future__ import annotations
 
-import json
 import logging
 import os
 import re
@@ -19,6 +18,7 @@ import swisseph as swe
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
+from pymongo import MongoClient, ReturnDocument
 
 # === Jovia Fine-tuned Model ===
 
@@ -50,8 +50,6 @@ CORS(
     },
 )
 
-USER_DATA_FILE = BASE_DIR / "user_profile.json"
-
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
     swe.set_ephe_path(EPHE_PATH)
@@ -64,6 +62,24 @@ if not GROQ_API_KEY:
     logger.warning("⚠️ GROQ_API_KEY not found in environment.")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 GROQ_API_URL = os.getenv("GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions")
+MONGO_URI = os.getenv("MONGO_URI")
+mongo_client: MongoClient | None = None
+profiles_collection = None
+
+if MONGO_URI:
+    try:
+        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        mongo_client.admin.command("ping")
+        db = mongo_client["jovia_ai"]
+        profiles_collection = db["users"]
+        profiles_collection.create_index("name", background=True)
+        logger.info("MongoDB connection initialised.")
+    except Exception as exc:  # pragma: no cover - startup diagnostics
+        logger.exception("Failed to initialise MongoDB connection: %s", exc)
+        mongo_client = None
+        profiles_collection = None
+else:
+    logger.warning("MONGO_URI is not configured; profile endpoints will be unavailable.")
 
 PLANETS = {
     "Sun": swe.SUN,
@@ -307,6 +323,47 @@ def _mock_categories(archetype: Mapping[str, Any]) -> Mapping[str, Any]:
             "themes": ["healing", "transmutation", "awareness"],
         },
     }
+
+
+def _ensure_profiles_collection():
+    if profiles_collection is None:
+        raise RuntimeError("MongoDB connection is not configured.")
+    return profiles_collection
+
+
+def _serialise_profile(document: Mapping[str, Any] | None) -> Dict[str, Any] | None:
+    if not document:
+        return None
+    profile = dict(document)
+    profile.pop("_id", None)
+    updated_at = profile.get("updated_at")
+    if isinstance(updated_at, datetime):
+        profile["updated_at"] = updated_at.isoformat()
+    return profile
+
+
+def _upsert_profile(data: Mapping[str, Any]) -> Dict[str, Any]:
+    collection = _ensure_profiles_collection()
+    identifier = data.get("name") or data.get("email") or "default_profile"
+    payload = dict(data)
+    if not payload.get("name"):
+        payload["name"] = identifier if identifier != "default_profile" else "Stargazer"
+    payload["updated_at"] = datetime.utcnow()
+    document = collection.find_one_and_update(
+        {"name": identifier},
+        {"$set": payload},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    return _serialise_profile(document)
+
+
+def _get_latest_profile() -> Dict[str, Any] | None:
+    collection = _ensure_profiles_collection()
+    document = collection.find_one(sort=[("updated_at", -1)])
+    if not document:
+        document = collection.find_one(sort=[("_id", -1)])
+    return _serialise_profile(document)
 
 
 def _summarise_chart_for_chat(chart: Mapping[str, Any]) -> str:
@@ -1356,13 +1413,15 @@ def save_profile():
         return jsonify({"error": "No data provided"}), 400
 
     try:
-        USER_DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        logger.info("User profile saved to %s", USER_DATA_FILE)
-    except OSError as exc:
+        profile_doc = _upsert_profile(data)
+    except RuntimeError as exc:
+        logger.error("Unable to save profile (mongo misconfigured): %s", exc)
+        return jsonify({"error": str(exc)}), 500
+    except Exception as exc:  # pragma: no cover - runtime
         logger.exception("Failed to persist profile data: %s", exc)
         return jsonify({"error": "Unable to save profile"}), 500
 
-    return jsonify({"status": "saved"})
+    return jsonify({"status": "saved", "profile": profile_doc})
 
 
 @app.route("/get-profile", methods=["GET", "OPTIONS"])
@@ -1370,20 +1429,19 @@ def get_profile():
     if request.method == "OPTIONS":
         return "", 204
 
-    if not USER_DATA_FILE.exists():
-        logger.info("Profile requested but not found on disk.")
-        return jsonify({"profile": None})
-
     try:
-        data = json.loads(USER_DATA_FILE.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError) as exc:
+        profile_doc = _get_latest_profile()
+    except RuntimeError as exc:
+        logger.error("Profile retrieval failed (mongo misconfigured): %s", exc)
+        return jsonify({"error": str(exc)}), 500
+    except Exception as exc:  # pragma: no cover
         logger.exception("Failed to load profile data: %s", exc)
-        return jsonify({"profile": None})
+        return jsonify({"error": "Unable to read profile"}), 500
 
-    return jsonify({"profile": data})
+    return jsonify({"profile": profile_doc})
 
 
-@app.route("/update-profile", methods=["PUT", "OPTIONS"])
+@app.route("/update-profile", methods=["POST", "PUT", "OPTIONS"])
 def update_profile():
     if request.method == "OPTIONS":
         return "", 204
@@ -1394,13 +1452,30 @@ def update_profile():
         return jsonify({"error": "no data"}), 400
 
     try:
-        USER_DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        logger.info("User profile updated at %s", USER_DATA_FILE)
-    except OSError as exc:
+        profile_doc = _upsert_profile(data)
+    except RuntimeError as exc:
+        logger.error("Profile update failed (mongo misconfigured): %s", exc)
+        return jsonify({"error": str(exc)}), 500
+    except Exception as exc:  # pragma: no cover
         logger.exception("Failed to update profile data: %s", exc)
         return jsonify({"error": "Unable to update profile"}), 500
 
-    return jsonify({"status": "updated"})
+    return jsonify({"status": "updated", "profile": profile_doc})
+
+
+@app.route("/test-db", methods=["GET", "OPTIONS"])
+def test_db_connection():
+    if request.method == "OPTIONS":
+        return "", 204
+    try:
+        collection = _ensure_profiles_collection()
+        sample = {"test": "connection", "timestamp": datetime.utcnow()}
+        result = collection.insert_one(sample)
+        collection.delete_one({"_id": result.inserted_id})
+        return jsonify({"status": "MongoDB connected!"})
+    except Exception as exc:  # pragma: no cover - diagnostics
+        logger.exception("MongoDB connectivity test failed: %s", exc)
+        return jsonify({"error": str(exc)}), 500
 
 
 @app.route("/api/health", methods=["GET"])
