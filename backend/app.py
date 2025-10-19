@@ -27,9 +27,10 @@ ROOT_DIR = BASE_DIR.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from backend.archetype_engine import extract_archetype_data
-
 load_dotenv(dotenv_path=BASE_DIR / ".env")
+
+from backend.archetype_engine import extract_archetype_data
+from backend.db import MongoUnavailable, ensure_mongo_connection, mongo_healthcheck
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -57,6 +58,16 @@ if not GROQ_API_KEY:
     logger.warning("⚠️ GROQ_API_KEY not found in environment.")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 GROQ_API_URL = os.getenv("GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions")
+MONGO_URI = os.getenv("MONGO_URI")
+
+if MONGO_URI:
+    try:
+        ensure_mongo_connection(retries=2, delay=0.8, revalidate=True)
+        logger.info("MongoDB bağlantısı başarıyla kuruldu.")
+    except MongoUnavailable as exc:
+        logger.warning("MongoDB başlangıç bağlantısı kurulamadı: %s", exc)
+else:
+    logger.info("MONGO_URI tanımlı değil; MongoDB bağlantısı devre dışı bırakıldı.")
 
 PLANETS = {
     "Sun": swe.SUN,
@@ -1107,7 +1118,20 @@ def public_chat_message():
 @app.route("/api/health", methods=["GET"])
 def health_check():
     """Simple endpoint to confirm backend is alive."""
-    return jsonify({"status": "ok"})
+    health = {"status": "ok"}
+
+    if MONGO_URI:
+        mongo_ok, detail = mongo_healthcheck()
+        health["mongo"] = {
+            "status": "ok" if mongo_ok else "error",
+            "detail": detail,
+        }
+        if not mongo_ok:
+            health["status"] = "degraded"
+    else:
+        health["mongo"] = {"status": "disabled", "detail": "MongoDB bağlantısı yapılandırılmadı."}
+
+    return jsonify(health)
 
 
 if __name__ == "__main__":
