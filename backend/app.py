@@ -1,7 +1,9 @@
 """Astrologi-AI Backend MVP: Flask REST API for astrology charts."""
 from __future__ import annotations
 
+import json
 import logging
+logging.basicConfig(level=logging.INFO)
 import os
 import re
 import sys
@@ -12,17 +14,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Sequence
 
-import json
-
 import pytz
 import requests
 import swisseph as swe
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-from pymongo import MongoClient
-
-# === Jovia Fine-tuned Model ===
 
 # Ensure project root is on sys.path when running as a script.
 BASE_DIR = Path(__file__).resolve().parent
@@ -34,18 +31,21 @@ from backend.archetype_engine import extract_archetype_data
 
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
-MODEL_PATH = "Sahradeniz/jovia-finetune"
-HF_TOKEN = os.getenv("HF_TOKEN")
-
-print("✅ Hugging Face proxy mode ready!")
-
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["*"])
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
 
-EPHE_PATH = os.environ.get('SWISSEPH_PATH') or os.environ.get('EPHE_PATH', '')
+CORS(
+    app,
+    origins=[origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()],
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization"],
+    methods=["GET", "POST", "OPTIONS"],
+)
+
+EPHE_PATH = os.environ.get('EPHE_PATH', '')
 try:
     swe.set_ephe_path(EPHE_PATH)
 except Exception as exc:  # pragma: no cover - depends on runtime environment
@@ -57,25 +57,6 @@ if not GROQ_API_KEY:
     logger.warning("⚠️ GROQ_API_KEY not found in environment.")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 GROQ_API_URL = os.getenv("GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions")
-MONGO_URI = os.getenv("MONGO_URI")
-mongo_client: MongoClient | None = None
-db = None
-profiles_collection = None
-
-if MONGO_URI:
-    try:
-        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-        mongo_client.admin.command("ping")
-        db = mongo_client["jovia_ai"]
-        profiles_collection = db["users"]
-        profiles_collection.create_index("name", background=True)
-        logger.info("MongoDB connection initialised.")
-    except Exception as exc:  # pragma: no cover - startup diagnostics
-        logger.exception("Failed to initialise MongoDB connection: %s", exc)
-        mongo_client = None
-        profiles_collection = None
-else:
-    logger.warning("MONGO_URI is not configured; profile endpoints will be unavailable.")
 
 PLANETS = {
     "Sun": swe.SUN,
@@ -168,377 +149,6 @@ def call_groq(messages: Sequence[Dict[str, str]], *, temperature: float = 0.6, m
     return content
 
 
-def _build_interpretation_prompt(
-    archetype: Mapping[str, Any], planet_text: str, aspect_text: str
-) -> str:
-    core_themes = ", ".join(archetype.get("core_themes", []) or []) or "Not specified"
-    story_tone = archetype.get("story_tone") or "Balanced growth"
-    notable_aspects = ", ".join(archetype.get("notable_aspects", []) or [])
-
-    prompt_sections = [
-        "You are Jovia, an AI astrologer.",
-        f"User chart themes: {core_themes}",
-        f"Story tone: {story_tone}",
-        f"Notable aspects: {notable_aspects or aspect_text or 'Not specified'}",
-    ]
-    if planet_text:
-        prompt_sections.append(f"Planet positions: {planet_text}")
-
-    prompt_sections.append(
-        "Generate short paragraph insights for these categories:\n"
-        "- Love & Relationships\n"
-        "- Career & Purpose\n"
-        "- Spiritual Growth\n"
-        "- Shadow & Transformation\n"
-        "Return result as JSON with keys love, career, spiritual, shadow, each containing headline, summary, advice, and a list named themes."
-    )
-
-    return "\n".join(prompt_sections)
-
-
-def _extract_json_from_text(text: str) -> Mapping[str, Any] | None:
-    if not text:
-        return None
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if match:
-        candidate = match.group(0)
-        try:
-            return json.loads(candidate)
-        except json.JSONDecodeError:
-            return None
-    return None
-
-
-def _validate_categories(candidate: Mapping[str, Any]) -> bool:
-    if not isinstance(candidate, Mapping):
-        return False
-    required_keys = {"love", "career", "spiritual", "shadow"}
-    if not required_keys.issubset(candidate.keys()):
-        return False
-    for value in required_keys:
-        if not isinstance(candidate.get(value), Mapping):
-            return False
-    return True
-
-
-def _parse_categories_from_output(output: Any) -> Mapping[str, Any] | None:
-    generated_text = ""
-    if isinstance(output, list) and output:
-        generated_text = output[0].get("generated_text", "") or ""
-    elif isinstance(output, Mapping):
-        generated_text = output.get("generated_text", "") or output.get("data", "")
-
-    parsed = _extract_json_from_text(generated_text)
-    if parsed and "categories" in parsed and _validate_categories(parsed["categories"]):
-        return parsed["categories"]
-    if parsed and _validate_categories(parsed):
-        return parsed
-    return None
-
-
-def _fetch_model_categories(prompt: str, archetype: Mapping[str, Any]) -> Mapping[str, Any] | None:
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"} if HF_TOKEN else {}
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 180,
-            "temperature": 0.8,
-            "top_p": 0.9,
-        },
-    }
-
-    start_time = time.time()
-    try:
-        response = requests.post(
-            f"https://api-inference.huggingface.co/models/{MODEL_PATH}",
-            headers=headers,
-            json=payload,
-            timeout=60,
-        )
-        response.raise_for_status()
-        output = response.json()
-        logger.debug("Model raw output received: %s", output)
-    except requests.RequestException as exc:
-        latency = time.time() - start_time
-        logger.error("Failed to call Hugging Face Inference API after %.2fs: %s", latency, exc)
-        logger.debug("Prompt used for failed interpretation: %s", prompt)
-        return None
-    finally:
-        latency = time.time() - start_time
-        logger.info("✨ Hugging Face latency: %.2fs", latency)
-
-    if isinstance(output, dict) and output.get("error"):
-        logger.error("Hugging Face API error payload: %s", output)
-        return None
-
-    categories = _parse_categories_from_output(output)
-    if not categories:
-        logger.warning("Unable to parse model output; archetype themes=%s", archetype.get("core_themes"))
-    return categories
-
-
-def _mock_categories(archetype: Mapping[str, Any]) -> Mapping[str, Any]:
-    story_tone = archetype.get("story_tone") or "Balanced growth"
-    core = ", ".join(archetype.get("core_themes", []) or [])
-    base_summary = (
-        f"Themes of {story_tone.lower()} weave through your chart."
-        if story_tone
-        else "Your chart opens new pathways."
-    )
-    if core:
-        base_summary += f" Key motifs: {core}."
-
-    return {
-        "love": {
-            "headline": "A time to open your heart",
-            "summary": base_summary,
-            "advice": "Share your emotions with trust.",
-            "themes": ["empathy", "connection", "self-expression"],
-        },
-        "career": {
-            "headline": "Structure brings success",
-            "summary": base_summary,
-            "advice": "Anchor your vision with consistent action.",
-            "themes": ["discipline", "focus", "growth"],
-        },
-        "spiritual": {
-            "headline": "Follow the intuitive shimmer",
-            "summary": base_summary,
-            "advice": "Create quiet moments to listen inward.",
-            "themes": ["intuition", "alignment", "reflection"],
-        },
-        "shadow": {
-            "headline": "Integrate the unseen",
-            "summary": base_summary,
-            "advice": "Meet old stories with compassion.",
-            "themes": ["healing", "transmutation", "awareness"],
-        },
-    }
-
-
-def _normalise_date(value: Any) -> str | None:
-    if not value:
-        return None
-    if isinstance(value, datetime):
-        return value.date().isoformat()
-    if isinstance(value, str):
-        candidate = value.strip()
-        if not candidate:
-            return None
-        # Direct ISO format
-        try:
-            return datetime.fromisoformat(candidate).date().isoformat()
-        except ValueError:
-            pass
-        for pattern in ("%Y-%m-%d", "%d/%m/%Y", "%d.%m.%Y", "%m/%d/%Y"):
-            try:
-                return datetime.strptime(candidate, pattern).date().isoformat()
-            except ValueError:
-                continue
-    return None
-
-
-def _normalise_time(value: Any) -> str | None:
-    if not value:
-        return None
-    if isinstance(value, datetime):
-        return value.strftime("%H:%M")
-    if isinstance(value, str):
-        candidate = value.strip()
-        if not candidate:
-            return None
-        if len(candidate) == 5 and candidate[2] == ":" and candidate.replace(":", "").isdigit():
-            return candidate
-        for pattern in ("%H:%M:%S", "%H.%M", "%I:%M %p", "%I.%M %p"):
-            try:
-                parsed = datetime.strptime(candidate, pattern)
-                return parsed.strftime("%H:%M")
-            except ValueError:
-                continue
-        try:
-            parsed = datetime.strptime(candidate, "%H:%M")
-            return parsed.strftime("%H:%M")
-        except ValueError:
-            pass
-    return None
-
-
-def _prepare_chart_payload(payload: Any) -> Dict[str, Any] | None:
-    if isinstance(payload, Mapping):
-        return dict(payload)
-    if isinstance(payload, str):
-        try:
-            parsed = json.loads(payload)
-            if isinstance(parsed, Mapping):
-                return parsed
-        except json.JSONDecodeError:
-            logger.debug("Failed to decode chart payload string")
-    return None
-
-
-def _ensure_profiles_collection():
-    if profiles_collection is None:
-        raise RuntimeError("MongoDB connection is not configured.")
-    return profiles_collection
-
-
-def _serialise_profile(document: Mapping[str, Any] | None) -> Dict[str, Any] | None:
-    if not document:
-        return None
-    profile = dict(document)
-    profile.pop("_id", None)
-    updated_at = profile.get("updated_at")
-    if isinstance(updated_at, datetime):
-        profile["updated_at"] = updated_at.isoformat()
-    return profile
-
-
-def _upsert_profile(data: Mapping[str, Any]) -> Dict[str, Any]:
-    collection = _ensure_profiles_collection()
-    identifier = data.get("name") or data.get("email") or "default_profile"
-    payload = dict(data)
-    if not payload.get("name"):
-        payload["name"] = identifier if identifier != "default_profile" else "Stargazer"
-    normalised_date = _normalise_date(payload.get("date"))
-    if normalised_date:
-        payload["date"] = normalised_date
-    elif "date" in payload:
-        payload.pop("date")
-    normalised_time = _normalise_time(payload.get("time"))
-    if normalised_time:
-        payload["time"] = normalised_time
-    elif "time" in payload:
-        payload.pop("time")
-    city_value = payload.get("city")
-    if isinstance(city_value, str):
-        payload["city"] = city_value.strip()
-        if not payload["city"]:
-            payload.pop("city")
-    payload["updated_at"] = datetime.utcnow()
-    collection.update_one({"name": identifier}, {"$set": payload}, upsert=True)
-    document = collection.find_one({"name": identifier})
-    return _serialise_profile(document)
-
-
-def _get_latest_profile() -> Dict[str, Any] | None:
-    collection = _ensure_profiles_collection()
-    document = collection.find_one(sort=[("updated_at", -1)])
-    if not document:
-        document = collection.find_one(sort=[("_id", -1)])
-    return _serialise_profile(document)
-
-
-def _load_chart_from_profile() -> Dict[str, Any] | None:
-    try:
-        profile = _get_latest_profile()
-    except Exception as exc:  # pragma: no cover - graceful fallback
-        logger.warning("Failed to pull chart from profile: %s", exc)
-        return None
-    if isinstance(profile, Mapping):
-        chart = profile.get("chart")
-        if isinstance(chart, Mapping) and chart:
-            return chart
-        date_value = profile.get("date")
-        time_value = profile.get("time")
-        city_value = profile.get("city")
-        if date_value and time_value and city_value:
-            payload = {
-                "date": date_value,
-                "time": time_value,
-                "city": city_value,
-                "name": profile.get("name"),
-            }
-            try:
-                chart = build_natal_chart(payload)
-                updated_profile = dict(profile)
-                updated_profile["chart"] = chart
-                try:
-                    _upsert_profile(updated_profile)
-                except Exception as update_exc:  # pragma: no cover - best effort
-                    logger.debug("Unable to persist rebuilt chart: %s", update_exc)
-                return chart
-            except Exception as exc:  # pragma: no cover - diagnostics
-                logger.warning("Unable to rebuild chart from profile: %s", exc)
-    return None
-
-
-def _health_response() -> tuple[Dict[str, Any], int]:
-    try:
-        if db is None:
-            raise RuntimeError("MongoDB not configured")
-        db.command("ping")
-        return {"status": "ok", "mongo": True}, 200
-    except Exception as exc:
-        return {"status": "degraded", "mongo": False, "error": str(exc)}, 503
-
-
-def _summarise_chart_for_chat(chart: Mapping[str, Any]) -> str:
-    planets = chart.get("planets") or {}
-    planet_summary = []
-    for name, details in planets.items():
-        if not isinstance(details, Mapping):
-            continue
-        sign = details.get("sign") or ""
-        house = details.get("house")
-        house_part = f" ({house}. ev)" if house else ""
-        planet_summary.append(f"{name}: {sign}{house_part}")
-
-    aspects = chart.get("aspects") or []
-    aspect_summary = []
-    for aspect in aspects:
-        if not isinstance(aspect, Mapping):
-            continue
-        p1 = aspect.get("planet1")
-        aspect_name = aspect.get("aspect")
-        p2 = aspect.get("planet2")
-        if p1 and p2 and aspect_name:
-            aspect_summary.append(f"{p1} {aspect_name} {p2}")
-
-    summary_sections = []
-    if planet_summary:
-        summary_sections.append("Gezegenler: " + ", ".join(planet_summary))
-    if aspect_summary:
-        summary_sections.append("Önemli açılar: " + ", ".join(aspect_summary))
-    if chart.get("story_tone"):
-        summary_sections.append(f"Genel hikâye tonu: {chart.get('story_tone')}")
-
-    return "\n".join(summary_sections).strip()
-
-
-def _build_chat_greeting(chart: Mapping[str, Any]) -> str:
-    if not isinstance(chart, Mapping):
-        return "Merhaba! Kozmik yolculuğuna hazır mısın?"
-
-    name: str | None = None
-    raw_name = chart.get("name")
-    if isinstance(raw_name, str) and raw_name.strip():
-        name = raw_name.strip()
-    else:
-        user_block = chart.get("user")
-        if isinstance(user_block, Mapping):
-            user_name = user_block.get("name")
-            if isinstance(user_name, str) and user_name.strip():
-                name = user_name.strip()
-
-    if name:
-        return f"Merhaba {name}! Haritanı birlikte inceleyelim."
-
-    sun_sign = None
-    planets = chart.get("planets")
-    if isinstance(planets, Mapping):
-        sun_details = planets.get("Sun")
-        if isinstance(sun_details, Mapping):
-            sun_sign = sun_details.get("sign")
-    if isinstance(sun_sign, str) and sun_sign.strip():
-        return f"Merhaba parlak {sun_sign} ruhu! Haritan neler fısıldıyor bakalım."
-
-    return "Merhaba! Kozmik yolculuğuna hazır mısın?"
-
 
 def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
     """Call Groq Chat Completions to produce an interpretation."""
@@ -584,42 +194,55 @@ def generate_ai_interpretation(chart_data: dict[str, Any] | str) -> str:
 
 
 def get_ai_interpretation(chart_data: Mapping[str, Any]) -> Dict[str, Any]:
-    """Return a resilient AI interpretation payload anchored in archetype themes."""
-
-    fallback_ai: Dict[str, str] = {
-        "headline": "Interpretation unavailable",
-        "summary": "We could not generate a full interpretation at this time.",
-        "advice": "Stay grounded and patient; your insight is unfolding.",
-    }
+    """Generate a rich interpretation by blending archetype themes with Groq output."""
 
     try:
-        archetype_data = extract_archetype_data(chart_data)
+        archetype = extract_archetype_data(chart_data)
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Archetype extraction failed: %s", exc)
+        fallback_ai = {
+            "headline": "Interpretation unavailable",
+            "summary": "We could not generate a full interpretation at this time.",
+            "advice": "Stay grounded and patient; your insight is unfolding.",
+        }
         return {
             "ai_interpretation": fallback_ai,
             "themes": [],
             "tone": "balanced growth",
         }
 
-    themes_list = archetype_data.get("core_themes", [])
-    tone_value = str(archetype_data.get("story_tone", "balanced growth"))
-    aspects_text = ", ".join(archetype_data.get("notable_aspects", [])) or "No notable aspects recorded."
-
-    def build_payload(ai_output: Dict[str, str]) -> Dict[str, Any]:
-        return {
-            "ai_interpretation": ai_output,
-            "themes": themes_list,
-            "tone": tone_value,
-        }
-
     groq_api_key = os.getenv("GROQ_API_KEY")
     groq_model = os.getenv("GROQ_MODEL", GROQ_MODEL)
     if not groq_api_key:
         logger.warning("⚠️ GROQ_API_KEY not found; cannot call Groq.")
-        return build_payload(fallback_ai)
+        fallback_ai = {
+            "headline": "Interpretation unavailable",
+            "summary": "We could not generate a full interpretation at this time.",
+            "advice": "Stay grounded and patient; your insight is unfolding.",
+        }
+        return {
+            "ai_interpretation": fallback_ai,
+            "themes": archetype.get("core_themes", []),
+            "tone": archetype.get("story_tone", "balanced growth"),
+        }
 
-    themes_text = ", ".join(themes_list) or "inner exploration"
+    core_themes = archetype.get("core_themes", [])
+    tone_value = archetype.get("story_tone", "balanced growth")
+    themes = ", ".join(core_themes) or "inner exploration"
+    aspects = ", ".join(archetype.get("notable_aspects", [])) or "No notable aspects recorded."
+
+    fallback_ai = {
+        "headline": "Interpretation unavailable",
+        "summary": "We could not generate a full interpretation at this time.",
+        "advice": "Stay grounded and patient; your insight is unfolding.",
+    }
+
+    def build_result(ai_output: Dict[str, str]) -> Dict[str, Any]:
+        return {
+            "ai_interpretation": ai_output,
+            "themes": core_themes,
+            "tone": tone_value,
+        }
 
     prompt = f"""
 You are **Jovia**, an intuitive AI astrologer who blends depth psychology, mythology, and astrology.
@@ -629,9 +252,9 @@ Interpret the user's birth chart themes below.
 Focus on the inner story of transformation — emotional patterns, spiritual lessons, and healing arcs.
 Avoid explaining what astrology *is*; instead, *speak as if you see into their soul.*
 
-Themes: {themes_text}
-Tone: {tone_value}
-Aspects: {aspects_text}
+Themes: {themes}
+Tone: {tone}
+Aspects: {aspects}
 
 Return your response as a JSON object:
 
@@ -642,6 +265,11 @@ Return your response as a JSON object:
 }}
 """.strip()
 
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {groq_api_key}",
+        "Content-Type": "application/json",
+    }
     payload = {
         "model": groq_model,
         "messages": [
@@ -662,15 +290,7 @@ Return your response as a JSON object:
 
     content = ""
     try:
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {groq_api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=30,
-        )
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
         print("Groq response status:", response.status_code)
         print("Groq response preview:", response.text[:500])
         response.raise_for_status()
@@ -681,41 +301,61 @@ Return your response as a JSON object:
             content = (message or {}).get("content", "") if isinstance(message, dict) else ""
         else:
             logger.warning("Groq response missing choices array.")
+            content = ""
     except Exception as exc:  # pylint: disable=broad-except
         print("Groq API call failed:", exc)
         traceback.print_exc()
         logger.exception("Groq API call failed: %s", exc)
-        return build_payload(fallback_ai)
+        return fallback
 
     print("RAW GROQ OUTPUT:", content)
     logger.debug("Groq content raw: %s", content)
 
-    ai_output = fallback_ai
+    parsed = None
     if content:
         try:
             parsed = json.loads(content)
             print("PARSE SUCCESS:", True)
-            ai_output = {
-                "headline": str(parsed.get("headline", "")).strip() or fallback_ai["headline"],
-                "summary": str(parsed.get("summary", "")).strip() or fallback_ai["summary"],
-                "advice": str(parsed.get("advice", "")).strip() or fallback_ai["advice"],
-            }
         except json.JSONDecodeError:
             print("PARSE SUCCESS:", False)
             headline_match = re.search(r"(?i)(headline|title)[:\-]\s*(.*)", content)
             summary_match = re.search(r"(?i)(summary|interpretation)[:\-]\s*(.*)", content)
             advice_match = re.search(r"(?i)(advice|guidance)[:\-]\s*(.*)", content)
 
-            ai_output = {
-                "headline": headline_match.group(2).strip() if headline_match else fallback_ai["headline"],
-                "summary": summary_match.group(2).strip() if summary_match else content[:400].strip(),
-                "advice": advice_match.group(2).strip() if advice_match else "Trust your own timing.",
+            headline = headline_match.group(2).strip() if headline_match else "Interpretation unavailable"
+            summary = summary_match.group(2).strip() if summary_match else content[:400].strip()
+            advice = advice_match.group(2).strip() if advice_match else "Trust your own timing."
+
+            parsed = {
+                "headline": headline,
+                "summary": summary,
+                "advice": advice,
             }
-            print("PARSE SUCCESS:", True)
     else:
         print("PARSE SUCCESS:", False)
 
-    return build_payload(ai_output)
+    if not parsed:
+        parsed = {
+            "headline": "Interpretation unavailable",
+            "summary": "We could not generate a full interpretation at this time.",
+            "advice": "Stay grounded and patient; your insight is unfolding.",
+        }
+
+    headline = str(parsed.get("headline", "")).strip() or "Interpretation unavailable"
+    summary = str(parsed.get("summary", "")).strip() or "We could not generate a full interpretation at this time."
+    advice = str(parsed.get("advice", "")).strip() or "Stay grounded and patient; your insight is unfolding."
+
+    ai_output = {
+        "headline": headline,
+        "summary": summary,
+        "advice": advice,
+    }
+
+    return {
+        "ai_interpretation": ai_output,
+        "themes": archetype.get("core_themes", []),
+        "tone": archetype.get("story_tone", "balanced growth"),
+    }
 
 
 def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Mapping[str, Any]) -> Dict[str, str]:
@@ -1073,12 +713,30 @@ def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str
 
 
 def calc_houses(jd_ut: float, latitude: float, longitude: float) -> tuple[list[float], Dict[str, float]]:
+    """Calculate Placidus houses and ensure ASC–House 1 alignment."""
+    # Swiss Ephemeris expects east longitudes as negative
+    if longitude > 0:
+        logger.info(f"Longitude {longitude}°E detected — converting to negative for Swiss Ephemeris.")
+        longitude = -longitude
+
+    # Calculate Placidus houses
     cusps, ascmc = swe.houses(jd_ut, latitude, longitude, b"P")
     houses = [round(angle % 360, 4) for angle in cusps[:12]]
     angles = {
         "ascendant": round(ascmc[0] % 360, 4),
         "midheaven": round(ascmc[1] % 360, 4),
     }
+
+    # Sanity check for ASC alignment
+    delta = abs(houses[0] - angles["ascendant"])
+    logger.info(f"ASC={angles['ascendant']}°, House1={houses[0]}°, Δ={delta:.2f}°")
+
+    # If difference > 5°, rotate houses so ASC and 1st house match
+    if delta > 5:
+        logger.warning(f"ASC misalignment detected ({delta:.2f}°) → correcting houses.")
+        shift = (angles["ascendant"] - houses[0]) % 360
+        houses = [(h + shift) % 360 for h in houses]
+
     return houses, angles
 
 
@@ -1172,7 +830,8 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
     location = fetch_location(city)
     local_dt, utc_dt = parse_birth_datetime_components(date_value, time_value, location.timezone)
     jd_ut = julian_day(utc_dt)
-    cusps, ascmc = swe.houses(jd_ut, location.latitude, location.longitude, b"P")
+
+    cusps, ascmc = swe.houses(jd_ut, location.latitude, location.longitude)
 
     planets: Dict[str, Dict[str, Any]] = calc_planets(jd_ut, cusps)
 
@@ -1314,25 +973,6 @@ def _handle_chat_request():
         if not message:
             raise ValueError("message alanı gerekli.")
 
-        chart_context_raw = payload.get("chart")
-        chart_context = chart_context_raw if isinstance(chart_context_raw, Mapping) else None
-        if chart_context is None:
-            chart_context = _load_chart_from_profile()
-        if chart_context is None and chart_context_raw is not None:
-            logger.warning("Chat request provided invalid chart context type: %s", type(chart_context_raw))
-
-        normalized_message = message.lower()
-        greetings = {"selam", "hey", "merhaba", "hi", "hello"}
-        if any(greet in normalized_message for greet in greetings):
-            logger.info("💫 Greeting detected in chat message.")
-            return jsonify({
-                "reply": (
-                    "Merhaba! Ben Astrologi-AI, kişisel kozmik rehberin ✨ "
-                    "Doğum haritandaki yıldızların rehberliğiyle seninle konuşmak için buradayım. "
-                    "Aşk, kariyer, ya da kişisel dönüşüm mü merak ediyorsun?"
-                )
-            })
-
         history = []
         raw_history = payload.get("history")
         if isinstance(raw_history, list):
@@ -1344,55 +984,26 @@ def _handle_chat_request():
                 if role in {"user", "assistant"} and isinstance(content, str):
                     history.append({"role": role, "content": content})
 
-        logger.info("💬 Chat request received. history=%d message_preview=%s", len(history), message[:80])
-
         system_messages = [
             {
                 "role": "system",
-                "content": (
-                    "Sen Astrologi-AI adlı kozmik rehbersin. Türkçe yanıt ver, kullanıcıya empatik "
-                    "ve açıklayıcı bir tavırla yaklaş. Placidus ev sistemini temel al ve gezegen "
-                    "yerleşimlerini dikkatli biçimde değerlendir."
-                ),
+                "content": "Sen Astrologi-AI adlı kozmik rehbersin. Türkçe yanıt ver, kullanıcıya empatik ve açıklayıcı bir tavırla yaklaş.",
             }
         ]
 
-        chart_summary_text = ""
-        if chart_context:
-            chart_summary_text = _summarise_chart_for_chat(chart_context)
-            if chart_summary_text:
-                system_messages.append(
-                    {
-                        "role": "system",
-                        "content": "Kullanıcı doğum haritası özet bilgileri:\n" + chart_summary_text,
-                    }
-                )
-        else:
+        chart_context = payload.get("chart")
+        if isinstance(chart_context, Mapping):
             system_messages.append(
                 {
                     "role": "system",
-                    "content": "Kullanıcının detaylı doğum haritası paylaşılmadı; yine de astrolojik prensiplerle yardımcı ol.",
+                    "content": "Kullanıcı doğum haritası verileri:\n" + chart_to_summary(chart_context),
                 }
             )
 
-        messages = [*system_messages, *history]
-        if chart_summary_text:
-            messages.append({"role": "user", "content": "Harita özeti: " + chart_summary_text})
-        context_line = (
-            "Soru Placidus ev sistemine göre yanıtlanmalı."
-            if chart_context
-            else "Kullanıcı harita detaylarını paylaşmadı."
-        )
-        user_prompt = (
-            f"Kullanıcının mesajı: {message}\n"
-            f"{context_line}\n"
-            "Soğukkanlı, mistik ve içten bir tavırla yanıt ver."
-        )
-        messages.append({"role": "user", "content": user_prompt})
+        messages = [*system_messages, *history, {"role": "user", "content": message}]
         temperature = float(payload.get("temperature", 0.6))
         max_tokens = int(payload.get("maxTokens", 600))
         reply = call_groq(messages, temperature=temperature, max_tokens=max_tokens)
-
         return jsonify({"reply": reply})
     except AIError as exc:
         logger.error("AI chat error: %s", exc)
@@ -1407,108 +1018,47 @@ def interpretation():
     if request.method == "OPTIONS":
         return "", 204
 
-    data = request.get_json(silent=True) or {}
-    chart = _prepare_chart_payload(data.get("chart"))
-    if chart is None:
-        chart = _prepare_chart_payload(data.get("chart_data"))
-    profile_doc: Dict[str, Any] | None = None
-    if not isinstance(chart, Mapping) or not chart:
-        try:
-            profile_doc = _get_latest_profile()
-        except RuntimeError as exc:
-            logger.error("Profile lookup failed: %s", exc)
-            return jsonify({"error": str(exc)}), 500
-        except Exception as exc:  # pragma: no cover - defensive
-            logger.exception("Unexpected profile lookup error: %s", exc)
-            return jsonify({"error": "Unable to access stored profile"}), 500
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, Mapping):
+        logger.warning("Interpretation endpoint received invalid JSON payload: %s", payload)
+        return jsonify({"error": "Invalid JSON payload."}), 400
 
-        if not profile_doc:
-            logger.warning("Interpretation request missing chart payload and no stored profile available: %s", data)
-            return jsonify({"error": "chart must be provided"}), 400
+    chart_data = payload.get("chart_data")
+    if not isinstance(chart_data, Mapping):
+        logger.warning("Interpretation endpoint missing chart_data: %s", chart_data)
+        return jsonify({"error": "chart_data must be provided as an object."}), 400
 
-        if not all(profile_doc.get(field) for field in ("date", "time", "city")):
-            logger.warning("Stored profile missing required fields for interpretation: %s", profile_doc)
-            return jsonify({"error": "Stored profile must include date, time, and city"}), 400
-
-        chart = _prepare_chart_payload(profile_doc.get("chart"))
-        if not isinstance(chart, Mapping) or not chart:
-            try:
-                chart = build_natal_chart(
-                    {
-                        "date": profile_doc.get("date"),
-                        "time": profile_doc.get("time"),
-                        "city": profile_doc.get("city"),
-                        "name": profile_doc.get("name"),
-                    }
-                )
-                updated_profile = dict(profile_doc)
-                updated_profile["chart"] = chart
-                try:
-                    _upsert_profile(updated_profile)
-                except Exception as update_exc:  # pragma: no cover - non critical
-                    logger.debug("Unable to persist generated chart for profile: %s", update_exc)
-            except Exception as exc:
-                logger.exception("Failed to build chart from stored profile: %s", exc)
-                return jsonify({"error": "Unable to build chart from stored profile"}), 500
-
-    logger.info("🪐 Interpretation requested for chart keys: planets=%s aspects=%s", bool(chart.get("planets")), bool(chart.get("aspects")))
-
-    planets_section = chart.get("planets") or {}
-    aspects_section = chart.get("aspects") or []
-
-    planet_text = ""
-    if isinstance(planets_section, Mapping):
-        planet_descriptions = []
-        for name, details in planets_section.items():
-            if not isinstance(details, Mapping):
-                continue
-            sign = details.get("sign", "")
-            house = details.get("house")
-            descriptor = f"{name} in {sign}".strip()
-            if house not in (None, "", []):
-                descriptor = f"{descriptor} ({house}th)"
-            planet_descriptions.append(descriptor.strip())
-        planet_text = ", ".join(filter(None, planet_descriptions))
-
-    aspect_text = ""
-    if isinstance(aspects_section, Sequence) and not isinstance(aspects_section, str):
-        aspect_labels = []
-        for aspect in aspects_section:
-            if not isinstance(aspect, Mapping):
-                continue
-            planet1 = (
-                aspect.get("planet1")
-                or aspect.get("planet_1")
-                or aspect.get("body_1")
-                or aspect.get("object_1")
-            )
-            planet2 = (
-                aspect.get("planet2")
-                or aspect.get("planet_2")
-                or aspect.get("body_2")
-                or aspect.get("object_2")
-            )
-            aspect_name = aspect.get("aspect") or aspect.get("type") or aspect.get("name")
-            if not all(isinstance(value, str) and value for value in (planet1, planet2, aspect_name)):
-                continue
-            aspect_labels.append(f"{planet1} {aspect_name} {planet2}")
-        aspect_text = ", ".join(aspect_labels)
+    chart_dict = dict(chart_data)
 
     try:
-        archetype = extract_archetype_data(chart)
+        archetype = extract_archetype_data(chart_dict)
     except Exception as exc:  # pylint: disable=broad-except
-        logger.exception("Failed to extract archetype data: %s", exc)
+        logger.exception("Failed to extract archetype data")
         return jsonify({"error": "Failed to extract archetype data."}), 500
 
-    prompt = _build_interpretation_prompt(archetype, planet_text, aspect_text)
-    logger.debug("🪐 Interpretation prompt built: %s", prompt)
+    def _default_fallback() -> Dict[str, str]:
+        return {
+            "headline": "Interpretation unavailable",
+            "summary": "We could not generate an interpretation at this time.",
+            "advice": "Return to grounding practices until clarity returns.",
+        }
 
-    categories = _fetch_model_categories(prompt, archetype)
-    if not categories:
-        logger.info("Falling back to mock categories for interpretation")
-        categories = _mock_categories(archetype)
+    try:
+        ai_result = _request_refined_interpretation(archetype, chart_dict)
+    except AIError as exc:
+        logger.error("Groq interpretation error: %s", exc)
+        ai_result = get_ai_interpretation(chart_dict)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Unexpected interpretation failure")
+        ai_result = get_ai_interpretation(chart_dict)
 
-    return jsonify({"archetype": archetype, "categories": categories})
+    response_body = {
+        "themes": archetype.get("core_themes", []),
+        "ai_interpretation": ai_result,
+        "tone": archetype.get("story_tone"),
+    }
+
+    return jsonify(response_body), 200
 
 
 @app.route("/api/calculate-natal-chart", methods=["POST", "OPTIONS"])
@@ -1553,100 +1103,9 @@ def public_chat_message():
     return _handle_chat_request()
 
 
-@app.route("/save-profile", methods=["POST", "OPTIONS"])
-def save_profile():
-    if request.method == "OPTIONS":
-        return "", 204
-
-    data = request.get_json(silent=True)
-    if not isinstance(data, Mapping):
-        logger.warning("Profile save attempted with invalid payload: %s", data)
-        return jsonify({"error": "No data provided"}), 400
-
-    try:
-        profile_doc = _upsert_profile(data)
-    except RuntimeError as exc:
-        logger.error("Unable to save profile (mongo misconfigured): %s", exc)
-        return jsonify({"error": str(exc)}), 500
-    except Exception as exc:  # pragma: no cover - runtime
-        logger.exception("Failed to persist profile data: %s", exc)
-        return jsonify({"error": "Unable to save profile"}), 500
-
-    return jsonify({"status": "saved", "profile": profile_doc})
-
-
-@app.route("/get-profile", methods=["GET", "OPTIONS"])
-def get_profile():
-    if request.method == "OPTIONS":
-        return "", 204
-
-    try:
-        profile_doc = _get_latest_profile()
-    except RuntimeError as exc:
-        logger.error("Profile retrieval failed (mongo misconfigured): %s", exc)
-        return jsonify({"error": str(exc)}), 500
-    except Exception as exc:  # pragma: no cover
-        logger.exception("Failed to load profile data: %s", exc)
-        return jsonify({"error": "Unable to read profile"}), 500
-
-    if not profile_doc:
-        return jsonify({"error": "Profile not found"}), 404
-
-    return jsonify({"profile": profile_doc})
-
-
-@app.route("/update-profile", methods=["POST", "PUT", "OPTIONS"])
-def update_profile():
-    if request.method == "OPTIONS":
-        return "", 204
-
-    data = request.get_json(silent=True)
-    if not isinstance(data, Mapping):
-        logger.warning("Profile update attempted with invalid payload: %s", data)
-        return jsonify({"error": "no data"}), 400
-
-    try:
-        profile_doc = _upsert_profile(data)
-    except RuntimeError as exc:
-        logger.error("Profile update failed (mongo misconfigured): %s", exc)
-        return jsonify({"error": str(exc)}), 500
-    except Exception as exc:  # pragma: no cover
-        logger.exception("Failed to update profile data: %s", exc)
-        return jsonify({"error": "Unable to update profile"}), 500
-
-    return jsonify({"status": "updated", "profile": profile_doc})
-
-
-@app.route("/health", methods=["GET"])
-def health_check():
-    try:
-        if mongo_client is None:
-            raise RuntimeError("MongoDB not configured")
-        mongo_client.admin.command("ping")
-        return jsonify({"status": "ok", "mongo": "connected"}), 200
-    except Exception as exc:
-        return jsonify({"status": "error", "message": str(exc)}), 500
-
-
-@app.route("/test-db", methods=["GET", "OPTIONS"])
-def test_db_connection():
-    if request.method == "OPTIONS":
-        return "", 204
-    try:
-        collection = _ensure_profiles_collection()
-        sample = {"test": "connection", "timestamp": datetime.utcnow()}
-        result = collection.insert_one(sample)
-        collection.delete_one({"_id": result.inserted_id})
-        return jsonify({"status": "MongoDB connected!"})
-    except Exception as exc:  # pragma: no cover - diagnostics
-        logger.exception("MongoDB connectivity test failed: %s", exc)
-        return jsonify({"error": str(exc)}), 500
-
-
 @app.route("/api/health", methods=["GET"])
-def health_check_api():
-    payload, status_code = _health_response()
-    return jsonify(payload), status_code
+def health_check():
+    return jsonify({"status": "ok"})
 
 
 if __name__ == "__main__":
