@@ -20,6 +20,7 @@ import swisseph as swe
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
+from pymongo import ReturnDocument
 
 # Ensure project root is on sys.path when running as a script.
 BASE_DIR = Path(__file__).resolve().parent
@@ -59,6 +60,8 @@ if not GROQ_API_KEY:
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 GROQ_API_URL = os.getenv("GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions")
 MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "astrologi_ai")
+PROFILE_COLLECTION_NAME = os.getenv("MONGO_PROFILE_COLLECTION", "profiles")
 
 if MONGO_URI:
     try:
@@ -68,6 +71,29 @@ if MONGO_URI:
         logger.warning("MongoDB başlangıç bağlantısı kurulamadı: %s", exc)
 else:
     logger.info("MONGO_URI tanımlı değil; MongoDB bağlantısı devre dışı bırakıldı.")
+
+
+def get_profile_collection():
+    """Return the MongoDB collection for user profiles."""
+    if not MONGO_URI:
+        raise MongoUnavailable("MongoDB yapılandırılmadı.")
+    client = ensure_mongo_connection(retries=3, delay=1.0, revalidate=False)
+    return client[MONGO_DB_NAME][PROFILE_COLLECTION_NAME]
+
+
+def serialise_profile(document: Mapping[str, Any]) -> Dict[str, Any]:
+    """Convert MongoDB document into JSON-serialisable dict."""
+    result = dict(document)
+    identifier = result.pop("_id", None)
+    if identifier is not None:
+        result["id"] = str(identifier)
+    created_at = result.get("created_at")
+    if isinstance(created_at, datetime):
+        result["created_at"] = created_at.isoformat()
+    updated_at = result.get("updated_at")
+    if isinstance(updated_at, datetime):
+        result["updated_at"] = updated_at.isoformat()
+    return result
 
 PLANETS = {
     "Sun": swe.SUN,
@@ -1022,6 +1048,115 @@ def _handle_chat_request():
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Failed to process chat message")
         return jsonify({"error": str(exc)}), 400
+
+
+def _normalise_chart_payload(chart_data: Any) -> Dict[str, Any] | None:
+    if isinstance(chart_data, dict):
+        return dict(chart_data)
+    if isinstance(chart_data, str):
+        try:
+            parsed = json.loads(chart_data)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            return None
+    return None
+
+
+def _extract_profile_payload(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    first_name = str(payload.get("firstName") or "").strip()
+    last_name = str(payload.get("lastName") or "").strip()
+    email = str(payload.get("email") or "").strip().lower()
+
+    profile_payload: Dict[str, Any] = {
+        "firstName": first_name,
+        "lastName": last_name,
+        "email": email,
+        "date": payload.get("date"),
+        "time": payload.get("time"),
+        "city": payload.get("city"),
+        "chart": _normalise_chart_payload(payload.get("chart")),
+        "updated_at": datetime.utcnow(),
+    }
+    return profile_payload
+
+
+def _validate_profile_payload(profile_payload: Mapping[str, Any]) -> list[str]:
+    errors = []
+    if not profile_payload.get("firstName"):
+        errors.append("firstName gereklidir.")
+    if not profile_payload.get("lastName"):
+        errors.append("lastName gereklidir.")
+    email = profile_payload.get("email")
+    if not email:
+        errors.append("email gereklidir.")
+    elif "@" not in str(email):
+        errors.append("Geçerli bir email giriniz.")
+    for key in ("date", "time", "city"):
+        if not profile_payload.get(key):
+            errors.append(f"{key} alanı gereklidir.")
+    return errors
+
+
+@app.route("/api/profile", methods=["GET", "OPTIONS"])
+def get_profile():
+    if request.method == "OPTIONS":
+        return "", 204
+
+    email = request.args.get("email", "").strip().lower()
+    if not email:
+        return jsonify({"error": "email parametresi gereklidir."}), 400
+
+    try:
+        collection = get_profile_collection()
+        document = collection.find_one({"email": email})
+    except MongoUnavailable as exc:
+        logger.warning("Mongo unavailable during profile fetch: %s", exc)
+        return jsonify({"error": str(exc)}), 503
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Unexpected Mongo error during profile fetch: %s", exc)
+        return jsonify({"error": "Profil aranırken hata oluştu."}), 500
+
+    if not document:
+        return jsonify({"error": "Profil bulunamadı."}), 404
+
+    return jsonify(serialise_profile(document)), 200
+
+
+@app.route("/api/profile", methods=["POST", "PUT", "OPTIONS"])
+def upsert_profile():
+    if request.method == "OPTIONS":
+        return "", 204
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, Mapping):
+        return jsonify({"error": "Geçersiz JSON yükü."}), 400
+
+    profile_payload = _extract_profile_payload(payload)
+    errors = _validate_profile_payload(profile_payload)
+    if errors:
+        return jsonify({"error": " ".join(errors)}), 400
+
+    try:
+        collection = get_profile_collection()
+        updated_document = collection.find_one_and_update(
+            {"email": profile_payload["email"]},
+            {
+                "$set": profile_payload,
+                "$setOnInsert": {"created_at": datetime.utcnow()},
+            },
+            upsert=True,
+            return_document=ReturnDocument.AFTER,
+        )
+    except MongoUnavailable as exc:
+        logger.warning("Profile save skipped - Mongo unavailable: %s", exc)
+        return jsonify({"error": str(exc)}), 503
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Profile save failed: %s", exc)
+        return jsonify({"error": "Profil kaydedilemedi."}), 500
+
+    status_code = 200 if request.method == "PUT" else 200
+    return jsonify(serialise_profile(updated_document)), status_code
 
 
 @app.route("/interpretation", methods=["POST", "OPTIONS"])
