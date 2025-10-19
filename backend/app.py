@@ -812,7 +812,7 @@ def calc_houses(jd_ut: float, latitude: float, longitude: float) -> tuple[list[f
     """Calculate Placidus houses and ensure ASC–House 1 alignment."""
     # Calculate Placidus houses
     raw_cusps, ascmc = swe.houses(jd_ut, latitude, longitude, b"P")
-    houses = [float(raw_cusps[i]) % 360 for i in range(1, 13)]
+    houses = [float(raw_cusps[i]) % 360 for i in range(12)]
     angles = {
         "ascendant": round(ascmc[0] % 360, 4),
         "midheaven": round(ascmc[1] % 360, 4),
