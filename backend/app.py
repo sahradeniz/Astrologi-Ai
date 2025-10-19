@@ -44,7 +44,7 @@ CORS(
     origins=[origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()],
     supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
-    methods=["GET", "POST", "OPTIONS"],
+    methods=["GET", "POST", "PUT", "OPTIONS"],
 )
 
 EPHE_PATH = os.environ.get('EPHE_PATH', '')
@@ -868,22 +868,13 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
     local_dt, utc_dt = parse_birth_datetime_components(date_value, time_value, location.timezone)
     jd_ut = julian_day(utc_dt)
 
-    cusps, ascmc = swe.houses(jd_ut, location.latitude, location.longitude)
+    house_list, angles = calc_houses(jd_ut, location.latitude, location.longitude)
+    cusp_sequence = [0.0, *house_list]
 
-    planets: Dict[str, Dict[str, Any]] = calc_planets(jd_ut, cusps)
+    planets: Dict[str, Dict[str, Any]] = calc_planets(jd_ut, cusp_sequence)
 
-    houses: Dict[str, Any] = {}
-    try:
-        cusp_count = len(cusps)
-        for i in range(1, min(cusp_count, 13)):
-            houses[str(i)] = round(cusps[i], 4)
-    except Exception as exc:
-        print("Failed to calculate houses:", exc)
-        houses = {"error": str(exc)}
-
-    angles = {
-        "ascendant": round(ascmc[0] % 360, 4),
-        "midheaven": round(ascmc[1] % 360, 4),
+    houses: Dict[str, Any] = {
+        str(index + 1): round(value % 360, 4) for index, value in enumerate(house_list)
     }
 
     # Aspects
