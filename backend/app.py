@@ -675,10 +675,17 @@ def julian_day(utc_dt: datetime) -> float:
     return swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, ut, swe.GREG_CAL)
 
 
-def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str, Dict[str, Any]]:
+def calc_planets(
+    jd_ut: float,
+    cusps: Sequence[float] | None = None,
+    *,
+    angles: Mapping[str, Any] | None = None,
+) -> Dict[str, Dict[str, Any]]:
     """Calculate planetary longitudes with safe unpacking and metadata."""
 
     planets: Dict[str, Dict[str, Any]] = {}
+    cusp_sequence = list(cusps) if cusps is not None else None
+    cusp_list = [float(cusp_sequence[i]) % 360 for i in range(1, min(len(cusp_sequence), 13))] if cusp_sequence else None
     planet_codes = {
         "Sun": swe.SUN,
         "Moon": swe.MOON,
@@ -690,15 +697,19 @@ def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str
         "Uranus": swe.URANUS,
         "Neptune": swe.NEPTUNE,
         "Pluto": swe.PLUTO,
+        "North Node": swe.TRUE_NODE,
+        "Lilith": swe.TRUE_APOG,
+        "Chiron": swe.CHIRON,
+        "Vertex": swe.VERTEX,
     }
 
     def resolve_house(longitude: float) -> int | None:
-        if not cusps or len(cusps) < 2:
+        if not cusp_sequence or len(cusp_sequence) < 2:
             return None
         lon_val = longitude % 360
-        for idx in range(1, min(len(cusps), 13)):
-            start = cusps[idx] % 360
-            end = cusps[1] % 360 if idx == 12 else cusps[idx + 1] % 360
+        for idx in range(1, min(len(cusp_sequence), 13)):
+            start = cusp_sequence[idx] % 360
+            end = cusp_sequence[1] % 360 if idx == 12 else cusp_sequence[idx + 1] % 360
             if start <= end:
                 if start <= lon_val < end:
                     return idx
@@ -725,13 +736,27 @@ def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str
 
             house = resolve_house(lon_float) if lon_float is not None else None
 
+            lon_norm = normalize_degrees(lon_float)
+            degree_value = None
+            minute_value = None
+            if lon_norm is not None:
+                degree_in_sign = lon_norm % 30
+                degree_value = int(degree_in_sign)
+                minute_value = int(round((degree_in_sign - degree_value) * 60))
+                if minute_value == 60:
+                    minute_value = 0
+                    degree_value = (degree_value + 1) % 30
+
             planets[planet_name] = {
-                "longitude": round(lon_float % 360, 2) if lon_float is not None else None,
+                "longitude": round(lon_norm, 2) if lon_norm is not None else None,
                 "latitude": round(lat_float, 2) if lat_float is not None else None,
                 "distance": round(dist_float, 4) if dist_float is not None else None,
                 "speed": round(speed_float, 4) if speed_float is not None else None,
-                "sign": get_zodiac_sign(lon_float) if lon_float is not None else None,
+                "sign": get_zodiac_sign(lon_norm) if lon_norm is not None else None,
                 "house": house,
+                "retrograde": bool(speed_float is not None and speed_float < 0),
+                "degree": degree_value,
+                "minute": minute_value,
             }
 
             if planet_name == "Sun" and lon_float is not None:
@@ -746,33 +771,65 @@ def calc_planets(jd_ut: float, cusps: Sequence[float] | None = None) -> Dict[str
         except Exception as e:
             logger.warning("Failed to calculate %s: %s", planet_name, e)
 
+    # Part of Fortune (day / night formula)
+    if angles and cusp_list:
+        try:
+            asc = normalize_degrees(angles.get("ascendant"))
+            sun_lon = normalize_degrees(planets.get("Sun", {}).get("longitude"))
+            moon_lon = normalize_degrees(planets.get("Moon", {}).get("longitude"))
+            sun_house = planets.get("Sun", {}).get("house")
+            is_day_chart = bool(sun_house and 7 <= sun_house <= 12)
+            if asc is not None and sun_lon is not None and moon_lon is not None:
+                if is_day_chart:
+                    fortune_lon = normalize_degrees(asc + moon_lon - sun_lon)
+                else:
+                    fortune_lon = normalize_degrees(asc - moon_lon + sun_lon)
+                fortune_house = determine_house(fortune_lon, cusp_list)
+                fortune_degree = fortune_lon % 30 if fortune_lon is not None else 0.0
+                fortune_degree_whole = int(fortune_degree)
+                fortune_minute = int(round((fortune_degree - fortune_degree_whole) * 60))
+                if fortune_minute == 60:
+                    fortune_minute = 0
+                    fortune_degree_whole = (fortune_degree_whole + 1) % 30
+                planets["Fortune"] = {
+                    "longitude": round(fortune_lon, 2),
+                    "latitude": None,
+                    "distance": None,
+                    "speed": None,
+                    "sign": get_zodiac_sign(fortune_lon),
+                    "house": fortune_house,
+                    "retrograde": False,
+                    "degree": fortune_degree_whole,
+                    "minute": fortune_minute,
+                }
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("Failed to calculate Part of Fortune: %s", exc)
+
     return planets
 
 
 def calc_houses(jd_ut: float, latitude: float, longitude: float) -> tuple[list[float], Dict[str, float]]:
     """Calculate Placidus houses and ensure ASC–House 1 alignment."""
-    # Swiss Ephemeris expects east longitudes as negative
-    if longitude > 0:
-        logger.info(f"Longitude {longitude}°E detected — converting to negative for Swiss Ephemeris.")
-        longitude = -longitude
-
     # Calculate Placidus houses
-    cusps, ascmc = swe.houses(jd_ut, latitude, longitude, b"P")
-    houses = [round(angle % 360, 4) for angle in cusps[:12]]
+    raw_cusps, ascmc = swe.houses(jd_ut, latitude, longitude, b"P")
+    houses = [float(raw_cusps[i]) % 360 for i in range(1, 13)]
     angles = {
         "ascendant": round(ascmc[0] % 360, 4),
         "midheaven": round(ascmc[1] % 360, 4),
     }
+    angles["ascendant_sign"] = get_zodiac_sign(angles["ascendant"])
+    angles["midheaven_sign"] = get_zodiac_sign(angles["midheaven"])
+    angles["descendant"] = round((angles["ascendant"] + 180) % 360, 4)
+    angles["imum_coeli"] = round((angles["midheaven"] + 180) % 360, 4)
+    angles["descendant_sign"] = get_zodiac_sign(angles["descendant"])
+    angles["imum_coeli_sign"] = get_zodiac_sign(angles["imum_coeli"])
 
     # Sanity check for ASC alignment
-    delta = abs(houses[0] - angles["ascendant"])
-    logger.info(f"ASC={angles['ascendant']}°, House1={houses[0]}°, Δ={delta:.2f}°")
-
-    # If difference > 5°, rotate houses so ASC and 1st house match
-    if delta > 5:
-        logger.warning(f"ASC misalignment detected ({delta:.2f}°) → correcting houses.")
-        shift = (angles["ascendant"] - houses[0]) % 360
-        houses = [(h + shift) % 360 for h in houses]
+    delta = (angles["ascendant"] - houses[0]) % 360
+    if delta:
+        logger.debug("Aligning house cusps with ASC. Shift=%.4f°", delta)
+        houses = [(h + delta) % 360 for h in houses]
+    logger.info("ASC=%.4f°, House1=%.4f°", angles["ascendant"], houses[0])
 
     return houses, angles
 
@@ -798,7 +855,10 @@ def determine_house(longitude: float, cusps: list[float]) -> int:
     return 12
 
 
-
+def normalize_degrees(value: float | None) -> float | None:
+    if value is None:
+        return None
+    return value % 360
 
 
 def get_zodiac_sign(longitude: float) -> str:
@@ -868,14 +928,29 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
     local_dt, utc_dt = parse_birth_datetime_components(date_value, time_value, location.timezone)
     jd_ut = julian_day(utc_dt)
 
+    try:
+        swe.set_topo(location.longitude, location.latitude, 0.0)
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.debug("Failed to set topocentric coordinates: %s", exc)
+
     house_list, angles = calc_houses(jd_ut, location.latitude, location.longitude)
     cusp_sequence = [0.0, *house_list]
 
-    planets: Dict[str, Dict[str, Any]] = calc_planets(jd_ut, cusp_sequence)
+    planets: Dict[str, Dict[str, Any]] = calc_planets(jd_ut, cusp_sequence, angles=angles)
 
     houses: Dict[str, Any] = {
-        str(index + 1): round(value % 360, 4) for index, value in enumerate(house_list)
+        str(index + 1): round((value % 360), 4) for index, value in enumerate(house_list)
     }
+    houses_detailed = {}
+    for index, value in enumerate(house_list):
+        lon = normalize_degrees(value) or 0.0
+        degree_in_sign = lon % 30
+        houses_detailed[str(index + 1)] = {
+            "longitude": round(lon, 4),
+            "sign": get_zodiac_sign(lon),
+            "degree": int(degree_in_sign),
+            "minute": int(round((degree_in_sign - int(degree_in_sign)) * 60)),
+        }
 
     # Aspects
     aspect_definitions = [
@@ -891,6 +966,24 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
         for name, data in planets.items()
         if "longitude" in data
     ]
+    angle_items = []
+    asc = angles.get("ascendant")
+    mc = angles.get("midheaven")
+    if asc is not None:
+        angle_items.extend(
+            [
+                ("Ascendant", asc),
+                ("Descendant", (asc + 180) % 360),
+            ]
+        )
+    if mc is not None:
+        angle_items.extend(
+            [
+                ("Midheaven", mc),
+                ("Imum Coeli", (mc + 180) % 360),
+            ]
+        )
+    planet_items.extend(angle_items)
     for i in range(len(planet_items)):
         for j in range(i + 1, len(planet_items)):
             name_a, lon_a = planet_items[i]
@@ -920,6 +1013,7 @@ def build_natal_chart(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "timezone": location.timezone,
         "planets": planets,
         "houses": houses,
+        "house_positions": houses_detailed,
         "angles": angles,
         "aspects": aspects,
     }
