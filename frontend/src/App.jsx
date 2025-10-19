@@ -63,7 +63,7 @@ const AppShell = () => {
     const controller = new AbortController();
     const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-    fetch(`${apiBase}/health`, { signal: controller.signal })
+    fetch(`${apiBase}/api/health`, { signal: controller.signal })
       .then((response) => response.json())
       .then((data) => {
         if (data?.mongo) {

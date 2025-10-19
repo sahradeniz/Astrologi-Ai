@@ -156,9 +156,22 @@ const Profile = () => {
   useEffect(() => {
     if (profile) return;
 
+    let email = null;
+    try {
+      const storedRaw = localStorage.getItem("userProfile");
+      if (storedRaw) {
+        const parsed = JSON.parse(storedRaw);
+        email = parsed?.email || null;
+      }
+    } catch {
+      email = null;
+    }
+
+    if (!email) return;
+
     (async () => {
       try {
-        const remote = await fetchUserProfile();
+        const remote = await fetchUserProfile(email);
         if (remote) {
           setProfile(remote);
           localStorage.setItem("userProfile", JSON.stringify(remote));
@@ -245,6 +258,10 @@ const Profile = () => {
 
   const chartData = chart || profile?.chart || {};
   const currentProfileDetails = editMode ? form : profile;
+  const firstName = (editMode ? form?.firstName : profile?.firstName) || "";
+  const lastName = (editMode ? form?.lastName : profile?.lastName) || "";
+  const displayName = `${firstName} ${lastName}`.trim() || "Stargazer";
+  const usernameHandle = displayName.toLowerCase().replace(/\s+/g, "") || "stargazer";
   const sun = chartData?.planets?.Sun || {};
   const moon = chartData?.planets?.Moon || {};
   const sunHouse = ordinalSuffix(sun.house);
@@ -259,7 +276,6 @@ const Profile = () => {
   const moonSign = moon.sign || "—";
   const bigThreeLine = `${sunSign} ☀ — ${moonSign} 🌙 — ASC ${ascSign}`;
 
-  const username = (editMode ? form?.name : profile?.name) || chartData?.name || "stargazer";
   const formattedDate = formatDateDisplay(currentProfileDetails?.date);
   const formattedTime = formatTimeDisplay(currentProfileDetails?.time);
   const profileSubtitle = [formattedDate, formattedTime, currentProfileDetails?.city]
@@ -298,6 +314,24 @@ const Profile = () => {
       city: trimmedCity,
       chart: chartData,
     };
+    updatedProfile.firstName = (updatedProfile.firstName || "").trim();
+    updatedProfile.lastName = (updatedProfile.lastName || "").trim();
+    updatedProfile.email = (updatedProfile.email || "").trim().toLowerCase();
+    if (
+      !updatedProfile.firstName?.trim() ||
+      !updatedProfile.lastName?.trim() ||
+      !updatedProfile.email?.trim()
+    ) {
+      toast({
+        title: "Eksik bilgiler",
+        description: "Lütfen ad, soyad ve e-posta alanlarını doldur.",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
     if (!updatedProfile.date || !updatedProfile.time || !updatedProfile.city) {
       toast({
         title: "Eksik bilgiler",
@@ -369,13 +403,13 @@ const Profile = () => {
           <VStack spacing={4} align="stretch">
             <Stack direction={{ base: "column", md: "row" }} spacing={6} align={{ base: "center", md: "flex-start" }}>
               <Avatar
-                name={username}
+                name={displayName}
                 size="xl"
                 border="4px solid rgba(255,255,255,0.6)"
                 bg="rgba(0,0,0,0.2)"
               />
               <VStack align={{ base: "center", md: "flex-start" }} spacing={2}>
-                <Heading size="lg">@{username.toLowerCase()}</Heading>
+                <Heading size="lg">@{usernameHandle}</Heading>
                 <Badge colorScheme="purple" borderRadius="full" px={3} py={1}>
                   SOLAR MYSTIC · {behaviorCount} pattern
                 </Badge>
@@ -395,12 +429,37 @@ const Profile = () => {
                 {editMode ? (
                   <>
                     <FormControl>
-                      <FormLabel color="whiteAlpha.800">İsim</FormLabel>
+                      <FormLabel color="whiteAlpha.800">Ad</FormLabel>
                       <Input
-                        name="name"
-                        value={form?.name || ""}
+                        name="firstName"
+                        value={form?.firstName || ""}
                         onChange={handleInputChange}
                         placeholder="Adın"
+                        bg="rgba(255,255,255,0.1)"
+                        border="none"
+                        _focus={{ bg: "rgba(255,255,255,0.2)" }}
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel color="whiteAlpha.800">Soyad</FormLabel>
+                      <Input
+                        name="lastName"
+                        value={form?.lastName || ""}
+                        onChange={handleInputChange}
+                        placeholder="Soyadın"
+                        bg="rgba(255,255,255,0.1)"
+                        border="none"
+                        _focus={{ bg: "rgba(255,255,255,0.2)" }}
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel color="whiteAlpha.800">E-posta</FormLabel>
+                      <Input
+                        name="email"
+                        type="email"
+                        value={form?.email || ""}
+                        onChange={handleInputChange}
+                        placeholder="you@example.com"
                         bg="rgba(255,255,255,0.1)"
                         border="none"
                         _focus={{ bg: "rgba(255,255,255,0.2)" }}
@@ -450,8 +509,13 @@ const Profile = () => {
                 ) : (
                   <VStack align="flex-start" spacing={1}>
                     <Text fontSize="md" color="whiteAlpha.900">
-                      {currentProfileDetails?.name || "İsimsiz kahraman"}
+                      {displayName || "İsimsiz kahraman"}
                     </Text>
+                    {currentProfileDetails?.email && (
+                      <Text fontSize="sm" color="whiteAlpha.700">
+                        {currentProfileDetails.email}
+                      </Text>
+                    )}
                     <Text fontSize="sm" color="whiteAlpha.800">
                       {profileSubtitle || "Doğum bilgilerini düzenleyebilirsin."}
                     </Text>

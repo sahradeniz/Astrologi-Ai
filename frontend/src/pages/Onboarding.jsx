@@ -20,7 +20,9 @@ import { calculateNatalChart, saveUserProfile } from "../lib/api.js";
 const MotionBox = motion(Box);
 
 const initialForm = {
-  name: "",
+  firstName: "",
+  lastName: "",
+  email: "",
   date: "",
   time: "",
   city: "",
@@ -47,6 +49,17 @@ const Onboarding = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const trimmedCity = form.city.trim();
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
+      toast({
+        title: "Eksik bilgiler",
+        description: "Lütfen adını, soyadını ve e-posta adresini gir.",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
     if (!form.date || !form.time || !trimmedCity) {
       toast({
         title: "Eksik bilgiler",
@@ -73,7 +86,9 @@ const Onboarding = () => {
       localStorage.setItem("userChart", JSON.stringify(chart));
 
       const profileData = {
-        name: form.name?.trim() || "",
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim().toLowerCase(),
         date: formattedDate,
         time: formattedTime,
         city: trimmedCity,
@@ -85,6 +100,14 @@ const Onboarding = () => {
         await saveUserProfile(profileData);
       } catch (profileError) {
         console.warn("Profile save failed:", profileError);
+        toast({
+          title: "Profil kaydedilemedi",
+          description: profileError.message || "Şu anda verileri buluta kaydedemiyoruz.",
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+          position: "top",
+        });
       }
 
       navigate("/home", { replace: true });
@@ -102,7 +125,13 @@ const Onboarding = () => {
     }
   };
 
-  const canSubmit = form.date && form.time && form.city.trim();
+  const canSubmit =
+    form.firstName.trim() &&
+    form.lastName.trim() &&
+    form.email.trim() &&
+    form.date &&
+    form.time &&
+    form.city.trim();
 
   return (
     <Container
@@ -134,13 +163,40 @@ const Onboarding = () => {
           </VStack>
 
           <VStack spacing={4} align="stretch">
-            <FormControl>
-              <FormLabel color="whiteAlpha.900">Your Name (optional)</FormLabel>
+            <FormControl isRequired>
+              <FormLabel color="whiteAlpha.900">First Name</FormLabel>
               <Input
-                name="name"
-                value={form.name}
+                name="firstName"
+                value={form.firstName}
                 onChange={handleChange}
                 placeholder="Amelia"
+                bg="whiteAlpha.200"
+                border="none"
+                _focus={{ bg: "whiteAlpha.300" }}
+              />
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel color="whiteAlpha.900">Last Name</FormLabel>
+              <Input
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                placeholder="Stellar"
+                bg="whiteAlpha.200"
+                border="none"
+                _focus={{ bg: "whiteAlpha.300" }}
+              />
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel color="whiteAlpha.900">Email</FormLabel>
+              <Input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
                 bg="whiteAlpha.200"
                 border="none"
                 _focus={{ bg: "whiteAlpha.300" }}

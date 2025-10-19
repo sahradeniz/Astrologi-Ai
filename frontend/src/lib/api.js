@@ -38,6 +38,19 @@ async function post(path, payload) {
   }
 }
 
+async function put(path, payload) {
+  try {
+    const response = await axios.put(makeUrl(path), payload, {
+      headers: { "Content-Type": "application/json" },
+      timeout: 15000,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`❌ API Error on ${path}:`, error.response?.data || error.message);
+    throw new Error(extractMessage(error));
+  }
+}
+
 async function get(path) {
   try {
     const response = await axios.get(makeUrl(path), { timeout: 15000 });
@@ -77,10 +90,13 @@ export const getInterpretation = (chartData) => {
 export const calculateSynastry = (payload) =>
   post("/calculate_synastry_chart", payload);
 
-export const saveUserProfile = (profile) => post("/save-profile", profile);
+export const saveUserProfile = (profile) => post("/api/profile", profile);
 
-export const fetchUserProfile = async () => {
-  const result = await get("/get-profile");
+export const fetchUserProfile = async (email) => {
+  if (!email) {
+    throw new Error("Profil için e-posta sağlanmalı.");
+  }
+  const result = await get(`/api/profile?email=${encodeURIComponent(email)}`);
   if (!result) return null;
   if (result.profile !== undefined) {
     return result.profile;
@@ -88,7 +104,7 @@ export const fetchUserProfile = async () => {
   return result;
 };
 
-export const updateUserProfile = (profile) => post("/update-profile", profile);
+export const updateUserProfile = (profile) => put("/api/profile", profile);
 
 export const sendChatMessage = async (message, chartData) => {
   try {
