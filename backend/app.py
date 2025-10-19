@@ -253,7 +253,7 @@ Focus on the inner story of transformation — emotional patterns, spiritual les
 Avoid explaining what astrology *is*; instead, *speak as if you see into their soul.*
 
 Themes: {themes}
-Tone: {tone}
+Tone: {tone_value}
 Aspects: {aspects}
 
 Return your response as a JSON object:
@@ -306,7 +306,7 @@ Return your response as a JSON object:
         print("Groq API call failed:", exc)
         traceback.print_exc()
         logger.exception("Groq API call failed: %s", exc)
-        return fallback
+        return build_result(fallback_ai)
 
     print("RAW GROQ OUTPUT:", content)
     logger.debug("Groq content raw: %s", content)
@@ -1014,6 +1014,7 @@ def _handle_chat_request():
 
 
 @app.route("/interpretation", methods=["POST", "OPTIONS"])
+@app.route("/api/interpretation", methods=["POST", "OPTIONS"])
 def interpretation():
     if request.method == "OPTIONS":
         return "", 204
