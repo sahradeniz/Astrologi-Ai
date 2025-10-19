@@ -1105,6 +1105,7 @@ def public_chat_message():
 
 @app.route("/api/health", methods=["GET"])
 def health_check():
+    """Simple endpoint to confirm backend is alive."""
     return jsonify({"status": "ok"})
 
 

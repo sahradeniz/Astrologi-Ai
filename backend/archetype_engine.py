@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Sequence
 
+__all__ = [
+    "extract_archetype_data",
+    "derive_behavior_patterns",
+    "integrate_life_expression",
+    "generate_full_archetype_report",
+]
 # Mapping of aspect types to their core thematic interpretations.
 ASPECT_THEMES = {
     "square": "challenge",
