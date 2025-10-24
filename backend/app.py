@@ -698,7 +698,7 @@ def calc_planets(
         "Neptune": swe.NEPTUNE,
         "Pluto": swe.PLUTO,
         "North Node": swe.TRUE_NODE,
-        "Lilith": swe.TRUE_APOG,
+        "Lilith": getattr(swe, "MEAN_APOG", getattr(swe, "OSCU_APOG", swe.MEAN_NODE)),
         "Chiron": swe.CHIRON,
         "Vertex": swe.VERTEX,
     }
