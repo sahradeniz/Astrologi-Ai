@@ -7,16 +7,16 @@ const NavigationBar = ({ items, currentPath, onNavigate }) => (
     bottom={{ base: 4, md: 6 }}
     left="50%"
     transform="translateX(-50%)"
-    bg="rgba(255,255,255,0.8)"
-    backdropFilter="blur(18px)"
-    borderRadius="full"
-    boxShadow="xl"
-    px={4}
-    py={2}
+    bg="rgba(250, 249, 251, 0.92)"
+    backdropFilter="blur(14px)"
+    borderRadius="36px"
+    boxShadow="0 20px 35px rgba(92, 107, 242, 0.18)"
+    px={5}
+    py={3}
     align="center"
-    gap={2}
+    gap={3}
     zIndex={1000}
-    border="1px solid rgba(255,255,255,0.5)"
+    border="1px solid rgba(92, 107, 242, 0.18)"
   >
     {items.map((item) => {
       const isActive =
@@ -31,19 +31,19 @@ const NavigationBar = ({ items, currentPath, onNavigate }) => (
           direction="column"
           px={{ base: 3, md: 4 }}
           py={2}
-          borderRadius="full"
-          bg={isActive ? "blackAlpha.100" : "transparent"}
+          borderRadius="28px"
+          bg={isActive ? "rgba(92, 107, 242, 0.12)" : "transparent"}
           transition="all 0.2s ease"
         >
           <Icon
             as={item.icon}
             boxSize={5}
-            color={isActive ? "purple.600" : "gray.600"}
+            color={isActive ? "brand.blue" : "rgba(30,27,41,0.55)"}
           />
           <Text
             fontSize="xs"
             mt={1}
-            color={isActive ? "purple.600" : "gray.600"}
+            color={isActive ? "brand.blue" : "rgba(30,27,41,0.65)"}
             fontWeight={isActive ? "semibold" : "medium"}
           >
             {item.label}

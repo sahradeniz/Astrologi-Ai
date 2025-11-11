@@ -96,18 +96,27 @@ const AppShell = () => {
   }, [toast]);
 
   return (
-    <Flex
-      minH="100vh"
-      direction="column"
-      bgGradient="linear(to-b, #C2AFF0, #8E7FFF)"
-      color="gray.800"
-    >
+    <Flex minH="100vh" direction="column" position="relative">
+      <Box
+        position="absolute"
+        inset={0}
+        bgGradient="linear(135deg, rgba(92, 107, 242, 0.12) 0%, rgba(220, 201, 249, 0.18) 45%, rgba(253, 209, 163, 0.16) 100%)"
+        opacity={0.9}
+        pointerEvents="none"
+      />
       {backendStatus === "offline" && (
-        <Box bg="red.500" color="white" textAlign="center" py={2}>
+        <Box
+          bg="brand.coral"
+          color="brand.ivory"
+          textAlign="center"
+          py={3}
+          fontWeight="600"
+          fontSize="sm"
+        >
           Sunucuya bağlanılamadı — veriler şu anda yalnızca bu cihazda saklanıyor.
         </Box>
       )}
-      <Box flex="1" pb={showBottomNav ? { base: "90px", md: "110px" } : 0}>
+      <Box flex="1" pb={showBottomNav ? { base: "90px", md: "110px" } : 0} position="relative">
         <Container maxW="container.md" py={{ base: 10, md: 16 }}>
           <AnimatePresence mode="wait" initial={false}>
             <Routes location={location} key={location.pathname}>

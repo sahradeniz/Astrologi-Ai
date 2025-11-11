@@ -66,7 +66,7 @@ async function get(path) {
 
 export const calculateNatalChart = (payload) => post("/natal-chart", payload);
 
-export const getInterpretation = (chartData) => {
+export const getInterpretation = async (chartData) => {
   let preparedChart = chartData;
   if (typeof preparedChart === "string") {
     try {
@@ -81,10 +81,68 @@ export const getInterpretation = (chartData) => {
     console.warn("Invalid chart data supplied to getInterpretation", chartData);
   }
 
-  return post("/interpretation", {
+  const data = await post("/interpretation", {
     chart: preparedChart,
     chart_data: preparedChart,
   });
+
+  const legacyText = data?.life_narrative?.text || data?.text || "";
+
+  if (!data?.life_narrative?.card) {
+    const fallbackCard = {
+      title: "Hayat Anlatısı",
+      narrative: { main: legacyText },
+      reasons: { psychology: [] },
+      actions: [],
+      tags: [],
+      confidence_label: "Dengeli",
+    };
+    return {
+      ...data,
+      life_narrative: {
+        ...(data?.life_narrative || {}),
+        version: data?.life_narrative?.version || "v1",
+        axis: data?.life_narrative?.axis || null,
+        confidence_label: data?.life_narrative?.confidence_label || "Dengeli",
+        text: legacyText,
+        card: fallbackCard,
+      },
+      cards: data?.cards || { life: fallbackCard },
+    };
+  }
+
+  return data;
+};
+
+export const getAlternateNarrative = async (chartData, strategy = "secondary") => {
+  const preparedChart =
+    typeof chartData === "string"
+      ? (() => {
+          try {
+            return JSON.parse(chartData);
+          } catch (error) {
+            console.warn("Unable to parse chart data string:", error);
+            return null;
+          }
+        })()
+      : chartData;
+
+  const data = await post("/interpretation", {
+    chart: preparedChart,
+    chart_data: preparedChart,
+    alt_strategy: strategy,
+  });
+
+  return data?.life_narrative || {
+    version: "v1",
+    axis: null,
+    themes: [],
+    focus: null,
+    derived_from: [],
+    confidence: null,
+    strategy,
+    text: data?.text || "",
+  };
 };
 
 export const calculateSynastry = (payload) =>

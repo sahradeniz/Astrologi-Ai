@@ -7,8 +7,14 @@ import time
 from threading import Lock
 from typing import Optional, Tuple
 
-from pymongo import MongoClient
-from pymongo.errors import PyMongoError
+try:
+    from pymongo import MongoClient
+    from pymongo.errors import PyMongoError
+except ImportError:  # pragma: no cover - optional dependency
+    MongoClient = None  # type: ignore[assignment]
+
+    class PyMongoError(Exception):  # type: ignore[override]
+        """Fallback error when pymongo is unavailable."""
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +48,8 @@ def _parse_int(key: str, default: int) -> int:
 
 
 def _build_client() -> MongoClient:
+    if MongoClient is None:
+        raise MongoUnavailable("pymongo is not installed; MongoDB integration is disabled.")
     if not _MONGO_URI:
         raise MongoUnavailable("MONGO_URI is not configured.")
 
@@ -76,6 +84,8 @@ def close_mongo_client() -> None:
 
 def get_mongo_client(*, revalidate: bool = False) -> MongoClient:
     """Return the shared Mongo client, optionally verifying connectivity."""
+    if MongoClient is None:
+        raise MongoUnavailable("Mongo client unavailable (pymongo not installed).")
     global _client  # noqa: PLW0603 - module level cache
     if _client is None:
         with _lock:
@@ -108,6 +118,8 @@ def ensure_mongo_connection(
 
 def mongo_healthcheck() -> Tuple[bool, str]:
     """Return a tuple indicating Mongo availability and a human friendly message."""
+    if MongoClient is None:
+        return False, "MongoDB sürücüsü yüklenmemiş."
     if not _MONGO_URI:
         return False, "MongoDB disabled (MONGO_URI missing)."
 
@@ -116,4 +128,3 @@ def mongo_healthcheck() -> Tuple[bool, str]:
         return True, "Mongo connection healthy."
     except MongoUnavailable as exc:
         return False, str(exc)
-

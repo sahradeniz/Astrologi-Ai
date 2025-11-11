@@ -19,8 +19,16 @@ import requests
 import swisseph as swe
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from dotenv import load_dotenv
-from pymongo import ReturnDocument
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - optional dependency
+    def load_dotenv(*_args, **_kwargs):
+        return False
+try:
+    from pymongo import ReturnDocument
+except ImportError:  # pragma: no cover - optional dependency
+    class ReturnDocument:
+        AFTER = "after"
 
 # Ensure project root is on sys.path when running as a script.
 BASE_DIR = Path(__file__).resolve().parent
@@ -30,7 +38,15 @@ if str(ROOT_DIR) not in sys.path:
 
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
-from backend.archetype_engine import extract_archetype_data
+from backend.archetype_engine import (
+    clean_text,
+    extract_archetype_data,
+    generate_full_archetype_report,
+    integrate_life_expression,
+    limit_sentences,
+    map_confidence_label,
+    pick_axis,
+)
 from backend.db import MongoUnavailable, ensure_mongo_connection, mongo_healthcheck
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
@@ -71,6 +87,45 @@ if MONGO_URI:
         logger.warning("MongoDB başlangıç bağlantısı kurulamadı: %s", exc)
 else:
     logger.info("MONGO_URI tanımlı değil; MongoDB bağlantısı devre dışı bırakıldı.")
+
+AI_PROMPT = """
+Sen bir psikolojik astrolog, sezgisel yazar ve içgörü rehberisin.  
+Görevin, kullanıcıya doğum haritasındaki temayı sade, derin ve insani biçimde aktarmaktır.  
+Her yorum kişiye özel bir içsel farkındalık alanı açmalı; öğretici değil, hissedilir olmalıdır.
+
+Yazım tarzı rehberi:
+- Türkçe yaz.  
+- Teknik terimleri (örneğin: Merkür, kare, trine, ev, eksen, transit) kullanma.  
+- Onların anlamını sezgisel veya insani biçimde aktar (örneğin "zihinsel yoğunluk", "duygularını paylaşmakta zorlanma", "denge kurma ihtiyacı").  
+- Kullanıcıya doğrudan “sen” diyerek hitap et.  
+- Cümleler kısa ve doğal olmalı; paragraflar duygusal akış hissi taşımalı.  
+- Fazla spiritüel klişelerden, yapay motivasyon cümlelerinden, emoji ve sembollerden kaçın.  
+- Metin duygusal olarak sıcak, anlatı olarak net, ton olarak profesyonel olmalı.  
+
+Anlatı yapısı:
+1️⃣ Ana Yorum (3–6 cümle) → Bu temanın kullanıcı üzerindeki genel etkisini anlat.  
+2️⃣ Derin Nedenler (2–4 cümle) → Bu dinamiğin içsel, psikolojik kökenini açıkla.  
+3️⃣ Eylem Alanı (1–2 cümle) → Kullanıcıya sezgisel bir yönlendirme veya dengeleme önerisi ver.  
+Her yorumun başlığı (“headline”) etkileyici ama sade bir ifade olmalı (örnek: “İçsel Dengeyi Ararken”, “Kendini Anlatmanın Dansı”).  
+
+JSON biçiminde üretim yap.  
+Biçim hatası yapma. Metin dışında hiçbir şey yazma.  
+
+Cevap şu biçimde olmalı:
+{
+  "headline": "string",
+  "summary": "Ana Yorum bölümü (bir bütün, 3–6 cümle).",
+  "reasons": ["Her biri bir cümle olacak, 2–4 adet. Derin nedenler burada."],
+  "actions": ["1–2 kısa yönlendirme cümlesi. Kullanıcıya hitap et."],
+  "themes": ["1–4 kelimelik, küçük harfli, içgörüyü yansıtan temalar. Örn: clarity, growth, grounding"]
+}
+
+Ek kurallar:
+- Asla “interpretation unavailable” yazma.  
+- Eğer veri yetersizse, kullanıcıya genel bir farkındalık teması üret (“Kendini tanıma sürecin derinleşiyor” gibi).  
+- Asla JSON dışında açıklama veya İngilizce cümle ekleme.  
+- Her alan dolu olmalı (headline, summary, reasons, actions, themes).  
+""".strip()
 
 
 def get_profile_collection():
@@ -130,6 +185,106 @@ ASPECTS = (
     ("Trine", 120, 6),
     ("Opposition", 180, 8),
 )
+
+ASPECT_ANGLE_LOOKUP = {name: angle for name, angle, _ in ASPECTS}
+
+PLANET_DISPLAY_ORDER = [
+    "Sun",
+    "Moon",
+    "Mercury",
+    "Venus",
+    "Mars",
+    "Jupiter",
+    "Saturn",
+    "Uranus",
+    "Neptune",
+    "Pluto",
+    "North Node",
+    "Lilith",
+    "Chiron",
+    "Fortune",
+    "Vertex",
+]
+
+
+def _ordinal(value: int) -> str:
+    suffixes = {1: "st", 2: "nd", 3: "rd"}
+    if 10 <= value % 100 <= 20:
+        suffix = "th"
+    else:
+        suffix = suffixes.get(value % 10, "th")
+    return f"{value}{suffix}"
+
+
+def _format_degree(degree: int | float | None, minute: int | float | None) -> str:
+    deg = int(degree or 0)
+    minutes_total = int(round(minute or 0))
+    if minutes_total >= 60:
+        deg += minutes_total // 60
+        minutes_total %= 60
+    return f"{deg}°{str(minutes_total).zfill(2)}'"
+
+
+def _build_formatted_planet_positions(chart: Dict[str, Any]) -> list[str]:
+    planets = chart.get("planets") or {}
+    ordered_names = [name for name in PLANET_DISPLAY_ORDER if name in planets]
+    ordered_names.extend(name for name in planets.keys() if name not in ordered_names)
+
+    formatted: list[str] = []
+    for name in ordered_names:
+        details = planets.get(name) or {}
+        sign = details.get("sign") or "Unknown"
+        degree = details.get("degree")
+        minute = details.get("minute")
+        house = details.get("house")
+        retrograde = details.get("retrograde")
+        retro_suffix = ", Retrograde" if retrograde else ""
+        house_label = f"{_ordinal(int(house))} House" if isinstance(house, int) and house > 0 else "Unknown House"
+        formatted.append(
+            f"{name} in {sign} {_format_degree(degree, minute)}, in {house_label}{retro_suffix}"
+        )
+    return formatted
+
+
+def _build_formatted_house_positions(chart: Dict[str, Any]) -> list[str]:
+    houses = chart.get("house_positions") or {}
+    formatted: list[str] = []
+    for index in sorted(houses, key=lambda x: int(x)):
+        details = houses[index] or {}
+        sign = details.get("sign") or "Unknown"
+        degree = details.get("degree")
+        minute = details.get("minute")
+        formatted.append(
+            f"{_ordinal(int(index))} House in {sign} {_format_degree(degree, minute)}"
+        )
+    return formatted
+
+
+def _build_formatted_aspects(chart: Dict[str, Any]) -> list[str]:
+    aspects = chart.get("aspects") or []
+    formatted: list[str] = []
+    for item in aspects:
+        planet1 = item.get("planet1") or "Unknown"
+        planet2 = item.get("planet2") or "Unknown"
+        aspect_name = item.get("aspect") or "Aspect"
+        exact_angle = item.get("exact_angle")
+
+        expected_angle = ASPECT_ANGLE_LOOKUP.get(aspect_name)
+        orb_value: float | None = None
+        if expected_angle is not None and isinstance(exact_angle, (int, float)):
+            orb_value = abs(exact_angle - expected_angle)
+
+        if orb_value is not None:
+            orb_degrees = int(orb_value)
+            orb_minutes = int(round((orb_value - orb_degrees) * 60))
+            if orb_minutes >= 60:
+                orb_degrees += orb_minutes // 60
+                orb_minutes %= 60
+            orb_text = f"{orb_degrees}°{str(orb_minutes).zfill(2)}'"
+            formatted.append(f"{planet1} {aspect_name} {planet2} (Orb: {orb_text})")
+        else:
+            formatted.append(f"{planet1} {aspect_name} {planet2}")
+    return formatted
 
 
 @dataclass(slots=True)
@@ -281,26 +436,16 @@ def get_ai_interpretation(chart_data: Mapping[str, Any]) -> Dict[str, Any]:
             "tone": tone_value,
         }
 
-    prompt = f"""
-You are **Jovia**, an intuitive AI astrologer who blends depth psychology, mythology, and astrology.
-You speak with empathy and poetic insight, not like a generic assistant.
-
-Interpret the user's birth chart themes below.
-Focus on the inner story of transformation — emotional patterns, spiritual lessons, and healing arcs.
-Avoid explaining what astrology *is*; instead, *speak as if you see into their soul.*
-
-Themes: {themes}
-Tone: {tone_value}
-Aspects: {aspects}
-
-Return your response as a JSON object:
-
-{{
-  "headline": "a poetic title (2–5 words)",
-  "summary": "a rich 3–5 paragraph interpretation written as a story — introspective, emotional, and mythic in tone",
-  "advice": "one short, heartfelt sentence offering guidance"
-}}
-""".strip()
+    prompt = (
+        f"{AI_PROMPT}\n\n"
+        "Verilen astrolojik veriyi aşağıdaki bağlamla yorumla ve belirtilen şemaya uygun JSON üret:\n"
+        f"- Temalar: {themes}\n"
+        f"- Ton: {tone_value}\n"
+        f"- Ana eksen: {archetype.get('dominant_axis') or 'belirtilmedi'}\n"
+        f"- Dikkate değer açılar: {aspects}\n"
+        f"- Davranış kalıpları: {archetype.get('behavior_patterns')}\n"
+        "Her alanı Türkçe doldur; temaları doğal dile çevir.\n"
+    )
 
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
@@ -403,23 +548,20 @@ def _request_refined_interpretation(archetype: Mapping[str, Any], chart_data: Ma
         logger.warning("⚠️ GROQ_API_KEY not found in environment.")
         raise AIError("GROQ_API_KEY yapılandırılmadı.")
 
-    system_prompt = (
-        "You are a calm, wise, mentor-like astrologer. "
-        "Study the provided natal chart context and compose a response in JSON with keys "
-        "'headline', 'summary', and 'advice'. Headline must be a short poetic title in English, "
-        "no more than 10 words. Summary must be exactly one paragraph that expresses the emotional and "
-        "spiritual meaning of the themes in a reflective, compassionate tone. Advice must be a brief, "
-        "mentor-like suggestion for personal growth."
-    )
-
-    user_payload = {
+    system_prompt = "You are an experienced psychological astrologer and storyteller."
+    context_payload = {
         "core_themes": archetype.get("core_themes", []),
         "story_tone": archetype.get("story_tone"),
+        "dominant_axis": archetype.get("dominant_axis"),
         "notable_aspects": archetype.get("notable_aspects", []),
+        "behavior_patterns": archetype.get("behavior_patterns", []),
         "chart_data": chart_data,
     }
-
-    user_prompt = json.dumps(user_payload, ensure_ascii=False)
+    user_prompt = (
+        f"{AI_PROMPT}\n\n"
+        "Verilen bağlamı kullanarak şemaya sadık kal:\n"
+        f"{json.dumps(context_payload, ensure_ascii=False)}"
+    )
 
     try:
         headers = {
@@ -861,6 +1003,481 @@ def normalize_degrees(value: float | None) -> float | None:
     return value % 360
 
 
+LABEL_PREFIX_PATTERN = re.compile(r"^(?:[\s•·\-–—]*)\b(headline|summary|advice|challenge|struggle|gift|strength|lesson|shadow|insight|focus|theme|themes|story)\b[:\-–—]?\s*", re.IGNORECASE)
+SUMMARY_LABEL_PATTERN = re.compile(r"^(?P<label>[A-Za-zÇĞİÖŞÜçğıöşü\s]{2,24})[:\-–—]\s*(?P<body>.+)$")
+SUMMARY_LABEL_MAP = {
+    "challenge": "Meydan okuman",
+    "struggle": "Zorlandığın alan",
+    "gift": "Doğuştan ışığın",
+    "strength": "Dayandığın güç",
+    "lesson": "Öğrenmen gereken ders",
+    "shadow": "Gölgede kalan yönün",
+    "focus": "Odaklandığın yer",
+    "insight": "İçgörün",
+    "theme": "Tema",
+    "themes": "Tema",
+    "story": "Hikâye",
+}
+
+
+def strip_label_prefix(text: Any) -> str:
+    if not isinstance(text, str):
+        return ""
+    cleaned = LABEL_PREFIX_PATTERN.sub("", text or "").strip()
+    cleaned = re.sub(r"^[•·\-\u2022]+\s*", "", cleaned)
+    return cleaned.strip()
+
+
+def flatten_summary_text(text: Any, *, joiner: str = " ") -> str:
+    if not isinstance(text, str):
+        return ""
+    segments: list[str] = []
+    for raw_line in re.split(r"[\n•\u2022]+", text):
+        line = raw_line.strip()
+        if not line:
+            continue
+        match = SUMMARY_LABEL_PATTERN.match(line)
+        if match:
+            label = match.group("label").strip().lower()
+            body = match.group("body").strip()
+            if not body:
+                continue
+            if label in {"headline", "summary", "advice"}:
+                segments.append(body)
+                continue
+            prefix = SUMMARY_LABEL_MAP.get(label, "")
+            if prefix:
+                segments.append(f"{prefix}: {body}")
+            else:
+                segments.append(body)
+        else:
+            segments.append(line)
+
+    if not segments:
+        return clean_text(strip_label_prefix(text))
+
+    combined = joiner.join(segments).strip()
+    combined = re.sub(r"\s{2,}", " ", combined)
+    return clean_text(combined)
+
+
+def first_sentences(text: str, limit: int = 2) -> str:
+    if not text:
+        return ""
+    sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+    if len(sentences) <= limit:
+        return text.strip()
+    return " ".join(sentences[:limit]).strip()
+
+
+DEFAULT_REASON_FALLBACKS = [
+    "İç sesini duymak, dış dünyada kurduğun yapıya sıcaklık katıyor.",
+    "Duygularını sorumluluklarınla dengelemek olgunlaşma alanın.",
+    "Anlam arayışını paylaşmak çevrende güven köprüleri kuruyor.",
+]
+
+DEFAULT_ACTION_FALLBACKS = [
+    "Her gün 5 dakikalık nefesle bedeni ve zihni hizala.",
+    "Haftada bir sezgisel yazı çalışmasıyla hislerini isimlendir.",
+    "Akşamları günü üç maddede yeniden çerçevele.",
+]
+
+
+def _format_title(title: str | None) -> str:
+    cleaned = clean_text(title)
+    return cleaned or "Kozmik Yorum"
+
+
+def _prepare_reasons(
+    reasons: Iterable[str] | None,
+    fallback_tags: Iterable[str] | None = None,
+) -> list[str]:
+    prepared: list[str] = []
+    seen: set[str] = set()
+
+    def _append(sentence: str) -> None:
+        text = clean_text(strip_label_prefix(sentence))
+        if not text:
+            return
+        if not text.endswith("."):
+            text += "."
+        if text not in seen:
+            seen.add(text)
+            prepared.append(text)
+
+    for item in reasons or []:
+        _append(item)
+        if len(prepared) >= 4:
+            break
+
+    for tag in fallback_tags or []:
+        if len(prepared) >= 4:
+            break
+        tag_text = clean_text(tag)
+        if not tag_text:
+            continue
+        template = f"Tema: {tag_text.lower()} enerjisini bilinçli yönettiğinde dengede kalırsın."
+        _append(template)
+
+    idx = 0
+    while len(prepared) < 2 and idx < len(DEFAULT_REASON_FALLBACKS):
+        _append(DEFAULT_REASON_FALLBACKS[idx])
+        idx += 1
+
+    if len(prepared) < 2:
+        while len(prepared) < 2:
+            _append("İçsel ritmini duyduğunda adımların hafifler.")
+
+    return prepared[:4]
+
+
+def _prepare_actions(actions: Iterable[str] | None) -> list[str]:
+    prepared: list[str] = []
+    seen: set[str] = set()
+
+    def _append(sentence: str) -> None:
+        text = clean_text(strip_label_prefix(sentence))
+        if not text:
+            return
+        text = text[0].upper() + text[1:] if text else text
+        if not text.endswith("."):
+            text += "."
+        if text not in seen:
+            seen.add(text)
+            prepared.append(text)
+
+    for item in actions or []:
+        _append(item)
+        if len(prepared) >= 2:
+            break
+
+    idx = 0
+    while len(prepared) < 1 and idx < len(DEFAULT_ACTION_FALLBACKS):
+        _append(DEFAULT_ACTION_FALLBACKS[idx])
+        idx += 1
+
+    idx = 0
+    while len(prepared) < 2 and idx < len(DEFAULT_ACTION_FALLBACKS):
+        _append(DEFAULT_ACTION_FALLBACKS[idx])
+        idx += 1
+
+    return prepared[:2]
+
+
+def _prepare_tags(tags: Iterable[str] | None) -> list[str]:
+    cleaned_tags: list[str] = []
+    seen: set[str] = set()
+    for tag in tags or []:
+        text = clean_text(tag)
+        if not text:
+            continue
+        if text not in seen:
+            seen.add(text)
+            cleaned_tags.append(text)
+        if len(cleaned_tags) >= 6:
+            break
+    return cleaned_tags
+
+
+def build_card_payload(
+    *,
+    title: str,
+    main: str,
+    reasons: Iterable[str] | None = None,
+    actions: Iterable[str] | None = None,
+    tags: Iterable[str] | None = None,
+    confidence: Any = None,
+) -> Dict[str, Any]:
+    narrative_text = limit_sentences(main, min_sentences=3, max_sentences=6) if main else ""
+    fragments = [
+        fragment.strip()
+        for fragment in re.split(r"(?<=[.!?])\s+", narrative_text)
+        if fragment.strip()
+    ]
+    filler_idx = 0
+    while len(fragments) < 3 and filler_idx < len(DEFAULT_REASON_FALLBACKS):
+        filler_sentence = clean_text(DEFAULT_REASON_FALLBACKS[filler_idx])
+        if filler_sentence:
+            fragments.append(filler_sentence)
+        filler_idx += 1
+    if fragments:
+        narrative_text = " ".join(fragments[:6]).rstrip(".!?")
+        if narrative_text:
+            narrative_text += "."
+
+    prepared_tags = _prepare_tags(tags)
+
+    card = {
+        "title": _format_title(title),
+        "narrative": {
+            "main": narrative_text,
+        },
+        "reasons": {
+            "psychology": _prepare_reasons(reasons, prepared_tags),
+        },
+        "actions": _prepare_actions(actions),
+        "tags": prepared_tags,
+    }
+    confidence_label = map_confidence_label(confidence)
+    if confidence_label:
+        card["confidence_label"] = confidence_label
+    return card
+
+
+def build_life_card(
+    ai_payload: Mapping[str, Any] | None,
+    life_narrative: Mapping[str, Any] | None,
+    archetype: Mapping[str, Any] | None,
+) -> Dict[str, Any]:
+    ai_payload = ai_payload or {}
+    life_narrative = life_narrative or {}
+    archetype = archetype or {}
+
+    title = ai_payload.get("headline") or "Hayat Anlatısı"
+    primary_texts = [
+        life_narrative.get("text"),
+        ai_payload.get("summary"),
+        archetype.get("life_expression"),
+    ]
+    sentences: list[str] = []
+    for block in primary_texts:
+        cleaned_block = clean_text(strip_label_prefix(block))
+        if not cleaned_block:
+            continue
+        for piece in re.split(r"(?<=[.!?])\s+", cleaned_block):
+            piece_clean = clean_text(piece)
+            if piece_clean and piece_clean not in sentences:
+                sentences.append(piece_clean)
+    if len(sentences) < 3:
+        sentences.extend(DEFAULT_REASON_FALLBACKS)
+    main_text = " ".join(sentences[:6])
+
+    reasons: list[str] = []
+    axis = life_narrative.get("axis")
+    focus = life_narrative.get("focus")
+    if axis:
+        reasons.append(f"Eksen: {axis} hattı kişisel derslerini belirliyor.")
+    if focus:
+        reasons.append(f"Odak: {focus}.")
+    derived = life_narrative.get("derived_from")
+    if isinstance(derived, Sequence):
+        for item in derived[:3]:
+            if isinstance(item, Mapping):
+                pair = item.get("pair")
+                aspect = item.get("aspect")
+                orb = item.get("orb")
+                if pair and aspect:
+                    text = f"{pair} • {aspect}"
+                    if isinstance(orb, (int, float)):
+                        text += f" • orb {orb}°"
+                    reasons.append(text)
+    themes = life_narrative.get("themes")
+    if not reasons and isinstance(themes, Sequence):
+        reasons.extend(f"Tema: {theme}" for theme in themes[:3] if isinstance(theme, str))
+
+    actions: list[str] = []
+    advice = ai_payload.get("advice")
+    if isinstance(advice, str) and advice.strip():
+        actions.append(advice)
+    life_focus = archetype.get("life_focus")
+    if isinstance(life_focus, str) and life_focus.strip():
+        actions.append(f"Odaklan: {life_focus.strip()}")
+
+    tags = []
+    if isinstance(themes, Sequence):
+        tags.extend(theme for theme in themes if isinstance(theme, str))
+    if not tags and isinstance(archetype.get("core_themes"), Sequence):
+        tags.extend(theme for theme in archetype["core_themes"] if isinstance(theme, str))
+
+    return build_card_payload(
+        title=title,
+        main=main_text,
+        reasons=reasons,
+        actions=actions,
+        tags=tags,
+        confidence=life_narrative.get("confidence"),
+    )
+
+
+def build_category_card(
+    category: Mapping[str, Any] | None,
+    *,
+    default_title: str,
+    fallback_themes: Iterable[str] | None = None,
+    extra_reasons: Iterable[str] | None = None,
+    extra_actions: Iterable[str] | None = None,
+    confidence: Any = None,
+) -> Dict[str, Any] | None:
+    if not isinstance(category, Mapping):
+        return None
+    title = category.get("headline") or default_title
+    summary = category.get("summary") or ""
+    themes = category.get("themes") or fallback_themes or []
+
+    reasons = list(extra_reasons or [])
+    tag_sources = []
+    if isinstance(themes, Sequence):
+        tag_sources.extend(theme for theme in themes if isinstance(theme, str))
+
+    actions = list(extra_actions or [])
+    advice = category.get("advice")
+    if isinstance(advice, str) and advice.strip():
+        actions.append(advice)
+
+    return build_card_payload(
+        title=title,
+        main=summary,
+        reasons=reasons,
+        actions=actions,
+        tags=tag_sources or themes,
+        confidence=confidence,
+    )
+
+
+def build_shadow_card(
+    category: Mapping[str, Any] | None,
+    behavior_patterns: Iterable[Mapping[str, Any]] | None,
+) -> Dict[str, Any] | None:
+    extra_reasons = []
+    extra_tags = []
+    if behavior_patterns:
+        for pattern in list(behavior_patterns)[:3]:
+            if isinstance(pattern, Mapping):
+                label = pattern.get("pattern")
+                expression = pattern.get("expression")
+                if label and expression:
+                    extra_reasons.append(f"{label}: {expression}")
+                    extra_tags.append(label)
+    card = build_category_card(
+        category,
+        default_title="Gölge Çalışması",
+        fallback_themes=[pattern for pattern in extra_tags],
+        extra_reasons=extra_reasons,
+    )
+    if card is None and extra_reasons:
+        card = build_card_payload(
+            title="Gölgeler",
+            main="Gölgede kalan kalıpları sevgiyle tanımak dönüşümü başlatır.",
+            reasons=extra_reasons,
+            actions=[],
+            tags=extra_tags,
+        )
+    elif card is not None:
+        tags = card.get("tags") or []
+        card["tags"] = list({*tags, *extra_tags})[:6]
+    return card
+
+
+def normalize_ai_payload(value: Any) -> Dict[str, str]:
+    fallback = {
+        "headline": "Interpretation unavailable",
+        "summary": "We could not generate a full interpretation at this time.",
+        "advice": "Stay grounded and patient; your insight is unfolding.",
+    }
+    if isinstance(value, Mapping):
+        if all(key in value for key in ("headline", "summary", "advice")):
+            result = {
+                "headline": clean_text(strip_label_prefix(value.get("headline") or fallback["headline"]))
+                or fallback["headline"],
+                "summary": flatten_summary_text(value.get("summary") or fallback["summary"]) or fallback["summary"],
+                "advice": clean_text(strip_label_prefix(value.get("advice") or fallback["advice"])) or fallback["advice"],
+            }
+            return result
+        inner = value.get("ai_interpretation")
+        if isinstance(inner, Mapping):
+            return normalize_ai_payload(inner)
+    return {
+        "headline": fallback["headline"],
+        "summary": fallback["summary"],
+        "advice": fallback["advice"],
+    }
+
+
+def build_interpretation_categories(
+    archetype: Mapping[str, Any],
+    ai_output: Mapping[str, str],
+) -> Dict[str, Dict[str, Any]]:
+    def clean_list(items: Iterable[Any]) -> list[str]:
+        cleaned = []
+        for item in items or []:
+            if isinstance(item, str):
+                text = item.strip()
+                if text:
+                    cleaned.append(text)
+        return cleaned
+
+    def make_card(headline: str, summary: str, advice: str, themes: Iterable[str]) -> Dict[str, Any]:
+        return {
+            "headline": headline.strip() or ai_output.get("headline"),
+            "summary": summary.strip() or ai_output.get("summary"),
+            "advice": advice.strip() or ai_output.get("advice"),
+            "themes": clean_list(themes),
+        }
+
+    themes = clean_list(archetype.get("core_themes"))
+    tone = str(archetype.get("story_tone") or "").strip()
+    life_focus = str(archetype.get("life_focus") or "").strip()
+    life_expression = strip_label_prefix(archetype.get("life_expression") or "")
+    dominant_axis = str(archetype.get("dominant_axis") or "").strip()
+    behavior_patterns = archetype.get("behavior_patterns") or []
+
+    summary_text = ai_output.get("summary", "")
+    primary_summary = first_sentences(summary_text, 2)
+
+    love_card = make_card(
+        ai_output.get("headline") or "Kalbin Kimyası",
+        primary_summary or life_expression or summary_text,
+        ai_output.get("advice") or "Kalbini sezgilerinle hizala.",
+        themes[:3],
+    )
+
+    career_summary_parts = []
+    if life_focus:
+        career_summary_parts.append(life_focus.capitalize())
+    if tone:
+        career_summary_parts.append(f"{tone} bir yaklaşımla ilerliyorsun.")
+    if not career_summary_parts:
+        career_summary_parts.append("Enerjini anlamlı bir amaca yönlendiriyorsun.")
+    career_card = make_card(
+        "İş & Misyon",
+        " ".join(career_summary_parts),
+        "Somut hedeflerini ruhunun ritmiyle hizala.",
+        themes[3:6] or themes[:3],
+    )
+
+    spiritual_card = make_card(
+        "Ruhsal Akış",
+        first_sentences(life_expression or summary_text, 3),
+        "Ruhunun fısıltılarını her günkü ritüellerine davet et.",
+        clean_list([tone, dominant_axis]) or themes[1:4],
+    )
+
+    pattern_lines = []
+    pattern_names = []
+    for item in behavior_patterns[:2]:
+        if isinstance(item, Mapping):
+            pattern = str(item.get("pattern") or "").strip()
+            expression = str(item.get("expression") or "").strip()
+            if pattern:
+                pattern_names.append(pattern)
+            if pattern and expression:
+                pattern_lines.append(f"{pattern}: {expression}")
+    shadow_summary = " • ".join(pattern_lines) or "Gölgelerini kabullenmek, potansiyelini özgürleştiriyor."
+    shadow_card = make_card(
+        "Shadow Work",
+        shadow_summary,
+        "Karanlık noktalarına da sevgiyle dokun.",
+        pattern_names or themes[-3:] or themes[:3],
+    )
+
+    return {
+        "love": love_card,
+        "career": career_card,
+        "spiritual": spiritual_card,
+        "shadow": shadow_card,
+    }
+
+
 def get_zodiac_sign(longitude: float) -> str:
     """Return zodiac sign name for a given longitude."""
 
@@ -1024,6 +1641,17 @@ def diff_angle(lon1: float, lon2: float) -> float:
     return diff if diff <= 180 else 360 - diff
 
 
+def calculate_chart_from_birth_details(date_value: str, time_value: str, city_value: str) -> Dict[str, Any]:
+    """Utility used by interpretation endpoint when only birth inputs are provided."""
+
+    payload = {
+        "date": (date_value or "").strip(),
+        "time": (time_value or "").strip(),
+        "city": (city_value or "").strip(),
+    }
+    return build_natal_chart(payload)
+
+
 def calculate_aspects(planets_a: Mapping[str, Dict[str, Any]], planets_b: Mapping[str, Dict[str, Any]]) -> list[Dict[str, Any]]:
     aspects: list[Dict[str, Any]] = []
     for name_a, data_a in planets_a.items():
@@ -1049,6 +1677,9 @@ def _handle_natal_chart_request():
         chart = build_natal_chart(payload)
         summary = chart_to_summary(chart)
         chart["interpretation"] = generate_ai_interpretation(summary)
+        chart["formatted_positions"] = _build_formatted_planet_positions(chart)
+        chart["formatted_houses"] = _build_formatted_house_positions(chart)
+        chart["formatted_aspects"] = _build_formatted_aspects(chart)
     except ApiError as exc:
         logger.error("External API error: %s", exc)
         return jsonify({"error": str(exc)}), 502
@@ -1256,24 +1887,44 @@ def interpretation():
         return jsonify({"error": "Invalid JSON payload."}), 400
 
     chart_data = payload.get("chart_data")
+    alt_strategy = payload.get("alt_strategy")
+
     if not isinstance(chart_data, Mapping):
-        logger.warning("Interpretation endpoint missing chart_data: %s", chart_data)
-        return jsonify({"error": "chart_data must be provided as an object."}), 400
+        birth_date = payload.get("birth_date") or payload.get("date")
+        birth_time = payload.get("birth_time") or payload.get("time")
+        birth_place = payload.get("birth_place") or payload.get("city")
+        if not all((birth_date, birth_time, birth_place)):
+            logger.warning("Interpretation endpoint missing chart_data and birth inputs: %s", payload)
+            return jsonify({
+                "error": "chart_data must be provided as an object OR birth_date/time/place must be supplied.",
+            }), 400
+        try:
+            chart_data = calculate_chart_from_birth_details(birth_date, birth_time, birth_place)
+        except Exception as exc:  # pragma: no cover - network/location failures
+            logger.exception("Failed to build chart from inputs")
+            return jsonify({"error": f"Failed to calculate chart: {exc}"}), 500
 
     chart_dict = dict(chart_data)
 
     try:
-        archetype = extract_archetype_data(chart_dict)
+        archetype = generate_full_archetype_report(chart_dict)
     except Exception as exc:  # pylint: disable=broad-except
         logger.exception("Failed to extract archetype data")
         return jsonify({"error": "Failed to extract archetype data."}), 500
 
-    def _default_fallback() -> Dict[str, str]:
-        return {
-            "headline": "Interpretation unavailable",
-            "summary": "We could not generate an interpretation at this time.",
-            "advice": "Return to grounding practices until clarity returns.",
-        }
+    life_narrative = archetype.get("life_narrative")
+    if not life_narrative:
+        life_layer = integrate_life_expression(chart_dict, archetype_data=archetype)
+        archetype.update(life_layer)
+        life_narrative = life_layer.get("life_narrative")
+
+    alternate_narrative = None
+    if isinstance(alt_strategy, str):
+        alt_layer = integrate_life_expression(chart_dict, archetype_data=archetype, strategy=alt_strategy)
+        alternate_narrative = alt_layer.get("life_narrative")
+        if alternate_narrative:
+            archetype.update(alt_layer)
+            life_narrative = alternate_narrative
 
     try:
         ai_result = _request_refined_interpretation(archetype, chart_dict)
@@ -1284,11 +1935,87 @@ def interpretation():
         logger.exception("Unexpected interpretation failure")
         ai_result = get_ai_interpretation(chart_dict)
 
-    response_body = {
+    ai_payload = normalize_ai_payload(ai_result)
+    categories = build_interpretation_categories(archetype, ai_payload)
+
+    cards: Dict[str, Any] = {}
+    life_card = build_life_card(ai_payload, life_narrative, archetype)
+    if life_card:
+        cards["life"] = life_card
+
+    career_reasons = []
+    life_focus = archetype.get("life_focus")
+    story_tone = archetype.get("story_tone")
+    if isinstance(life_focus, str) and life_focus.strip():
+        career_reasons.append(f"Odak: {life_focus.strip()}")
+    if isinstance(story_tone, str) and story_tone.strip():
+        career_reasons.append(f"Ton: {story_tone.strip()}")
+    career_card = build_category_card(
+        categories.get("career") if isinstance(categories, Mapping) else None,
+        default_title="İş & Amaç",
+        extra_reasons=career_reasons,
+    )
+    if career_card:
+        cards["career"] = career_card
+
+    spiritual_reasons = []
+    dominant_axis = archetype.get("dominant_axis")
+    if isinstance(dominant_axis, str) and dominant_axis.strip():
+        spiritual_reasons.append(f"Öne çıkan eksen: {dominant_axis.strip()}")
+    spiritual_card = build_category_card(
+        categories.get("spiritual") if isinstance(categories, Mapping) else None,
+        default_title="Ruhsal Akış",
+        extra_reasons=spiritual_reasons,
+    )
+    if spiritual_card:
+        cards["spiritual"] = spiritual_card
+
+    love_card = build_category_card(
+        categories.get("love") if isinstance(categories, Mapping) else None,
+        default_title="Aşk & İlişkiler",
+    )
+    if love_card:
+        cards["love"] = love_card
+
+    shadow_card = build_shadow_card(
+        categories.get("shadow") if isinstance(categories, Mapping) else None,
+        archetype.get("behavior_patterns") if isinstance(archetype, Mapping) else None,
+    )
+    if shadow_card:
+        cards["shadow"] = shadow_card
+
+    response_body: Dict[str, Any] = {
         "themes": archetype.get("core_themes", []),
-        "ai_interpretation": ai_result,
+        "ai_interpretation": ai_payload,
         "tone": archetype.get("story_tone"),
+        "categories": categories,
+        "archetype": archetype,
+        "life_narrative": life_narrative,
     }
+
+    if life_card:
+        life_block = response_body.setdefault("life_narrative", {})
+        primary_text = life_card.get("narrative", {}).get("main") if isinstance(life_card.get("narrative"), Mapping) else ""
+        life_text = limit_sentences(primary_text or life_block.get("text") or "", min_sentences=3, max_sentences=6)
+        if life_text:
+            life_block["text"] = life_text
+        axis_candidate = clean_text(life_block.get("axis") or archetype.get("dominant_axis") or "")
+        axis_scores = payload.get("axis_scores") if isinstance(payload.get("axis_scores"), Mapping) else {}
+        dominant_axis = pick_axis(axis_scores, axis_candidate or "Yay–İkizler")
+        life_block["axis"] = dominant_axis
+        life_block["confidence_label"] = life_card.get("confidence_label") or map_confidence_label(life_block.get("confidence"))
+        life_block["card"] = life_card
+    if cards:
+        expanded_cards = dict(cards)
+        if "life" in cards:
+            expanded_cards.setdefault("essence", cards["life"])
+        if "career" in cards:
+            expanded_cards.setdefault("path", cards["career"])
+        if "love" in cards:
+            expanded_cards.setdefault("heart", cards["love"])
+        if "spiritual" in cards:
+            expanded_cards.setdefault("mind", cards["spiritual"])
+        response_body["cards"] = expanded_cards
 
     return jsonify(response_body), 200
 

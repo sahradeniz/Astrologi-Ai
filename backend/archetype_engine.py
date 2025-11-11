@@ -2,14 +2,80 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Sequence
+import re
+from typing import Any, Dict, Iterable, List, Sequence, Tuple
 
 __all__ = [
     "extract_archetype_data",
     "derive_behavior_patterns",
     "integrate_life_expression",
     "generate_full_archetype_report",
+    "clean_text",
+    "limit_sentences",
+    "map_confidence_label",
+    "pick_axis",
 ]
+
+TILDE = "–"
+
+
+def clean_text(value: str | None) -> str:
+    """Strip markdown/code fences, JSON artefacts, and normalise whitespace."""
+    if not isinstance(value, str):
+        return ""
+    text = value
+    text = re.sub(r"```+json|```+|^json\\b", "", text, flags=re.IGNORECASE).strip()
+
+    def _strip_brackets(match: re.Match[str]) -> str:
+        items = [
+            piece.strip(" '\"")
+            for piece in match.group(0).strip("[]").split(",")
+            if piece.strip(" '\"")
+        ]
+        return ", ".join(items)
+
+    text = re.sub(r"\[[^\[\]]*\]", _strip_brackets, text)
+    text = re.sub(r"\s+", " ", text).strip()
+    text = text.replace(" - ", f" {TILDE} ")
+    text = re.sub(r"\s*•\s*", " • ", text)
+    return text.strip()
+
+
+def limit_sentences(value: str | None, min_sentences: int = 3, max_sentences: int = 6) -> str:
+    """Clamp text to a 3–6 sentence window in a gentle, human-readable way."""
+    cleaned = clean_text(value)
+    if not cleaned:
+        return ""
+    sentences = [
+        sentence.strip()
+        for sentence in re.split(r"(?<=[.!?])\s+", cleaned)
+        if sentence.strip()
+    ]
+    if not sentences:
+        return cleaned
+    clipped = sentences[:max_sentences]
+    if len(clipped) < min_sentences:
+        clipped = sentences[: max(len(sentences), min_sentences)]
+    joined = " ".join(clipped).rstrip(".!?")
+    return f"{joined}."
+
+
+def map_confidence_label(score: float | None) -> str:
+    if score is None:
+        return "Dengeli"
+    if score >= 0.8:
+        return "Net"
+    if score >= 0.6:
+        return "Oldukça net"
+    return "İlham verici"
+
+
+def pick_axis(axis_scores: Dict[str, float] | None, fallback: str) -> str:
+    preferred_order = ["Yay–İkizler", "Yengeç–Oğlak", "Terazi–Koç", "Boğa–Akrep", "Başak–Balık"]
+    if not axis_scores:
+        return fallback
+    best_axis = max(axis_scores.items(), key=lambda item: item[1])[0]
+    return best_axis if best_axis in preferred_order else fallback
 # Mapping of aspect types to their core thematic interpretations.
 ASPECT_THEMES = {
     "square": "challenge",
@@ -34,6 +100,155 @@ BROAD_PLANET_THEMES = {
     "venus": "love",
     "neptune": "intuition",
 }
+
+
+EXPECTED_ASPECT_ANGLES = {
+    "Conjunction": 0.0,
+    "conjunction": 0.0,
+    "Sextile": 60.0,
+    "sextile": 60.0,
+    "Square": 90.0,
+    "square": 90.0,
+    "Trine": 120.0,
+    "trine": 120.0,
+    "Opposition": 180.0,
+    "opposition": 180.0,
+}
+
+
+def analyze_aspects_weighted(chart_data: Dict[str, Any]) -> Tuple[Dict[str, float], List[dict]]:
+    """Compute lightweight theme scores based on aspect patterns.
+
+    Returns
+    -------
+    Tuple[Dict[str, float], List[dict]]
+        Aggregated theme scores and provenance list with planet pairs/aspects.
+    """
+
+    theme_scores: Dict[str, float] = {}
+    derived_from: List[dict] = []
+
+    aspects = chart_data.get("aspects") if isinstance(chart_data, dict) else None
+    if not isinstance(aspects, Sequence):
+        return theme_scores, derived_from
+
+    for aspect in aspects:
+        if not isinstance(aspect, dict):
+            continue
+        planet1 = aspect.get("planet1")
+        planet2 = aspect.get("planet2")
+        aspect_name = aspect.get("aspect")
+        if not planet1 or not planet2 or not aspect_name:
+            continue
+
+        pair = f"{planet1}–{planet2}"
+        exact_angle = aspect.get("exact_angle")
+        expected = EXPECTED_ASPECT_ANGLES.get(aspect_name)
+        orb = None
+        if isinstance(exact_angle, (int, float)) and isinstance(expected, (int, float)):
+            orb = abs(exact_angle - expected)
+        elif isinstance(aspect.get("orb"), (int, float)):
+            orb = abs(float(aspect["orb"]))
+        else:
+            orb = None
+
+        if orb is None:
+            weight = 0.4
+        else:
+            weight = max(0.1, 1.0 - (orb / 12.0))
+
+        planets = {planet1, planet2}
+        name_upper = aspect_name.capitalize()
+
+        if {"Mars", "Jupiter"} <= planets and name_upper in {"Trine", "Sextile"}:
+            theme_scores["growth"] = theme_scores.get("growth", 0.0) + 0.6 * weight
+            theme_scores["action"] = theme_scores.get("action", 0.0) + 0.3 * weight
+        if {"Sun", "Saturn"} <= planets and name_upper in {"Square", "Opposition", "Conjunction"}:
+            theme_scores["challenge"] = theme_scores.get("challenge", 0.0) + 0.5 * weight
+            theme_scores["structure"] = theme_scores.get("structure", 0.0) + 0.3 * weight
+        if {"Moon", "Neptune"} <= planets and name_upper in {"Trine", "Sextile", "Conjunction"}:
+            theme_scores["intuition"] = theme_scores.get("intuition", 0.0) + 0.5 * weight
+            theme_scores["compassion"] = theme_scores.get("compassion", 0.0) + 0.25 * weight
+        if {"Venus", "Pluto"} <= planets:
+            theme_scores["love"] = theme_scores.get("love", 0.0) + 0.4 * weight
+            theme_scores["depth"] = theme_scores.get("depth", 0.0) + 0.4 * weight
+        if {"Mercury", "Uranus"} <= planets:
+            theme_scores["innovation"] = theme_scores.get("innovation", 0.0) + 0.35 * weight
+        if {"Sun", "Moon"} <= planets:
+            theme_scores["integration"] = theme_scores.get("integration", 0.0) + 0.35 * weight
+
+        derived_from.append(
+            {
+                "pair": pair,
+                "aspect": aspect_name,
+                "orb": round(float(orb), 2) if orb is not None else None,
+            }
+        )
+
+    return theme_scores, derived_from
+
+
+def infer_axis_by_themes_and_pairs(theme_scores: Dict[str, float], derived_from: List[dict]) -> Tuple[str, List[Tuple[str, float]]]:
+    """Choose the dominant axis considering theme scores and supporting aspect pairs."""
+
+    def score(key: str) -> float:
+        return float(theme_scores.get(key, 0.0))
+
+    axis_scores = {
+        "Yay–İkizler": score("growth") + 0.2 * score("intuition") + 0.15 * score("innovation"),
+        "Yengeç–Oğlak": score("security") + 0.2 * score("structure") + 0.1 * score("integration"),
+        "Terazi–Koç": score("balance") + 0.1 * score("action") + 0.1 * score("love"),
+        "Boğa–Akrep": score("value") + 0.2 * score("depth") + 0.1 * score("transformation"),
+        "Başak–Balık": score("service") + 0.2 * score("intuition") + 0.1 * score("compassion"),
+    }
+
+    for entry in derived_from:
+        pair = entry.get("pair")
+        if not isinstance(pair, str):
+            continue
+        if "Mars" in pair and "Jupiter" in pair:
+            axis_scores["Yay–İkizler"] += 0.12
+        if "Saturn" in pair and "Sun" in pair:
+            axis_scores["Yengeç–Oğlak"] += 0.08
+        if "Venus" in pair and "Mars" in pair:
+            axis_scores["Terazi–Koç"] += 0.08
+        if "Venus" in pair and "Pluto" in pair:
+            axis_scores["Boğa–Akrep"] += 0.1
+        if "Moon" in pair and "Neptune" in pair:
+            axis_scores["Başak–Balık"] += 0.12
+
+    ranked = sorted(axis_scores.items(), key=lambda item: item[1], reverse=True)
+    best_axis = ranked[0][0] if ranked else "Yay–İkizler"
+    return best_axis, ranked
+
+
+def compose_life_narrative_payload(
+    axis: str,
+    theme_scores: Dict[str, float],
+    focus: str,
+    derived_from: List[dict],
+    ai_text: str,
+    *,
+    strategy: str | None = None,
+) -> Dict[str, Any]:
+    themes_sorted = sorted(theme_scores.items(), key=lambda x: x[1], reverse=True)
+    themes = [key for key, _ in themes_sorted[:8]]
+    confidence_raw = sum(value for _, value in themes_sorted[:3])
+    confidence = None
+    if confidence_raw:
+        confidence = round(max(0.2, min(0.95, confidence_raw)), 2)
+
+    payload = {
+        "version": "v2",
+        "axis": axis,
+        "themes": themes,
+        "focus": focus,
+        "derived_from": derived_from[:12],
+        "confidence": confidence,
+        "strategy": strategy or "primary",
+        "text": ai_text,
+    }
+    return payload
 
 ARCHETYPE_BEHAVIOR_PATTERNS = {
     "sun square saturn": {
@@ -128,7 +343,7 @@ def extract_archetype_data(chart_data: Dict[str, Any]) -> Dict[str, Any]:
         "behavior_patterns": behavior_patterns,
     }
 
-    life_layer = integrate_life_expression(archetype_base)
+    life_layer = integrate_life_expression(chart_data, archetype_data=archetype_base)
     archetype_base.update(life_layer)
 
     return archetype_base
@@ -360,35 +575,81 @@ def call_ai_model(prompt: str) -> str:
     )
 
 
-def integrate_life_expression(archetype_data: Dict[str, Any]) -> Dict[str, Any]:
-    themes = archetype_data.get("core_themes", []) or []
+def integrate_life_expression(
+    chart_data: Dict[str, Any] | None,
+    *,
+    archetype_data: Dict[str, Any] | None = None,
+    strategy: str | None = None,
+) -> Dict[str, Any]:
+    """Compose enriched life narrative payload with fallbacks for legacy callers."""
+
+    archetype_data = archetype_data or {}
+    core_themes = archetype_data.get("core_themes", []) or []
     tone = archetype_data.get("story_tone", "") or ""
-    axis = infer_dominant_axis(archetype_data)
-    focus = infer_life_focus(themes, axis)
-    prompt = (
-        "Create a poetic Turkish life narrative.\n"
-        f"Themes: {themes}\n"
-        f"Tone: {tone}\n"
-        f"Axis: {axis}\n"
-        f"Focus: {focus}\n"
-    )
+
+    theme_scores: Dict[str, float] = {}
+    derived_from: List[dict] = []
+    if chart_data:
+        try:
+            theme_scores, derived_from = analyze_aspects_weighted(chart_data)
+        except Exception:  # pragma: no cover - defensive fallback
+            theme_scores, derived_from = {}, []
+
+    if not theme_scores and core_themes:
+        theme_scores = {theme: 1.0 for theme in core_themes}
+
+    themes_sorted = list(theme_scores.keys()) or list(core_themes)
+
+    axis_rank = []
+    axis = None
+    if theme_scores:
+        axis, axis_rank = infer_axis_by_themes_and_pairs(theme_scores, derived_from)
+    else:
+        axis = infer_dominant_axis(archetype_data or {"core_themes": core_themes})
+
+    if strategy == "secondary" and axis_rank and len(axis_rank) > 1:
+        axis = axis_rank[1][0]
+
+    focus = infer_life_focus(themes_sorted or core_themes, axis)
+
+    prompt = ["Create a poetic Turkish life narrative."]
+    if strategy == "secondary":
+        prompt.append("Offer a complementary perspective that highlights the secondary themes.")
+    prompt.append(f"Themes: {themes_sorted or core_themes}")
+    prompt.append(f"Tone: {tone}")
+    prompt.append(f"Axis: {axis}")
+    prompt.append(f"Focus: {focus}")
+    prompt_text = "\n".join(prompt)
+
     try:
-        life_expression = call_ai_model(prompt)
+        life_expression = call_ai_model(prompt_text)
     except Exception as exc:  # pragma: no cover - defensive fallback
         life_expression = (
             "Gökyüzü şu anda sessiz; yine de kalbin sezgisi sana yol gösteriyor. "
-            f"{axis} ekseninde, {focus} temasını incelikle dokuyorsun."
+            f"{axis} ekseninde, {focus} temasını incelikle dokuyorsun."  # noqa: E501
         )
         life_expression += f" (Hata: {exc})"
+
+    payload = compose_life_narrative_payload(
+        axis,
+        theme_scores or {theme: 1.0 for theme in themes_sorted or core_themes},
+        focus,
+        derived_from,
+        life_expression,
+        strategy=strategy,
+    )
+
     return {
-        "life_expression": life_expression,
-        "dominant_axis": axis,
-        "life_focus": focus,
+        "life_expression": payload.get("text", ""),
+        "dominant_axis": payload.get("axis"),
+        "life_focus": payload.get("focus"),
+        "life_narrative": payload,
     }
 
 
 def generate_full_archetype_report(chart_data: Dict[str, Any]) -> Dict[str, Any]:
     base = extract_archetype_data(chart_data)
     base["behavior_patterns"] = derive_behavior_patterns(chart_data)
-    base.update(integrate_life_expression(base))
+    if "life_narrative" not in base:
+        base.update(integrate_life_expression(chart_data, archetype_data=base))
     return base
